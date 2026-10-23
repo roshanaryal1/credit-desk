@@ -15,6 +15,13 @@
       "when": 1792724975334,
       "tag": "0001_append_only_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792760599047,
+      "tag": "0002_agent_run_as_of",
+      "breakpoints": true
     }
   ]
 }

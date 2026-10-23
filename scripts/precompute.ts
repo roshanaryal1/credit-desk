@@ -57,22 +57,37 @@ async function main() {
       .where(eq(t.findings.configVersion, CONFIG_VERSION))
       .orderBy(asc(t.findings.invoiceId))
   ).map((r) => r.id);
-  const high = (
-    await db
-      .select({ id: t.incidents.id })
-      .from(t.incidents)
-      .where(eq(t.incidents.severity, "HIGH"))
-      .orderBy(asc(t.incidents.id))
-  ).map((r) => r.id);
+  const highIncidents = await db
+    .select({ id: t.incidents.id, asOf: t.incidents.lastDetectedDate })
+    .from(t.incidents)
+    .where(eq(t.incidents.severity, "HIGH"))
+    .orderBy(asc(t.incidents.id));
+  const high = highIncidents.map((r) => r.id);
   const doneInvoices = await passed("INVOICE");
-  const doneIncidents = await passed("INCIDENT");
+  const doneIncidents = new Map(
+    (
+      await db
+        .select({ id: t.agentRuns.subjectId, asOf: t.agentRuns.asOfDate })
+        .from(t.agentRuns)
+        .where(
+          and(
+            eq(t.agentRuns.subjectType, "INCIDENT"),
+            eq(t.agentRuns.status, "PASSED"),
+            eq(t.agentRuns.promptVersion, PROMPT_VERSION),
+            eq(t.agentRuns.configVersion, CONFIG_VERSION),
+          ),
+        )
+    ).map((r) => [r.id, r.asOf] as const),
+  );
   const todo = [
     ...flagged
       .filter((id) => !doneInvoices.has(id))
       .map((id) => ({ type: "INVOICE" as const, id })),
-    ...high
-      .filter((id) => !doneIncidents.has(id))
-      .map((id) => ({ type: "INCIDENT" as const, id })),
+    // An incident needs a new run when the book has moved past the date its
+    // last passing explanation was written for.
+    ...highIncidents
+      .filter((inc) => doneIncidents.get(inc.id) !== inc.asOf)
+      .map((inc) => ({ type: "INCIDENT" as const, id: inc.id })),
   ];
   const limit = values.limit ? Number(values.limit) : todo.length;
   console.log(

@@ -325,6 +325,7 @@ async function runAgentLoop(
       tokensIn,
       tokensOut,
       latencyMs,
+      asOfDate: subject.asOf,
     });
     const value = result?.value;
     if (value) {

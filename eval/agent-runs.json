@@ -16,6 +16,7 @@
       "tokensIn": 7511,
       "tokensOut": 1274,
       "latencyMs": 3996,
+      "asOfDate": "2026-10-20",
       "createdAt": "2026-10-23T07:19:19.896Z"
     },
     {
@@ -32,6 +33,7 @@
       "tokensIn": 7438,
       "tokensOut": 559,
       "latencyMs": 28227,
+      "asOfDate": "2026-10-20",
       "createdAt": "2026-10-23T07:20:48.129Z"
     },
     {
@@ -48,6 +50,7 @@
       "tokensIn": 9573,
       "tokensOut": 2144,
       "latencyMs": 14541,
+      "asOfDate": "2026-10-20",
       "createdAt": "2026-10-23T07:29:03.580Z"
     },
     {
@@ -64,6 +67,7 @@
       "tokensIn": 2597,
       "tokensOut": 208,
       "latencyMs": 4144,
+      "asOfDate": "2026-10-20",
       "createdAt": "2026-10-23T07:21:31.421Z"
     },
     {
@@ -80,6 +84,7 @@
       "tokensIn": 10134,
       "tokensOut": 2923,
       "latencyMs": 19459,
+      "asOfDate": "2026-10-20",
       "createdAt": "2026-10-23T07:30:23.043Z"
     },
     {
@@ -96,6 +101,7 @@
       "tokensIn": 7443,
       "tokensOut": 1483,
       "latencyMs": 3982,
+      "asOfDate": "2026-09-27",
       "createdAt": "2026-10-23T07:22:32.431Z"
     },
     {
@@ -112,6 +118,7 @@
       "tokensIn": 5490,
       "tokensOut": 893,
       "latencyMs": 3560,
+      "asOfDate": "2026-07-28",
       "createdAt": "2026-10-23T06:31:40.466Z"
     },
     {
@@ -128,6 +135,7 @@
       "tokensIn": 3674,
       "tokensOut": 635,
       "latencyMs": 2973,
+      "asOfDate": "2026-07-28",
       "createdAt": "2026-10-23T06:32:43.437Z"
     },
     {
@@ -144,6 +152,7 @@
       "tokensIn": 6850,
       "tokensOut": 936,
       "latencyMs": 5087,
+      "asOfDate": "2026-07-28",
       "createdAt": "2026-10-23T06:33:48.524Z"
     },
     {
@@ -160,6 +169,7 @@
       "tokensIn": 5843,
       "tokensOut": 1321,
       "latencyMs": 4837,
+      "asOfDate": "2026-08-05",
       "createdAt": "2026-10-23T06:34:53.363Z"
     },
     {
@@ -176,6 +186,7 @@
       "tokensIn": 5841,
       "tokensOut": 779,
       "latencyMs": 3171,
+      "asOfDate": "2026-08-05",
       "createdAt": "2026-10-23T06:35:56.535Z"
     },
     {
@@ -192,6 +203,7 @@
       "tokensIn": 5843,
       "tokensOut": 798,
       "latencyMs": 3223,
+      "asOfDate": "2026-08-05",
       "createdAt": "2026-10-23T06:36:59.760Z"
     },
     {
@@ -208,6 +220,7 @@
       "tokensIn": 10257,
       "tokensOut": 1124,
       "latencyMs": 4582,
+      "asOfDate": "2026-08-05",
       "createdAt": "2026-10-23T06:38:04.343Z"
     },
     {
@@ -224,6 +237,7 @@
       "tokensIn": 5108,
       "tokensOut": 820,
       "latencyMs": 2583,
+      "asOfDate": "2026-08-13",
       "createdAt": "2026-10-23T06:39:06.928Z"
     },
     {
@@ -240,6 +254,7 @@
       "tokensIn": 3675,
       "tokensOut": 602,
       "latencyMs": 2124,
+      "asOfDate": "2026-08-13",
       "createdAt": "2026-10-23T06:40:09.054Z"
     },
     {
@@ -256,6 +271,7 @@
       "tokensIn": 8531,
       "tokensOut": 590,
       "latencyMs": 3181,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T06:41:12.237Z"
     },
     {
@@ -272,6 +288,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 90,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:09:47.596Z"
     },
     {
@@ -288,6 +305,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 129,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:10:05.180Z"
     },
     {
@@ -304,6 +322,7 @@
       "tokensIn": 3897,
       "tokensOut": 279,
       "latencyMs": 2645,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:10:57.418Z"
     },
     {
@@ -320,6 +339,7 @@
       "tokensIn": 5474,
       "tokensOut": 904,
       "latencyMs": 24574,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:23:23.206Z"
     },
     {
@@ -336,6 +356,7 @@
       "tokensIn": 8455,
       "tokensOut": 692,
       "latencyMs": 2849,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T06:42:14.717Z"
     },
     {
@@ -352,6 +373,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 54,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:09:47.655Z"
     },
     {
@@ -368,6 +390,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 97,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:10:26.209Z"
     },
     {
@@ -384,6 +407,7 @@
       "tokensIn": 3898,
       "tokensOut": 286,
       "latencyMs": 3582,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:12:00.290Z"
     },
     {
@@ -400,6 +424,7 @@
       "tokensIn": 8480,
       "tokensOut": 1448,
       "latencyMs": 10228,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:24:33.437Z"
     },
     {
@@ -416,6 +441,7 @@
       "tokensIn": 8453,
       "tokensOut": 488,
       "latencyMs": 2604,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T06:43:16.842Z"
     },
     {
@@ -432,6 +458,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 53,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:09:47.709Z"
     },
     {
@@ -448,6 +475,7 @@
       "tokensIn": 3897,
       "tokensOut": 228,
       "latencyMs": 2865,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:13:01.525Z"
     },
     {
@@ -464,6 +492,7 @@
       "tokensIn": 3897,
       "tokensOut": 1248,
       "latencyMs": 3127,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:25:36.572Z"
     },
     {
@@ -480,6 +509,7 @@
       "tokensIn": 8453,
       "tokensOut": 596,
       "latencyMs": 2729,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T06:44:19.145Z"
     },
     {
@@ -496,6 +526,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 94,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:09:47.805Z"
     },
     {
@@ -512,6 +543,7 @@
       "tokensIn": 6120,
       "tokensOut": 399,
       "latencyMs": 9378,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:14:10.134Z"
     },
     {
@@ -528,6 +560,7 @@
       "tokensIn": 3897,
       "tokensOut": 622,
       "latencyMs": 4351,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:26:40.932Z"
     },
     {
@@ -544,6 +577,7 @@
       "tokensIn": 3897,
       "tokensOut": 231,
       "latencyMs": 19959,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:30:50.302Z"
     },
     {
@@ -560,6 +594,7 @@
       "tokensIn": 8457,
       "tokensOut": 766,
       "latencyMs": 3270,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T06:45:22.008Z"
     },
     {
@@ -576,6 +611,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 57,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:09:47.863Z"
     },
     {
@@ -592,6 +628,7 @@
       "tokensIn": 2530,
       "tokensOut": 833,
       "latencyMs": 2829,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T07:15:06.110Z"
     },
     {
@@ -608,6 +645,7 @@
       "tokensIn": 3721,
       "tokensOut": 827,
       "latencyMs": 2849,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T06:46:24.499Z"
     },
     {
@@ -624,6 +662,7 @@
       "tokensIn": 10015,
       "tokensOut": 1254,
       "latencyMs": 3579,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T06:47:28.080Z"
     },
     {
@@ -640,6 +679,7 @@
       "tokensIn": 10077,
       "tokensOut": 1396,
       "latencyMs": 4329,
+      "asOfDate": "2026-08-26",
       "createdAt": "2026-10-23T06:48:32.411Z"
     },
     {
@@ -656,6 +696,7 @@
       "tokensIn": 6524,
       "tokensOut": 671,
       "latencyMs": 2185,
+      "asOfDate": "2026-09-09",
       "createdAt": "2026-10-23T06:49:34.597Z"
     },
     {
@@ -672,6 +713,7 @@
       "tokensIn": 7660,
       "tokensOut": 1473,
       "latencyMs": 4374,
+      "asOfDate": "2026-09-09",
       "createdAt": "2026-10-23T06:50:38.974Z"
     },
     {
@@ -688,6 +730,7 @@
       "tokensIn": 5066,
       "tokensOut": 728,
       "latencyMs": 1974,
+      "asOfDate": "2026-09-09",
       "createdAt": "2026-10-23T06:51:40.951Z"
     },
     {
@@ -704,6 +747,7 @@
       "tokensIn": 6855,
       "tokensOut": 1335,
       "latencyMs": 3436,
+      "asOfDate": "2026-09-09",
       "createdAt": "2026-10-23T06:52:44.389Z"
     },
     {
@@ -720,6 +764,7 @@
       "tokensIn": 5130,
       "tokensOut": 990,
       "latencyMs": 2717,
+      "asOfDate": "2026-09-09",
       "createdAt": "2026-10-23T06:53:47.108Z"
     },
     {
@@ -736,6 +781,7 @@
       "tokensIn": 6943,
       "tokensOut": 1093,
       "latencyMs": 3233,
+      "asOfDate": "2026-09-09",
       "createdAt": "2026-10-23T06:54:50.344Z"
     },
     {
@@ -752,6 +798,7 @@
       "tokensIn": 7008,
       "tokensOut": 1168,
       "latencyMs": 3075,
+      "asOfDate": "2026-09-09",
       "createdAt": "2026-10-23T06:55:53.421Z"
     },
     {
@@ -768,6 +815,7 @@
       "tokensIn": 9654,
       "tokensOut": 1479,
       "latencyMs": 4509,
+      "asOfDate": "2026-09-23",
       "createdAt": "2026-10-23T06:56:57.932Z"
     },
     {
@@ -784,6 +832,7 @@
       "tokensIn": 6297,
       "tokensOut": 1045,
       "latencyMs": 3438,
+      "asOfDate": "2026-09-23",
       "createdAt": "2026-10-23T06:58:01.372Z"
     },
     {
@@ -800,6 +849,7 @@
       "tokensIn": 5130,
       "tokensOut": 715,
       "latencyMs": 2000,
+      "asOfDate": "2026-09-23",
       "createdAt": "2026-10-23T06:59:03.374Z"
     },
     {
@@ -816,6 +866,7 @@
       "tokensIn": 5132,
       "tokensOut": 960,
       "latencyMs": 2666,
+      "asOfDate": "2026-09-23",
       "createdAt": "2026-10-23T07:00:06.042Z"
     },
     {
@@ -832,6 +883,7 @@
       "tokensIn": 5066,
       "tokensOut": 913,
       "latencyMs": 3309,
+      "asOfDate": "2026-09-23",
       "createdAt": "2026-10-23T07:01:09.354Z"
     },
     {
@@ -848,6 +900,7 @@
       "tokensIn": 6706,
       "tokensOut": 1202,
       "latencyMs": 4459,
+      "asOfDate": "2026-09-23",
       "createdAt": "2026-10-23T07:02:13.815Z"
     },
     {
@@ -864,6 +917,7 @@
       "tokensIn": 5133,
       "tokensOut": 1017,
       "latencyMs": 3639,
+      "asOfDate": "2026-10-17",
       "createdAt": "2026-10-23T07:03:17.455Z"
     },
     {
@@ -880,6 +934,7 @@
       "tokensIn": 5131,
       "tokensOut": 982,
       "latencyMs": 3012,
+      "asOfDate": "2026-10-17",
       "createdAt": "2026-10-23T07:04:20.468Z"
     },
     {
@@ -896,6 +951,7 @@
       "tokensIn": 9648,
       "tokensOut": 1324,
       "latencyMs": 6578,
+      "asOfDate": "2026-10-17",
       "createdAt": "2026-10-23T07:05:27.048Z"
     },
     {
@@ -912,6 +968,7 @@
       "tokensIn": 5183,
       "tokensOut": 1073,
       "latencyMs": 3379,
+      "asOfDate": "2026-10-17",
       "createdAt": "2026-10-23T07:06:30.429Z"
     },
     {
@@ -928,6 +985,7 @@
       "tokensIn": 6066,
       "tokensOut": 1043,
       "latencyMs": 3162,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:07:33.591Z"
     },
     {
@@ -944,6 +1002,7 @@
       "tokensIn": 5585,
       "tokensOut": 1283,
       "latencyMs": 3695,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:08:37.287Z"
     },
     {
@@ -960,6 +1019,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 54,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:09:47.921Z"
     },
     {
@@ -976,6 +1036,7 @@
       "tokensIn": 2659,
       "tokensOut": 1367,
       "latencyMs": 3111,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:16:09.227Z"
     },
     {
@@ -992,6 +1053,7 @@
       "tokensIn": 7971,
       "tokensOut": 2052,
       "latencyMs": 10203,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:27:49.034Z"
     },
     {
@@ -1008,6 +1070,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 163,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:09:37.395Z"
     },
     {
@@ -1024,6 +1087,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 52,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:09:47.974Z"
     },
     {
@@ -1040,6 +1104,7 @@
       "tokensIn": 7264,
       "tokensOut": 1443,
       "latencyMs": 3069,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:17:12.301Z"
     },
     {
@@ -1056,6 +1121,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 55,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:09:37.452Z"
     },
     {
@@ -1072,6 +1138,7 @@
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 53,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:09:48.029Z"
     },
     {
@@ -1088,6 +1155,7 @@
       "tokensIn": 6304,
       "tokensOut": 1546,
       "latencyMs": 3584,
+      "asOfDate": "2026-10-19",
       "createdAt": "2026-10-23T07:18:15.895Z"
     }
   ],
