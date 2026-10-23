@@ -185,6 +185,7 @@ async function runAgentLoop(
 
   try {
     for (;;) {
+      if (now() >= deadline) throw new DeadlineExceeded();
       const allowTools = toolCalls < AGENT_LIMITS.maxToolCalls;
       const res = await llm.complete({
         messages,
@@ -212,6 +213,7 @@ async function runAgentLoop(
           tool_calls: investigate,
         });
         for (const call of investigate) {
+          if (now() >= deadline) throw new DeadlineExceeded();
           toolCalls++;
           const output =
             toolCalls <= AGENT_LIMITS.maxToolCalls
@@ -234,6 +236,7 @@ async function runAgentLoop(
       result = validateOutput(content, tools.evidence);
       if (result.ok) {
         status = "PASSED";
+        // Errors from an earlier attempt do not describe the accepted output.
         errors = [];
         break;
       }
