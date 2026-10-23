@@ -211,6 +211,51 @@ describe("saving a decision", () => {
     expect(out.rows[0]?.checks.length).toBeGreaterThan(0);
   });
 
+  it("freezes every record the explanation cites, allocated or not", async () => {
+    const invoiceId = flagged[12]!;
+    const [bank] = await db.select().from(t.bankTransactions).limit(1);
+    const { CONFIG_VERSION } = await import("@/lib/checks/config");
+    await db.insert(t.agentRuns).values({
+      id: "run_test_cited",
+      subjectType: "INVOICE",
+      subjectId: invoiceId,
+      provider: "test",
+      model: "test",
+      promptVersion: "test",
+      configVersion: CONFIG_VERSION,
+      codeSha: "test",
+      attempts: 1,
+      status: "PASSED",
+      tokensIn: 0,
+      tokensOut: 0,
+      latencyMs: 0,
+    });
+    await db.insert(t.explanations).values({
+      id: "exp_test_cited",
+      agentRunId: "run_test_cited",
+      summary: "Test.",
+      riskLevel: "LOW",
+      recommendation: "HOLD",
+      questionsForClient: [],
+      claims: [{ text: "A receipt.", evidenceIds: [bank!.id] }],
+      citedEvidenceIds: [bank!.id],
+      validationStatus: "PASSED",
+      validationErrors: [],
+    });
+    const res = await decide(invoiceId);
+    if (!res.ok) throw new Error("expected ok");
+    const [snap] = await db
+      .select()
+      .from(t.decisionSnapshots)
+      .where(eq(t.decisionSnapshots.decisionId, res.decisionId));
+    const frozen = JSON.parse(snap!.canonicalJson);
+    expect(frozen.schemaVersion).toBe(2);
+    expect(frozen.citedRecords[bank!.id]).toMatchObject({
+      id: bank!.id,
+      amountCents: bank!.amountCents,
+    });
+  });
+
   it("requires a reason to hold or reject", async () => {
     const { DecisionInputSchema } = await import("@/lib/trust/decide");
     const base = {
