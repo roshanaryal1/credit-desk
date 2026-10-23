@@ -23,7 +23,7 @@ body:
       label: Acceptance criteria
       description: Testable statements. Each one becomes a test or a demo step.
       value: |
-        - [ ] 
+        - [ ]
     validations:
       required: true
   - type: textarea

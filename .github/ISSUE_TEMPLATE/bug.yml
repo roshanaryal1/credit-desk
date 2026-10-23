@@ -21,7 +21,7 @@ body:
     attributes:
       label: Steps to reproduce
       value: |
-        1. 
+        1.
     validations:
       required: true
   - type: input
