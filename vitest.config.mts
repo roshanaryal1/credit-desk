@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -5,8 +7,9 @@ export default defineConfig({
     tsconfigPaths: true,
     // server-only throws outside React Server Components; tests run in Node.
     alias: {
-      "server-only": new URL("./tests/stubs/server-only.ts", import.meta.url)
-        .pathname,
+      "server-only": fileURLToPath(
+        new URL("./tests/stubs/server-only.ts", import.meta.url),
+      ),
     },
   },
   test: {
