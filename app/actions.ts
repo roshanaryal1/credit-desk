@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDb } from "@/lib/db/client";
@@ -95,6 +95,10 @@ export async function incidentAction(
   const analyst = await currentAnalyst();
   const db = await getDb();
   const ok = await db.transaction(async (tx) => {
+    // Serialise competing transitions on the same incident.
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${parsed.data.incidentId}))`,
+    );
     const [incident] = await tx
       .select()
       .from(t.incidents)
@@ -106,6 +110,9 @@ export async function incidentAction(
       .where(eq(t.incidentEvents.incidentId, incident.id))
       .orderBy(desc(t.incidentEvents.occurredAt))
       .limit(1);
+    // Resolved incidents only reopen through a new detection; an analyst
+    // action on a stale screen must not undo a resolution.
+    if (latest?.status === "RESOLVED") return "resolved" as const;
     if (latest?.status === parsed.data.action) return true;
     const actor = `${analyst.displayName} (${analyst.sessionId.slice(0, 8)})`;
     const id = `iev_${incident.id}_${crypto.randomUUID().slice(0, 8)}`;
@@ -131,6 +138,12 @@ export async function incidentAction(
     });
     return true;
   });
+  if (ok === "resolved")
+    return {
+      status: "error",
+      message:
+        "Someone already resolved this incident. Reload to see the latest history.",
+    };
   if (!ok) return { status: "error", message: "Incident not found." };
   revalidatePath("/", "layout");
   return {

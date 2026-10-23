@@ -248,3 +248,24 @@ describe("watch runner", () => {
     expect(det!.n).toBeGreaterThan(incidents.length);
   });
 });
+
+describe("watch backfill", () => {
+  it("gives the same first detections whether or not a later date ran first", async () => {
+    const forward = await createMemoryDb();
+    const backfill = await createMemoryDb();
+    const ds = generate(DEV_PARAMS);
+    await writeDataset(forward, ds);
+    await writeDataset(backfill, ds);
+    await runWatchRange(forward, "2026-09-01", DEMO_TODAY);
+    await runWatchForDate(backfill, DEMO_TODAY);
+    await runWatchRange(backfill, "2026-09-01", DEMO_TODAY);
+    const first = async (db: Db) =>
+      Object.fromEntries(
+        (await db.select().from(t.incidents)).map((i) => [
+          i.incidentKey,
+          i.firstDetectedDate,
+        ]),
+      );
+    expect(await first(backfill)).toEqual(await first(forward));
+  }, 60_000);
+});
