@@ -3,6 +3,8 @@
 // Format: base64url(JSON payload) + "." + base64url(HMAC-SHA256).
 
 export const AUTH_COOKIE = "cd_auth";
+/** Per-browser session id used only when the password gate is off (development). */
+export const DEV_SESSION_COOKIE = "cd_dev_session";
 export const SESSION_TTL_SECONDS = 12 * 60 * 60;
 
 export interface SessionPayload {

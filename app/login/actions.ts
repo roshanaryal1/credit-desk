@@ -14,6 +14,7 @@ import {
 import { getDb } from "@/lib/db/client";
 import { MODE_COOKIE } from "@/lib/session";
 import { takeAll } from "@/lib/rate-limit";
+import { clientIp, safeNext } from "@/lib/request";
 
 const LoginSchema = z.object({
   password: z.string().min(1).max(200),
@@ -27,16 +28,6 @@ export interface LoginState {
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 10;
-
-/** Only same-site relative paths are allowed as a post-login destination. */
-function safeNext(next: string | undefined): string {
-  return next &&
-    next.startsWith("/") &&
-    !next.startsWith("//") &&
-    !next.startsWith("/\\")
-    ? next
-    : "/";
-}
 
 export async function loginAction(
   _prev: LoginState,
@@ -54,14 +45,14 @@ export async function loginAction(
   if (!gate.configured)
     return { message: "Sign-in is not configured on this deployment." };
 
-  const ip =
-    (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "unknown";
+  const ip = clientIp(await headers());
   const db = await getDb();
   // Each attempt is reserved atomically before the password is checked, so
   // concurrent guesses cannot exceed the limit.
   const allowed = await takeAll(db, [
     { key: `login:${ip}`, max: LOGIN_MAX_ATTEMPTS, windowMs: LOGIN_WINDOW_MS },
+    // A global cap holds even when no trusted client address is available.
+    { key: "login:global", max: 200, windowMs: LOGIN_WINDOW_MS },
   ]);
   if (!allowed)
     return { message: "Too many attempts. Try again in 15 minutes." };
