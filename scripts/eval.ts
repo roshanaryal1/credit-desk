@@ -88,7 +88,9 @@ async function main() {
             data.runs.filter(
               (r) =>
                 (r as { promptVersion?: string }).promptVersion ===
-                data.promptVersion,
+                  data.promptVersion &&
+                (r as { configVersion?: string }).configVersion ===
+                  CONFIG_VERSION,
             ),
             data.explanations,
           ),
