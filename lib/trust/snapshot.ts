@@ -8,7 +8,7 @@ import { PROMPT_VERSION, SYSTEM_PROMPT } from "@/lib/agent/prompts";
 
 import { canonicalJson, sha256 } from "./canonical";
 
-export const SNAPSHOT_SCHEMA_VERSION = 1;
+export const SNAPSHOT_SCHEMA_VERSION = 2;
 
 export interface SnapshotInput {
   invoiceId: string;
@@ -65,6 +65,15 @@ export async function buildSnapshot(db: Db, input: SnapshotInput) {
     findings,
     bankLines,
     explanation,
+    // Every record the explanation cites, frozen as it was, so replay never
+    // needs live data to show the evidence the analyst saw (SPEC 9.3).
+    citedRecords: await citedRecords(db, [
+      ...new Set([
+        ...(explanation?.explanation.citedEvidenceIds ?? []),
+        ...(explanation?.explanation.claims.flatMap((c) => c.evidenceIds) ??
+          []),
+      ]),
+    ]),
     decision: input.decision,
   };
 }
@@ -124,4 +133,40 @@ export async function verifySnapshot(
 export function hashSnapshot(snapshot: unknown) {
   const text = canonicalJson(snapshot);
   return { text, sha256: sha256(text) };
+}
+
+/** Raw rows for cited ids, from every table the agent's tools can return. */
+async function citedRecords(db: Db, ids: string[]) {
+  if (ids.length === 0) return {};
+  const out: Record<string, unknown> = {};
+  const tables = [
+    t.invoices,
+    t.ledgerEntries,
+    t.creditNotes,
+    t.bankTransactions,
+    t.debtorPayments,
+    t.debtors,
+    t.findings,
+    t.fundings,
+    t.fundingAdjustments,
+    t.incidents,
+  ] as const;
+  for (const table of tables) {
+    const rows = (await db
+      .select()
+      .from(table)
+      .where(inArray(table.id, ids))) as { id: string }[];
+    for (const r of rows) out[r.id] = r;
+  }
+  const bankIds = ids.filter(
+    (id) =>
+      out[id] && (out[id] as { reference?: unknown }).reference !== undefined,
+  );
+  if (bankIds.length > 0) {
+    out.allocations = await db
+      .select()
+      .from(t.receiptAllocations)
+      .where(inArray(t.receiptAllocations.bankTransactionId, bankIds));
+  }
+  return out;
 }
