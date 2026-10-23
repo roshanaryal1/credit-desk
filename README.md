@@ -152,4 +152,5 @@ figures match the cited records; it does not prove the reasoning is right.
 - [SPEC.md](SPEC.md): product and technical specification
 - [docs/reviews](docs/reviews): design review and how each finding was resolved
 - [docs/adr](docs/adr): architecture decision records
+- [docs/deploy.md](docs/deploy.md): deploying to Vercel and Neon
 - [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md)
