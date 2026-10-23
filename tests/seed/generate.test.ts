@@ -113,6 +113,23 @@ describe("synthetic data generator", () => {
     ).toBe(false);
   });
 
+  it("labels date facts from the dates, including resubmitted invoices", () => {
+    for (const ds of [dev, generate(HOLDOUT_PARAMS)]) {
+      for (const inv of ds.invoices) {
+        const sub = ds.batches.find((b) => b.id === inv.batchId)!.submittedDate;
+        const labels = ds.labels.find(
+          (l) => l.invoiceId === inv.id,
+        )!.expectedCheckIds;
+        expect(labels.includes("OVER_AGE"), inv.id!).toBe(
+          daysBetween(inv.issueDate, sub) > 90,
+        );
+        expect(labels.includes("FUTURE_DATED"), inv.id!).toBe(
+          inv.issueDate > sub,
+        );
+      }
+    }
+  });
+
   it("never uses a valid NZBN check digit", () => {
     for (const d of dev.debtors) {
       expect(d.nzbn).toMatch(/^9429\d{9}$/);
