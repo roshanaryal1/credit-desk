@@ -63,6 +63,13 @@ export async function listBatches() {
     .select({ invoiceId: t.findings.invoiceId, severity: t.findings.severity })
     .from(t.findings)
     .where(eq(t.findings.configVersion, CONFIG_VERSION));
+  const decided = new Set(
+    (
+      await db
+        .selectDistinct({ invoiceId: t.decisions.invoiceId })
+        .from(t.decisions)
+    ).map((d) => d.invoiceId),
+  );
   const sevByInvoice = new Map<string, string[]>();
   for (const f of findings)
     sevByInvoice.set(f.invoiceId, [
@@ -72,8 +79,13 @@ export async function listBatches() {
   return batches.map(({ batch, clientName }) => {
     const mine = invoices.filter((i) => i.batchId === batch.id);
     const statuses = mine.map((i) => statusOf(sevByInvoice.get(i.id) ?? []));
+    // A batch is reviewed once every invoice in it has a decision.
+    const reviewed =
+      batch.status === "REVIEWED" ||
+      (mine.length > 0 && mine.every((i) => decided.has(i.id)));
     return {
       ...batch,
+      status: reviewed ? ("REVIEWED" as const) : ("PENDING" as const),
       clientName,
       invoiceCount: mine.length,
       faceCents: mine.reduce((s, i) => s + i.amountCents, 0),

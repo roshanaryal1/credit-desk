@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, or } from "drizzle-orm";
 
 import { buildCheckContext } from "@/lib/checks/context";
 import { CHECK_CONFIG, CONFIG_VERSION } from "@/lib/checks/config";
@@ -98,20 +98,26 @@ export async function verifySnapshot(
     .where(eq(t.decisionSnapshots.decisionId, decisionId));
   if (!snap) return null;
   const checksumMatches = sha256(snap.canonicalJson) === snap.sha256;
-  let chainMatches = true;
-  if (snap.prevSha256 !== null) {
-    const [prev] = await db
-      .select({ id: t.decisionSnapshots.decisionId })
-      .from(t.decisionSnapshots)
-      .where(
+  // The link must name the snapshot inserted immediately before this one;
+  // null is only valid for the first snapshot in the chain.
+  const [prev] = await db
+    .select({ sha256: t.decisionSnapshots.sha256 })
+    .from(t.decisionSnapshots)
+    .where(
+      or(
+        lt(t.decisionSnapshots.createdAt, snap.createdAt),
         and(
-          eq(t.decisionSnapshots.sha256, snap.prevSha256),
-          ne(t.decisionSnapshots.decisionId, decisionId),
+          eq(t.decisionSnapshots.createdAt, snap.createdAt),
+          lt(t.decisionSnapshots.decisionId, snap.decisionId),
         ),
-      )
-      .limit(1);
-    chainMatches = prev !== undefined;
-  }
+      ),
+    )
+    .orderBy(
+      desc(t.decisionSnapshots.createdAt),
+      desc(t.decisionSnapshots.decisionId),
+    )
+    .limit(1);
+  const chainMatches = (prev?.sha256 ?? null) === snap.prevSha256;
   return { checksumMatches, chainMatches };
 }
 
