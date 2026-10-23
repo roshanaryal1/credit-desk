@@ -1,6 +1,5 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 
-import { CONFIG_VERSION } from "@/lib/checks/config";
 import { getDb } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import type { DecisionRecord, Recommendation } from "@/lib/trust/agreement";
@@ -17,16 +16,14 @@ export async function decisionRecords(): Promise<DecisionRecord[]> {
       eq(t.decisions.explanationIdAtDecision, t.explanations.id),
     )
     .orderBy(asc(t.decisions.decidedAt), asc(t.decisions.id));
-  const findings = await db
-    .select({ invoiceId: t.findings.invoiceId, checkId: t.findings.checkId })
-    .from(t.findings)
-    .where(eq(t.findings.configVersion, CONFIG_VERSION));
-  const checksByInvoice = new Map<string, string[]>();
-  for (const f of findings)
-    checksByInvoice.set(f.invoiceId, [
-      ...(checksByInvoice.get(f.invoiceId) ?? []),
-      f.checkId,
-    ]);
+  // Checks come from each decision's frozen snapshot, so re-running checks
+  // under a new config can never move historical decisions between groups.
+  const frozen = await db.execute<{ decision_id: string; checks: string[] }>(
+    sql`select decision_id, jsonb_path_query_array(canonical_json::jsonb, '$.findings[*].checkId') as checks from decision_snapshots`,
+  );
+  const checksByDecision = new Map(
+    frozen.rows.map((r) => [r.decision_id, r.checks]),
+  );
   const seen = new Map<string, number>();
   return rows.map(({ d, e }) => {
     const prior = seen.get(d.invoiceId) ?? 0;
@@ -43,7 +40,7 @@ export async function decisionRecords(): Promise<DecisionRecord[]> {
       recommendation: (e?.recommendation as Recommendation | undefined) ?? null,
       explanationPassed: e?.validationStatus === "PASSED",
       riskLevel: e?.riskLevel ?? null,
-      checks: checksByInvoice.get(d.invoiceId) ?? [],
+      checks: checksByDecision.get(d.id) ?? [],
     };
   });
 }
