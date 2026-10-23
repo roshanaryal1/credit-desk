@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Invoice Check",
+  title: "Invoice Check: a prototype built for Runway",
   description: "Prototype invoice verification. All data is synthetic.",
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           role="note"
           className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-950 dark:bg-amber-950 dark:text-amber-100"
         >
-          Prototype for discussion. All data is synthetic.
+          Prototype built for Runway, for discussion. All data is synthetic.
         </div>
         {children}
       </body>
