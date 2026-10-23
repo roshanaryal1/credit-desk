@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
+import { desc, eq } from "drizzle-orm";
+import { z } from "zod";
+
 import { getDb } from "@/lib/db/client";
+import * as t from "@/lib/db/schema";
 import { MODE_COOKIE, currentAnalyst } from "@/lib/session";
 import { DecisionInputSchema, saveDecision } from "@/lib/trust/decide";
 
@@ -57,4 +61,80 @@ export async function setModeAction(mode: "SHADOW" | "ASSIST") {
     path: "/",
   });
   revalidatePath("/", "layout");
+}
+
+const IncidentActionSchema = z.object({
+  incidentId: z.string().min(1).max(200),
+  action: z.enum(["ACKNOWLEDGED", "RESOLVED"]),
+  note: z.string().trim().max(1000),
+});
+
+export interface IncidentState {
+  status: "idle" | "saved" | "error";
+  message?: string;
+}
+
+/** Acknowledge or resolve an incident with a note; audited in one transaction. */
+export async function incidentAction(
+  _prev: IncidentState,
+  form: FormData,
+): Promise<IncidentState> {
+  const parsed = IncidentActionSchema.safeParse({
+    incidentId: form.get("incidentId"),
+    action: form.get("action"),
+    note: form.get("note") ?? "",
+  });
+  if (!parsed.success)
+    return { status: "error", message: "That action is not valid." };
+  if (parsed.data.action === "RESOLVED" && parsed.data.note.length < 5) {
+    return {
+      status: "error",
+      message: "Add a note of at least 5 characters to resolve.",
+    };
+  }
+  const analyst = await currentAnalyst();
+  const db = await getDb();
+  const ok = await db.transaction(async (tx) => {
+    const [incident] = await tx
+      .select()
+      .from(t.incidents)
+      .where(eq(t.incidents.id, parsed.data.incidentId));
+    if (!incident) return false;
+    const [latest] = await tx
+      .select({ status: t.incidentEvents.status })
+      .from(t.incidentEvents)
+      .where(eq(t.incidentEvents.incidentId, incident.id))
+      .orderBy(desc(t.incidentEvents.occurredAt))
+      .limit(1);
+    if (latest?.status === parsed.data.action) return true;
+    const actor = `${analyst.displayName} (${analyst.sessionId.slice(0, 8)})`;
+    const id = `iev_${incident.id}_${crypto.randomUUID().slice(0, 8)}`;
+    await tx.insert(t.incidentEvents).values({
+      id,
+      incidentId: incident.id,
+      status: parsed.data.action,
+      note: parsed.data.note || null,
+      actor,
+      occurredAt: new Date(),
+    });
+    await tx.insert(t.auditEvents).values({
+      id: `aud_${id}`,
+      actor,
+      action: `INCIDENT_${parsed.data.action}`,
+      entityType: "incident",
+      entityId: incident.id,
+      payload: {
+        ruleId: incident.ruleId,
+        note: parsed.data.note,
+        reason: parsed.data.note || undefined,
+      },
+    });
+    return true;
+  });
+  if (!ok) return { status: "error", message: "Incident not found." };
+  revalidatePath("/", "layout");
+  return {
+    status: "saved",
+    message: parsed.data.action === "RESOLVED" ? "Resolved." : "Acknowledged.",
+  };
 }

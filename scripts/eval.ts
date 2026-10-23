@@ -10,6 +10,11 @@ import {
   type StoredRun,
 } from "@/lib/eval/agent";
 import { CHECK_IDS, gateFailures, scoreChecks } from "@/lib/eval/checks";
+import { WATCH_RULE_IDS, scoreWatch } from "@/lib/eval/watch";
+import { addDays } from "@/lib/dates";
+import { HISTORY_DAYS } from "@/lib/demo";
+import * as t from "@/lib/db/schema";
+import { runWatchRange } from "@/lib/watch/runner";
 import {
   DEV_PARAMS,
   HOLDOUT_PARAMS,
@@ -45,8 +50,13 @@ async function evaluateSeed(params: SeedParams) {
       ? [{ invoiceId: r.invoiceId, falsePositives: fp, falseNegatives: fn }]
       : [];
   });
+  await runWatchRange(db, addDays(DEMO_TODAY, -HISTORY_DAYS), DEMO_TODAY);
+  const incidents = await db.select().from(t.incidents);
+  const watch = scoreWatch(incidents, ds.watchLabels);
   return {
     seed: params.name,
+    watch,
+    incidents: incidents.length,
     invoices: ds.invoices.length,
     labelledInvoices: ds.labels.filter((l) => l.expectedCheckIds.length > 0)
       .length,
@@ -118,6 +128,24 @@ async function main() {
       ),
     );
     if (seed.misses.length > 0) console.table(seed.misses);
+    console.log(`${seed.seed} watch: ${seed.incidents} incidents`);
+    console.table(
+      Object.fromEntries(
+        WATCH_RULE_IDS.map((r) => {
+          const m = seed.watch[r];
+          return [
+            r,
+            {
+              tp: m.tp,
+              fp: m.fp,
+              fn: m.fn,
+              precision: fmt(m.precision),
+              recall: fmt(m.recall),
+            },
+          ];
+        }),
+      ),
+    );
   }
   if (agent) {
     console.log("\nAgent (from stored runs):");

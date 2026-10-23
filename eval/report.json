@@ -11,6 +11,44 @@
   "checks": {
     "dev": {
       "seed": "dev",
+      "watch": {
+        "PAYMENT_DRIFT": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FUNDED_CREDIT_NOTE": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "OVERDUE_FUNDED": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "CONCENTRATION_CREEP": {
+          "tp": 11,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FACILITY_UTILISATION": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null
+        }
+      },
+      "incidents": 21,
       "invoices": 251,
       "labelledInvoices": 38,
       "checks": {
@@ -107,6 +145,44 @@
     },
     "holdout": {
       "seed": "holdout",
+      "watch": {
+        "PAYMENT_DRIFT": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FUNDED_CREDIT_NOTE": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "OVERDUE_FUNDED": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "CONCENTRATION_CREEP": {
+          "tp": 14,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FACILITY_UTILISATION": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null
+        }
+      },
+      "incidents": 22,
       "invoices": 237,
       "labelledInvoices": 42,
       "checks": {
@@ -201,6 +277,18 @@
       },
       "misses": []
     }
+  },
+  "agent": {
+    "promptVersion": "2026-10-23.3",
+    "runs": 4,
+    "passRate": 1,
+    "schemaPassRate": 1,
+    "citationValidity": 1,
+    "amountFaithfulness": 1,
+    "retryRate": 0,
+    "errorRate": 0,
+    "avgTokens": 7652,
+    "avgLatencyMs": 3821
   },
   "gate": {
     "passed": true,
