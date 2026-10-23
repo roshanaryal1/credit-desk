@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { parseArgs } from "node:util";
 
+import { runAllBatches } from "@/lib/checks/runner";
 import { getDb } from "@/lib/db/client";
 import { DEV_PARAMS, HOLDOUT_PARAMS, generate } from "@/lib/seed/generate";
 import { liveDecisionCount, summarise, writeDataset } from "@/lib/seed/write";
@@ -48,6 +49,8 @@ async function main() {
 
   const ds = generate(params);
   await writeDataset(db, ds);
+  const results = await runAllBatches(db);
+  const flagged = results.filter((r) => r.findings.length > 0).length;
   const summary = summarise(ds);
   console.log(`Seeded ${params.name} dataset into ${target}.`);
   console.table(summary.tables);
@@ -57,6 +60,9 @@ async function main() {
   console.table(summary.perProblem);
   console.log("Clean cases:", summary.cleanCases);
   console.table(summary.scriptedEvents);
+  console.log(
+    `Checks run: ${results.length} invoices, ${flagged} with findings.`,
+  );
 }
 
 main().catch((err: unknown) => {

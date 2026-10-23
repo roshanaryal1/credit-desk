@@ -17,6 +17,7 @@ const DRIFT_INCREASE_DAYS = 15;
 const FACILITY_LIMIT_BPS = 9000;
 const DUP_WINDOW_DAYS = 7;
 const PAID_COVERAGE_BPS = 9900;
+const OVER_AGE_DAYS = 90;
 
 interface ScriptedDebtors {
   driftDebtorId: string | null;
@@ -81,6 +82,11 @@ export function applyReferenceLabels(
     const sub = submittedOf(inv.id!);
     const set = labels.get(inv.id!)!;
     const ledger = ledgerFor(inv.clientId, inv.invoiceNumber, sub);
+
+    // OVER_AGE and FUTURE_DATED are pure date facts. Resubmitting an old
+    // invoice (a DUP) can make it over-age, so they are labelled here too.
+    if (daysBetween(inv.issueDate, sub) > OVER_AGE_DAYS) set.add("OVER_AGE");
+    if (inv.issueDate > sub) set.add("FUTURE_DATED");
 
     // ALREADY_PAID: receipts dated before submission cover 99% of face value.
     if (ledger) {
