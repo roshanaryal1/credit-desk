@@ -121,7 +121,7 @@ async function Agreement({
                   {checkSummaryLine(
                     checkLabel(check),
                     rate,
-                    cohort === "live" ? MIN_N : 1,
+                    cohort === "simulated" ? 1 : MIN_N,
                   )}
                 </li>
               ))}
