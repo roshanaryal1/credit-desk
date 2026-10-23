@@ -56,6 +56,13 @@
 | X24 | P2 | 5 | Reseeding can overwrite live history; previews could share data. | `--target`, refusal without `--force`, separate preview database branch (5, 11). |
 | X25 | P2 | 3, 10 | Existing scaffold should be extended, not rebuilt; banner names the audience; provider switching has no tested contract. | Scaffold extended; banner neutral; only the default provider is claimed as tested (3, 10). |
 
+## Follow-up review of the amended spec
+
+| # | Sev | Finding | Resolution |
+| --- | --- | --- | --- |
+| X26 | P2 | Making submitted invoice numbers unique per client would reject the double submissions DUP must detect. | Uniqueness moved to `ledger_entries`; `invoices` are submissions and may repeat (4.2). |
+| X27 | P2 | A single current ledger status cannot reconstruct earlier states, so a later void could cause false LEDGER_MISSING or leak future status. | `ledger_status_events` with the initial state and `recorded_date`; funding status derived from adjustments (4.2, 6). |
+
 ## Accepted risks
 
 - Simulated analyst decisions are generated from the same labels the checks are

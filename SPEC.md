@@ -87,9 +87,12 @@ Reference data:
   credit_band.
 
 What the client's systems say (synthetic, Xero- and Akahu-shaped):
-- `ledger_entries`: id, client_id, invoice_number, debtor_id, amount_cents,
-  issue_date, status (AUTHORISED, PAID, VOIDED), status_effective_date,
-  supersedes_ledger_entry_id (nullable, for reissued invoices).
+- `ledger_entries`: id, client_id, invoice_number (unique per client),
+  debtor_id, amount_cents, issue_date, recorded_date (when it first appeared in
+  the ledger), supersedes_ledger_entry_id (nullable, for reissued invoices).
+- `ledger_status_events`: ledger_entry_id, status (AUTHORISED, PAID, VOIDED),
+  effective_date. Includes the initial AUTHORISED event. Status as of a date is
+  the latest event on or before it (X1).
 - `credit_notes`: id, ledger_entry_id, date, amount_cents.
 - `bank_transactions`: id, client_id, date, amount_cents, counterparty_name,
   reference.
@@ -101,10 +104,13 @@ What the client's systems say (synthetic, Xero- and Akahu-shaped):
 The lender's records:
 - `batches`: id, client_id, submitted_at, status (PENDING, REVIEWED).
 - `invoices`: id, batch_id, client_id, debtor_id, invoice_number, issue_date,
-  due_date, amount_cents, description. Invoice numbers are unique per client,
-  not globally (X14).
-- `fundings`: id, invoice_id, funded_date, advance_cents, status (OUTSTANDING,
-  COLLECTED, DILUTED, WRITTEN_OFF), status_effective_date.
+  due_date, amount_cents, description. These are submissions, so the same
+  invoice number may appear in more than one batch; that is what DUP detects.
+  Invoice numbers are scoped to the client, never matched across clients
+  (X14).
+- `fundings`: id, invoice_id, funded_date, advance_cents. Status as of a date
+  (OUTSTANDING, COLLECTED, DILUTED, WRITTEN_OFF) is derived from adjustments up
+  to that date, never stored.
 - `funding_adjustments`: id, funding_id, date, kind (COLLECTION, DILUTION,
   WRITE_OFF), amount_cents. Outstanding exposure = advance minus the sum of
   adjustments up to the as-of date (X13).
@@ -192,9 +198,9 @@ with a comment explaining each default.
 | ID | Check | Default rule | Severity |
 | --- | --- | --- | --- |
 | DUP | Duplicate or double-submitted | Same client and invoice number in another invoice, or same debtor and amount with issue dates within 7 days. Excludes the invoice itself and any match whose ledger entry is VOIDED and superseded by this one | High |
-| LEDGER_MISSING | Not in the ledger | No ledger entry for the client and invoice number | High |
+| LEDGER_MISSING | Not in the ledger | No ledger entry for the client and invoice number with recorded_date on or before submission | High |
 | LEDGER_MISMATCH | Ledger disagrees | Amount, debtor or issue date differs from the ledger entry | High |
-| VOIDED | Voided in the ledger | Ledger status VOIDED as of submission | High |
+| VOIDED | Voided in the ledger | Ledger status (from status events) VOIDED as of submission | High |
 | CREDIT_NOTE | Diluted by a credit note | Any credit note dated on or before submission; High if credited total over 20% of value | Medium or High |
 | ALREADY_PAID | Already paid | Receipts allocated to the ledger entry before submission cover at least 99% of the amount | High |
 | NEW_DEBTOR | New debtor | First seen under 60 days before submission, or no payment history | Medium |
