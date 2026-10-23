@@ -22,6 +22,17 @@ decides.** The agent never approves, funds or changes anything.
 - [What production would need](#what-production-would-need)
 - [Project docs](#project-docs)
 
+## Screenshots
+
+| | |
+| --- | --- |
+| ![Overview](docs/screenshots/overview.png) | ![Batch in shadow mode](docs/screenshots/batch-shadow.png) |
+| Overview: facility use, waiting batches, open incidents, agreement | Invoice Check in shadow mode: the agent's view is withheld until the analyst decides |
+| ![Explanation revealed](docs/screenshots/invoice-revealed.png) | ![Replay](docs/screenshots/replay.png) |
+| After the decision: the explanation with numbered evidence, and whether the analyst agreed | Replay from the frozen snapshot, with checksum and chain status |
+| ![Trust Panel](docs/screenshots/trust-agreement.png) | ![Portfolio Watch](docs/screenshots/watch.png) |
+| Agreement, kappa, confusion matrix and disagreements (simulated cohort) | Portfolio Watch with an explained High incident |
+
 ## What it does
 
 | Part | What an analyst sees |
