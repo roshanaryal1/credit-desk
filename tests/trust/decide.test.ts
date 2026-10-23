@@ -89,6 +89,7 @@ describe("saving a decision", () => {
       .from(t.auditEvents)
       .where(eq(t.auditEvents.entityId, flagged[0]!));
     expect(audit.some((a) => a.action === "DECISION_HOLD")).toBe(true);
+    expect((audit[0]?.payload as { simulated?: boolean }).simulated).toBe(false);
     const frozen = JSON.parse(snap!.canonicalJson);
     expect(frozen.checkContext.invoice.id).toBe(flagged[0]);
     expect(frozen.findings.length).toBeGreaterThan(0);
