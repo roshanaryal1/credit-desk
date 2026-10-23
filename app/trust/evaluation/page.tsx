@@ -33,6 +33,12 @@ interface AgentBlock {
   errorRate: number | null;
   avgTokens: number | null;
   avgLatencyMs: number | null;
+  byModel?: Record<
+    string,
+    { runs: number; passRate: number | null; retryRate: number | null }
+  >;
+  allRuns?: { runs: number; passRate: number | null };
+  note?: string;
 }
 
 const r = report as unknown as {
@@ -191,6 +197,51 @@ export default function EvaluationPage() {
             the agent.
           </p>
         )}
+        {r.agent?.byModel ? (
+          <div className="flex flex-col gap-2 text-sm">
+            <table className="bg-card w-full max-w-xl rounded-md border">
+              <caption className="sr-only">Agent results by model</caption>
+              <thead className="text-muted-foreground border-b">
+                <tr>
+                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                    Model
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    Items
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    Passed
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                    Needed a retry
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {Object.entries(r.agent.byModel).map(([model, m]) => (
+                  <tr key={model}>
+                    <th scope="row" className="px-3 py-2 text-left font-normal">
+                      {model}
+                    </th>
+                    <td className="num px-3 py-2 text-right">{m.runs}</td>
+                    <td className="num px-3 py-2 text-right">
+                      {percent(m.passRate)}
+                    </td>
+                    <td className="num px-3 py-2 text-right">
+                      {percent(m.retryRate)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-muted-foreground max-w-prose">
+              {r.agent.note} Across all {r.agent.allRuns?.runs} attempts,{" "}
+              {percent(r.agent.allRuns?.passRate ?? null)} passed. The smaller
+              model was used after the larger one reached the provider&apos;s
+              free daily token limit.
+            </p>
+          </div>
+        ) : null}
       </Section>
 
       <Section title="What these numbers do and do not show">

@@ -81,7 +81,7 @@ with `DATABASE_URL` empty the app uses PGlite, an in-process Postgres, stored in
 npm ci
 cp .env.example .env.local          # then fill in the values below
 npm run seed -- --target=local      # data, checks and 90 days of watch runs
-npm run precompute                  # agent explanations (needs LLM_API_KEY; about a minute per invoice on the free tier)
+npm run precompute                  # agent explanations (needs LLM_API_KEY; about a minute per item; Groq's free tier allows about 28 per model per day)
 npm run simulate                    # simulated past decisions for the agreement history
 npm run dev
 ```

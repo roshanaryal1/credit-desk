@@ -234,6 +234,7 @@ async function runAgentLoop(
       result = validateOutput(content, tools.evidence);
       if (result.ok) {
         status = "PASSED";
+        errors = [];
         break;
       }
       errors = result.errors;
@@ -262,12 +263,15 @@ async function runAgentLoop(
         : (err as Error).message,
     ];
   }
-  // A provider-side tool validation failure (the model called a tool the
-  // request did not allow) counts as a failed attempt, retried once.
+  // A provider-side rejection of malformed model output (an undeclared tool,
+  // arguments that do not match the schema, or unparseable output) counts as
+  // a failed attempt and is retried once.
   if (
     status === "ERROR" &&
     attempts < 2 &&
-    /tool call validation failed/i.test(errors[0] ?? "")
+    /tool call validation failed|parsing failed|did not match schema/i.test(
+      errors[0] ?? "",
+    )
   ) {
     attempts++;
     messages.push({
