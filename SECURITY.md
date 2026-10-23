@@ -16,8 +16,10 @@ customer, debtor or bank data.
 
 ## Prototype controls
 
-- Shared-password gate (`DEMO_PASSWORD`) with an httpOnly session cookie.
-- Rate limit on the "Re-run agent" endpoint (10 runs per hour per session).
+- Shared-password gate (`DEMO_PASSWORD`) with a signed, expiring, httpOnly
+  session cookie, login throttling and Origin checks on mutations.
+- Agent re-runs limited per session, per IP and by a global daily cap.
+- Append-only audit, decision snapshot and agent run tables.
 - Every LLM output is validated with Zod and the citation validator before use.
 - The agent is read-only and never approves or funds anything.
 

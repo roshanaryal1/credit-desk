@@ -25,8 +25,8 @@ Closes #
 ## Review checklist
 
 - [ ] Matches SPEC.md, or SPEC.md updated in this PR
-- [ ] Money in integer cents, dates ISO in NZ time
-- [ ] No secrets, real company names or lender branding
+- [ ] Money in integer cents; business dates NZ, instants UTC
+- [ ] No secrets, real company names or logos
 - [ ] LLM output (if any) goes through Zod and the citation validator
 - [ ] Migrations, env vars or config changes called out below
 
