@@ -23,79 +23,103 @@ export async function runWatchForDate(
 ): Promise<Detection[]> {
   const src = source ?? (await loadBookSource(db));
   const detections = runWatchRules(bookAsOf(src, asOf));
-  for (const d of detections) {
-    const inserted = await db
-      .insert(t.watchDetections)
-      .values({
-        id: `det_${d.incidentKey}_${asOf}`,
-        ruleId: d.ruleId,
-        incidentKey: d.incidentKey,
-        asOfDate: asOf,
-        details: { ...d.details, evidenceIds: d.evidenceIds },
-        configVersion: CONFIG_VERSION,
-      })
-      .onConflictDoNothing()
-      .returning({ id: t.watchDetections.id });
-    if (inserted.length === 0) continue;
+  // Each detection and its incident changes commit together, so a failure
+  // part-way leaves nothing behind and the date can simply be re-run.
+  for (const d of detections)
+    await db.transaction((tx) => recordDetection(tx as unknown as Db, d, asOf));
+  return detections;
+}
 
-    const [incident] = await db
-      .select()
-      .from(t.incidents)
-      .where(eq(t.incidents.incidentKey, d.incidentKey));
-    if (!incident) {
-      const id = `inc_${d.incidentKey}`;
-      await db.insert(t.incidents).values({
-        id,
-        incidentKey: d.incidentKey,
-        ruleId: d.ruleId,
-        clientId: d.clientId,
-        debtorId: d.debtorId,
-        fundingId: d.fundingId,
-        severity: WATCH_SEVERITY[d.ruleId],
-        firstDetectedDate: asOf,
-        lastDetectedDate: asOf,
-      });
-      await db.insert(t.incidentEvents).values({
-        id: `iev_${id}_${asOf}_open`,
-        incidentId: id,
+async function recordDetection(db: Db, d: Detection, asOf: string) {
+  const inserted = await db
+    .insert(t.watchDetections)
+    .values({
+      id: `det_${d.incidentKey}_${asOf}`,
+      ruleId: d.ruleId,
+      incidentKey: d.incidentKey,
+      asOfDate: asOf,
+      details: { ...d.details, evidenceIds: d.evidenceIds },
+      configVersion: CONFIG_VERSION,
+    })
+    .onConflictDoNothing()
+    .returning({ id: t.watchDetections.id });
+  if (inserted.length === 0) return;
+
+  const [incident] = await db
+    .select()
+    .from(t.incidents)
+    .where(eq(t.incidents.incidentKey, d.incidentKey));
+  if (!incident) {
+    const id = `inc_${d.incidentKey}`;
+    await db.insert(t.incidents).values({
+      id,
+      incidentKey: d.incidentKey,
+      ruleId: d.ruleId,
+      clientId: d.clientId,
+      debtorId: d.debtorId,
+      fundingId: d.fundingId,
+      severity: WATCH_SEVERITY[d.ruleId],
+      firstDetectedDate: asOf,
+      lastDetectedDate: asOf,
+    });
+    await db.insert(t.incidentEvents).values({
+      id: `iev_${id}_${asOf}_open`,
+      incidentId: id,
+      status: "OPEN",
+      note: null,
+      actor: "watch",
+      occurredAt: systemInstant(asOf),
+    });
+    return;
+  }
+  if (asOf > incident.lastDetectedDate) {
+    await db
+      .update(t.incidents)
+      .set({ lastDetectedDate: asOf })
+      .where(eq(t.incidents.id, incident.id));
+  }
+  if (asOf < incident.firstDetectedDate) {
+    // A backfill found an earlier detection: the incident opened then.
+    await db
+      .update(t.incidents)
+      .set({ firstDetectedDate: asOf })
+      .where(eq(t.incidents.id, incident.id));
+    await db
+      .insert(t.incidentEvents)
+      .values({
+        id: `iev_${incident.id}_${asOf}_open`,
+        incidentId: incident.id,
         status: "OPEN",
-        note: null,
+        note: "Opened on an earlier date found by a backfill run.",
         actor: "watch",
         occurredAt: systemInstant(asOf),
-      });
-      continue;
-    }
-    if (asOf > incident.lastDetectedDate) {
-      await db
-        .update(t.incidents)
-        .set({ lastDetectedDate: asOf })
-        .where(eq(t.incidents.id, incident.id));
-    }
-    // A detection after a resolution reopens the incident (SPEC 7).
-    const [latest] = await db
-      .select()
-      .from(t.incidentEvents)
-      .where(eq(t.incidentEvents.incidentId, incident.id))
-      .orderBy(desc(t.incidentEvents.occurredAt))
-      .limit(1);
-    if (
-      latest?.status === "RESOLVED" &&
-      systemInstant(asOf) > latest.occurredAt
-    ) {
-      await db
-        .insert(t.incidentEvents)
-        .values({
-          id: `iev_${incident.id}_${asOf}_reopen`,
-          incidentId: incident.id,
-          status: "REOPENED",
-          note: "Detected again after it was resolved.",
-          actor: "watch",
-          occurredAt: systemInstant(asOf),
-        })
-        .onConflictDoNothing();
-    }
+      })
+      .onConflictDoNothing();
+    return;
   }
-  return detections;
+  // A detection after a resolution reopens the incident (SPEC 7).
+  const [latest] = await db
+    .select()
+    .from(t.incidentEvents)
+    .where(eq(t.incidentEvents.incidentId, incident.id))
+    .orderBy(desc(t.incidentEvents.occurredAt))
+    .limit(1);
+  if (
+    latest?.status === "RESOLVED" &&
+    systemInstant(asOf) > latest.occurredAt
+  ) {
+    await db
+      .insert(t.incidentEvents)
+      .values({
+        id: `iev_${incident.id}_${asOf}_reopen`,
+        incidentId: incident.id,
+        status: "REOPENED",
+        note: "Detected again after it was resolved.",
+        actor: "watch",
+        occurredAt: systemInstant(asOf),
+      })
+      .onConflictDoNothing();
+  }
 }
 
 /** Runs every date in [from, to] in order, loading the book once. */

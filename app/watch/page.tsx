@@ -39,6 +39,9 @@ export default function WatchPage({ searchParams }: PageProps<"/watch">) {
 function clampDate(value: unknown): string {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
     return DEMO_TODAY;
+  // Reject impossible dates such as 2026-09-31 rather than letting them reach the database.
+  if (new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) !== value)
+    return DEMO_TODAY;
   if (value < START) return START;
   if (value > DEMO_TODAY) return DEMO_TODAY;
   return value;

@@ -139,7 +139,13 @@ async function Replay({
       </Section>
 
       <Section title="The agent's view at the time">
-        {frozen.explanation ? (
+        {frozen.explanation &&
+        frozen.explanation.explanation.validationStatus !== "PASSED" ? (
+          <p className="text-sm">
+            An explanation was generated but failed validation, so it was not
+            shown to the analyst and is not shown here.
+          </p>
+        ) : frozen.explanation ? (
           <div className="flex flex-col gap-2 text-sm">
             <p>{frozen.explanation.explanation.summary}</p>
             <ul className="text-muted-foreground list-disc pl-5">
