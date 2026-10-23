@@ -73,7 +73,15 @@ async function main() {
         };
         return {
           promptVersion: data.promptVersion,
-          ...agentMetrics(data.runs, data.explanations),
+          // Only runs on the current prompt version measure the current prompt.
+          ...agentMetrics(
+            data.runs.filter(
+              (r) =>
+                (r as { promptVersion?: string }).promptVersion ===
+                data.promptVersion,
+            ),
+            data.explanations,
+          ),
         };
       })()
     : null;

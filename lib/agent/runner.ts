@@ -80,7 +80,9 @@ export async function runAgentForInvoice(
         eq(t.agentRuns.subjectId, invoiceId),
       ),
     );
-  const runId = `run_${invoiceId}_${(prior?.n ?? 0) + 1}`;
+  // The count keeps ids readable; the random suffix keeps concurrent runs
+  // for the same invoice from colliding.
+  const runId = `run_${invoiceId}_${(prior?.n ?? 0) + 1}_${crypto.randomUUID().slice(0, 6)}`;
 
   if (findingRows.length === 0) {
     // Clear invoices never go to the agent.
@@ -246,39 +248,43 @@ export async function runAgentForInvoice(
   }
 
   const latencyMs = now() - started;
-  await db.insert(t.agentRuns).values({
-    id: runId,
-    subjectType: "INVOICE",
-    subjectId: invoiceId,
-    provider: llm.provider,
-    model: llm.model,
-    promptVersion: PROMPT_VERSION,
-    configVersion: CONFIG_VERSION,
-    codeSha: opts.codeSha,
-    attempts,
-    status,
-    tokensIn,
-    tokensOut,
-    latencyMs,
-  });
-  const value = result?.value;
-  if (value) {
-    await db.insert(t.explanations).values({
-      id: `exp_${runId}`,
-      agentRunId: runId,
-      summary: value.summary,
-      riskLevel: value.risk_level.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
-      recommendation: value.recommendation,
-      questionsForClient: value.questions_for_client,
-      claims: value.claims.map((c) => ({
-        text: c.text,
-        evidenceIds: c.evidence_ids,
-      })),
-      citedEvidenceIds: value.cited_evidence_ids,
-      validationStatus: status === "PASSED" ? "PASSED" : "FAILED",
-      validationErrors: errors,
+  // The run and its explanation commit together, so resuming never treats
+  // a run as done when its explanation was not saved.
+  await db.transaction(async (tx) => {
+    await tx.insert(t.agentRuns).values({
+      id: runId,
+      subjectType: "INVOICE",
+      subjectId: invoiceId,
+      provider: llm.provider,
+      model: llm.model,
+      promptVersion: PROMPT_VERSION,
+      configVersion: CONFIG_VERSION,
+      codeSha: opts.codeSha,
+      attempts,
+      status,
+      tokensIn,
+      tokensOut,
+      latencyMs,
     });
-  }
+    const value = result?.value;
+    if (value) {
+      await tx.insert(t.explanations).values({
+        id: `exp_${runId}`,
+        agentRunId: runId,
+        summary: value.summary,
+        riskLevel: value.risk_level.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
+        recommendation: value.recommendation,
+        questionsForClient: value.questions_for_client,
+        claims: value.claims.map((c) => ({
+          text: c.text,
+          evidenceIds: c.evidence_ids,
+        })),
+        citedEvidenceIds: value.cited_evidence_ids,
+        validationStatus: status === "PASSED" ? "PASSED" : "FAILED",
+        validationErrors: errors,
+      });
+    }
+  });
 
   log({
     event: "agent_run",
