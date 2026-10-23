@@ -12,7 +12,7 @@ LLM output can be fluent and wrong, including invented amounts or records.
 
 - Every risk flag comes from a pure, unit-tested check function in
   `lib/checks/`, with thresholds in one config file.
-- The LLM agent runs only on flagged invoices, uses read-only tools and writes
+- The LLM agent runs only on flagged invoices and High incidents, uses read-only tools and writes
   a structured finding that cites record ids.
 - A validator rejects any finding that cites a record that does not exist,
   belongs to another client, or states an amount not present in the cited

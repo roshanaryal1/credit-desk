@@ -38,8 +38,11 @@ npm run build
 
 - Behaviour matches SPEC.md, or SPEC.md is updated in the same PR.
 - Tests cover the normal path, a failure path and an edge case.
-- Money is integer cents; dates are ISO strings in NZ time.
-- No secrets, no real company names, no lender branding.
+- Money is integer cents; business dates are `YYYY-MM-DD` in NZ time;
+  instants are UTC.
+- Decision, snapshot and audit event are written in one transaction.
+- No secrets, no real company names or logos. The only named organisation is
+  the one About-page line allowed by SPEC section 10.
 - Any LLM output path goes through Zod and the citation validator.
 - Significant design choices get an ADR in `docs/adr/`.
 
@@ -48,11 +51,11 @@ npm run build
 | Prefix | Values |
 | --- | --- |
 | `type:` | feature, bug, task, docs, chore |
-| `area:` | data, checks, agent, eval, ui, security, infra, docs |
+| `area:` | data, checks, watch, agent, trust, eval, ui, security, infra, docs |
 | `priority:` | P0 (blocks the demo), P1 (needed for done), P2 (nice to have) |
-| `phase:` | 0 to 5, plus `deploy` |
+| `phase:` | 0 to 7, plus `deploy` |
 
 ## Scope cuts
 
-If a phase slips, cut scope, not the date. Cut order: Re-run agent button, dark
-theme, then lower-value checks. The Evaluation page is never cut.
+If a phase slips, cut scope, not quality. Follow the Tier 2 cut order in SPEC
+section 13. The Trust Panel and the evaluation are never cut.
