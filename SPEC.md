@@ -102,7 +102,8 @@ What the client's systems say (synthetic, Xero- and Akahu-shaped):
   paid_date, amount_cents.
 
 The lender's records:
-- `batches`: id, client_id, submitted_at, status (PENDING, REVIEWED).
+- `batches`: id, client_id, submitted_date (business date; the as-of date for
+  checks), status (PENDING, REVIEWED).
 - `invoices`: id, batch_id, client_id, debtor_id, invoice_number, issue_date,
   due_date, amount_cents, description. These are submissions, so the same
   invoice number may appear in more than one batch; that is what DUP detects.
@@ -130,6 +131,8 @@ The lender's records:
   decided_at (X4, X12, X21).
 - `decision_snapshots`: decision_id, canonical_json (text), sha256,
   prev_sha256, schema_version, created_at. Append-only (C1, C2, X11).
+- `exposures`: session_id, invoice_id, exposed_at. Records that a session saw
+  agent output for an invoice (9.1).
 - `watch_detections`: id, rule_id, incident_key, as_of_date, details_json,
   config_version. One row per rule, incident key and date (X16).
 - `incidents`: id, incident_key (unique), rule_id, client_id, debtor_id
