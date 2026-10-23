@@ -11,7 +11,12 @@ export type ValidationResult =
   | { ok: true; value: AgentOutput }
   | { ok: false; errors: string[]; value?: AgentOutput };
 
-const MONEY = /\$\s?(\d{1,3}(?:,\d{3})*|\d+)(?:\.(\d{1,2}))?/g;
+// Grouped thousands ($1,234.56) or a plain run of digits ($12345.67); the
+// grouped form needs at least one comma so plain digits are read in full.
+const MONEY = /\$\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?/g;
+// Record fields that hold money in dollars; fields ending in Cents hold cents.
+// Other numbers (days to pay, counts, basis points) are never money evidence.
+const DOLLAR_FIELDS = new Set(["amount", "advance", "outstanding"]);
 const ISO_DATE = /\b\d{4}-\d{2}-\d{2}\b/g;
 // Wording the agent must never use: it does not approve or fund anything.
 const FORBIDDEN =
@@ -41,7 +46,7 @@ function recordFacts(
     if (typeof v === "number") {
       // Tool records state dollars; finding details use *Cents integers.
       if (/cents$/i.test(key)) cents.add(Math.round(v));
-      else cents.add(Math.round(v * 100));
+      else if (DOLLAR_FIELDS.has(key)) cents.add(Math.round(v * 100));
     } else if (typeof v === "string") {
       if (/^\d{4}-\d{2}-\d{2}$/.test(v)) dates.add(v);
     } else if (Array.isArray(v)) {

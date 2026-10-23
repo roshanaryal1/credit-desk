@@ -142,6 +142,50 @@ describe("citation validator", () => {
   });
 });
 
+describe("money evidence", () => {
+  it("reads ungrouped amounts of four or more digits in full", () => {
+    expect(moneyMentions("$12345.67 and $1234 and $1,234.56")).toEqual([
+      1234567, 123400, 123456,
+    ]);
+  });
+
+  it("does not accept an invented ungrouped amount that shares leading digits", () => {
+    const r = new EvidenceRegistry("cli_1");
+    r.add({ id: "x", clientId: "cli_1", amount: 123 });
+    const out = validateOutput(
+      JSON.stringify({
+        ...good,
+        claims: [{ text: "Paid $12345.67.", evidence_ids: ["x"] }],
+        cited_evidence_ids: ["x"],
+        summary: "Paid.",
+      }),
+      r,
+    );
+    expect(out.ok).toBe(false);
+  });
+
+  it("never treats days, counts or basis points as money", () => {
+    const r = new EvidenceRegistry("cli_1");
+    r.add({
+      id: "pay",
+      clientId: "cli_1",
+      daysToPay: 45,
+      paymentCount: 3,
+      shareBps: 4500,
+    });
+    const out = validateOutput(
+      JSON.stringify({
+        ...good,
+        claims: [{ text: "Paid $45.00.", evidence_ids: ["pay"] }],
+        cited_evidence_ids: ["pay"],
+        summary: "Paid.",
+      }),
+      r,
+    );
+    expect(out.ok).toBe(false);
+  });
+});
+
 describe("mention parsing", () => {
   it("reads dollar amounts as cents", () => {
     expect(moneyMentions("$1,234.5 and $7 and $12,345.67")).toEqual([
