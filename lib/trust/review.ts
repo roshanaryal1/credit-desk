@@ -22,6 +22,9 @@ export async function latestExplanation(
       and(
         eq(t.agentRuns.subjectType, "INVOICE"),
         eq(t.agentRuns.subjectId, invoiceId),
+        // Only explanations written against the current check configuration
+        // describe the findings on screen.
+        eq(t.agentRuns.configVersion, CONFIG_VERSION),
       ),
     )
     .orderBy(desc(t.agentRuns.createdAt), desc(t.agentRuns.id))
