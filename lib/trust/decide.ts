@@ -127,6 +127,7 @@ export async function saveDecision(
       payload: {
         decisionId: id,
         mode: analyst.mode,
+        simulated: opts.simulated ?? false,
         exposedBeforeDecision: exposed,
         reason: input.reason,
         findings: state.findings.map((f) => f.id),
