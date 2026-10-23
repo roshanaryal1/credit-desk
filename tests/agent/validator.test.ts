@@ -164,6 +164,24 @@ describe("money evidence", () => {
     expect(out.ok).toBe(false);
   });
 
+  it("keeps the sign of negative amounts so they cannot match positive evidence", () => {
+    expect(moneyMentions("-$100.00 and $-999.00 and $5")).toEqual([
+      -10000, -99900, 500,
+    ]);
+    const r = new EvidenceRegistry("cli_1");
+    r.add({ id: "x", clientId: "cli_1", amount: 100 });
+    const out = validateOutput(
+      JSON.stringify({
+        ...good,
+        claims: [{ text: "Balance -$100.00.", evidence_ids: ["x"] }],
+        cited_evidence_ids: ["x"],
+        summary: "Balance.",
+      }),
+      r,
+    );
+    expect(out.ok).toBe(false);
+  });
+
   it("never treats days, counts or basis points as money", () => {
     const r = new EvidenceRegistry("cli_1");
     r.add({
