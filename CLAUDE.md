@@ -10,8 +10,10 @@ the same pull request or stop and ask.
   amounts are NZD. Format only at the UI edge.
 - Dates are ISO strings in NZ time (`Pacific/Auckland`). Date maths must be
   correct across NZST and NZDT.
-- Synthetic data only. No real company names, people, NZBNs, logos, or lender
-  branding anywhere: code, seed data, fixtures, screenshots, docs.
+- Synthetic data only. No real company names, people, NZBNs or logos anywhere:
+  code, seed data, fixtures, screenshots, docs. One exception: Runway is named
+  as the audience in text ("a prototype built for Runway"). Never a Runway
+  logo, colours or brand asset, and never Runway as a seeded client or debtor.
 - Checks in `lib/checks/` are pure functions `(invoice, context) => Finding | null`,
   one file each, thresholds only in `lib/checks/config.ts`, each with positive,
   negative and edge-case tests.
