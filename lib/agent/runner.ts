@@ -131,8 +131,9 @@ export async function runAgentForInvoice(
       const allowTools = toolCalls < AGENT_LIMITS.maxToolCalls;
       const res = await llm.complete({
         messages,
-        // Investigation tools until the cap, then only the submit tool.
-        tools: allowTools ? [...TOOL_DEFINITIONS, SUBMIT_TOOL] : [SUBMIT_TOOL],
+        // Every tool stays declared (gpt-oss rejects calls to undeclared
+        // tools); after the cap the submit tool is forced.
+        tools: [...TOOL_DEFINITIONS, SUBMIT_TOOL],
         toolChoice: allowTools
           ? "auto"
           : { type: "function", function: { name: SUBMIT_TOOL_NAME } },
@@ -203,6 +204,41 @@ export async function runAgentForInvoice(
         ? "run budget exceeded"
         : (err as Error).message,
     ];
+  }
+  // A provider-side tool validation failure (the model called a tool the
+  // request did not allow) counts as a failed attempt, retried once.
+  if (
+    status === "ERROR" &&
+    attempts < 2 &&
+    /tool call validation failed/i.test(errors[0] ?? "")
+  ) {
+    attempts++;
+    messages.push({
+      role: "user",
+      content: `That tool call was rejected: ${errors[0]}. Call ${SUBMIT_TOOL_NAME} now with your answer.`,
+    });
+    try {
+      const res = await llm.complete({
+        messages,
+        tools: [...TOOL_DEFINITIONS, SUBMIT_TOOL],
+        toolChoice: { type: "function", function: { name: SUBMIT_TOOL_NAME } },
+        deadline,
+      });
+      tokensIn += res.tokensIn;
+      tokensOut += res.tokensOut;
+      const submit = (res.message.tool_calls ?? []).find(
+        (c) => c.type === "function" && c.function.name === SUBMIT_TOOL_NAME,
+      );
+      const content =
+        submit && submit.type === "function"
+          ? submit.function.arguments
+          : (res.message.content ?? "");
+      result = validateOutput(content, tools.evidence);
+      status = result.ok ? "PASSED" : "FAILED";
+      errors = result.ok ? [] : result.errors;
+    } catch (err) {
+      errors = [...errors, (err as Error).message];
+    }
   }
 
   const latencyMs = now() - started;

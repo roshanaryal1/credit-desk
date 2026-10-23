@@ -137,7 +137,7 @@ describe("agent runner", () => {
     expect(run?.status).toBe("FAILED");
   });
 
-  it("caps tool calls and then offers only the submit tool", async () => {
+  it("caps tool calls and then forces the submit tool", async () => {
     const script = Array.from(
       { length: 6 },
       () => () => toolCall("get_invoice", { invoice_id: flagged.id }),
@@ -148,11 +148,10 @@ describe("agent runner", () => {
       log: () => {},
     });
     expect(out.toolCalls).toBe(6);
-    expect(
-      llm.calls
-        .at(-1)
-        ?.tools?.map((x) => x.type === "function" && x.function.name),
-    ).toEqual(["submit_explanation"]);
+    expect(llm.calls.at(-1)?.toolChoice).toEqual({
+      type: "function",
+      function: { name: "submit_explanation" },
+    });
     expect(out.status).toBe("PASSED");
   });
 
@@ -166,6 +165,38 @@ describe("agent runner", () => {
       log: () => {},
     });
     expect(out).toMatchObject({ status: "PASSED", toolCalls: 1 });
+  });
+
+  it("recovers once from a provider tool validation error", async () => {
+    let n = 0;
+    const llm: LlmClient = {
+      provider: "test",
+      model: "scripted",
+      async complete() {
+        n++;
+        if (n === 1) {
+          return {
+            message: toolCall("get_invoice", { invoice_id: flagged.id }),
+            tokensIn: 10,
+            tokensOut: 10,
+          };
+        }
+        if (n === 2)
+          throw new Error(
+            "400 Tool call validation failed: attempted to call tool 'JSON'",
+          );
+        return {
+          message: toolCall("submit_explanation", grounded()),
+          tokensIn: 10,
+          tokensOut: 10,
+        };
+      },
+    };
+    const out = await runAgentForInvoice(db, llm, flagged.id, {
+      codeSha: "test",
+      log: () => {},
+    });
+    expect(out).toMatchObject({ status: "PASSED", attempts: 2 });
   });
 
   it("skips clear invoices without calling the model", async () => {
