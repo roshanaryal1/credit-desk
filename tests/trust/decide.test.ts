@@ -89,10 +89,38 @@ describe("saving a decision", () => {
       .from(t.auditEvents)
       .where(eq(t.auditEvents.entityId, flagged[0]!));
     expect(audit.some((a) => a.action === "DECISION_HOLD")).toBe(true);
-    expect((audit[0]?.payload as { simulated?: boolean }).simulated).toBe(false);
+    expect((audit[0]?.payload as { simulated?: boolean }).simulated).toBe(
+      false,
+    );
     const frozen = JSON.parse(snap!.canonicalJson);
     expect(frozen.checkContext.invoice.id).toBe(flagged[0]);
     expect(frozen.findings.length).toBeGreaterThan(0);
+  });
+
+  it("rejects a severed or redirected chain link", async () => {
+    const a = await decide(flagged[8]!);
+    const b = await decide(flagged[9]!);
+    const c = await decide(flagged[10]!);
+    if (!a.ok || !b.ok || !c.ok) throw new Error("expected ok");
+    await db.execute(
+      sql`alter table decision_snapshots disable trigger decision_snapshots_append_only`,
+    );
+    await db.execute(
+      sql`update decision_snapshots set prev_sha256 = null where decision_id = ${c.decisionId}`,
+    );
+    expect((await verifySnapshot(db, c.decisionId))?.chainMatches).toBe(false);
+    const [sa] = await db
+      .select()
+      .from(t.decisionSnapshots)
+      .where(eq(t.decisionSnapshots.decisionId, a.decisionId));
+    await db.execute(
+      sql`update decision_snapshots set prev_sha256 = ${sa!.sha256} where decision_id = ${c.decisionId}`,
+    );
+    expect((await verifySnapshot(db, c.decisionId))?.chainMatches).toBe(false);
+    await db.execute(
+      sql`alter table decision_snapshots enable trigger decision_snapshots_append_only`,
+    );
+    expect((await verifySnapshot(db, b.decisionId))?.chainMatches).toBe(true);
   });
 
   it("chains each snapshot to the previous one", async () => {
