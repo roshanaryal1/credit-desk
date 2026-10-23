@@ -1,0 +1,30 @@
+name: Bug
+description: Something does not behave as SPEC.md says
+title: "fix: "
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Include exact error text. Never paste secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. 
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or deployment URL

@@ -1,0 +1,32 @@
+name: Feature
+description: New behaviour described in SPEC.md
+title: "feat: "
+labels: ["type:feature"]
+body:
+  - type: input
+    id: spec
+    attributes:
+      label: SPEC.md section
+      placeholder: "e.g. 6. Checks"
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What the user or system can do when this is done.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Testable statements. Each one becomes a test or a demo step.
+      value: |
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes, risks, out of scope

@@ -1,0 +1,19 @@
+name: Task
+description: Setup, infra, docs or chore work
+title: "chore: "
+labels: ["type:task"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      value: |
+        - [ ] 
+    validations:
+      required: true

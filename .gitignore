@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# build and coverage
+build/
+dist/
+coverage/
+*.tsbuildinfo
+
+# env files: secrets never committed; .env.example is the documented template
+.env
+.env.*
+!.env.example
+
+# vercel
+.vercel
+
+# logs and OS noise
+npm-debug.log*
+*.log
+.DS_Store
+
+# editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
