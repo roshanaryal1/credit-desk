@@ -12,7 +12,8 @@ import {
   signSession,
 } from "@/lib/auth";
 import { getDb } from "@/lib/db/client";
-import { hitsSince, recordHit } from "@/lib/rate-limit";
+import { MODE_COOKIE } from "@/lib/session";
+import { takeAll } from "@/lib/rate-limit";
 
 const LoginSchema = z.object({
   password: z.string().min(1).max(200),
@@ -25,7 +26,7 @@ export interface LoginState {
 }
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
-const LOGIN_MAX_FAILURES = 10;
+const LOGIN_MAX_ATTEMPTS = 10;
 
 /** Only same-site relative paths are allowed as a post-login destination. */
 function safeNext(next: string | undefined): string {
@@ -57,12 +58,14 @@ export async function loginAction(
     (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown";
   const db = await getDb();
-  const key = `login:${ip}`;
-  if ((await hitsSince(db, key, LOGIN_WINDOW_MS)) >= LOGIN_MAX_FAILURES) {
+  // Each attempt is reserved atomically before the password is checked, so
+  // concurrent guesses cannot exceed the limit.
+  const allowed = await takeAll(db, [
+    { key: `login:${ip}`, max: LOGIN_MAX_ATTEMPTS, windowMs: LOGIN_WINDOW_MS },
+  ]);
+  if (!allowed)
     return { message: "Too many attempts. Try again in 15 minutes." };
-  }
   if (!(await safeEqual(parsed.data.password, gate.password))) {
-    await recordHit(db, key);
     return { message: "That password is not right." };
   }
 
@@ -74,7 +77,10 @@ export async function loginAction(
     },
     gate.secret,
   );
-  (await cookies()).set(AUTH_COOKIE, token, {
+  const jar = await cookies();
+  // A new session starts in shadow mode (SPEC 9.1).
+  jar.delete(MODE_COOKIE);
+  jar.set(AUTH_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
