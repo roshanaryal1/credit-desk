@@ -88,7 +88,9 @@ async function main() {
         };
         // Final view: the latest run per item on the current prompt version.
         const current = data.runs.filter(
-          (r) => r.promptVersion === data.promptVersion,
+          (r) =>
+            r.promptVersion === data.promptVersion &&
+            (r as { configVersion?: string }).configVersion === CONFIG_VERSION,
         );
         const latest = new Map<string, (typeof current)[number]>();
         for (const r of current) {

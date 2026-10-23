@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, or } from "drizzle-orm";
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
 import { z } from "zod";
 
@@ -82,6 +82,9 @@ export const SUBMIT_TOOL: ChatCompletionTool = {
 };
 
 const cents = (n: number) => n / 100;
+
+/** Most bank receipts one call returns. */
+const BANK_LIMIT = 25;
 
 export class ToolExecutor {
   constructor(
@@ -261,19 +264,40 @@ export class ToolExecutor {
     if (!debtor)
       return { error: `debtor ${debtorId} not found for this client` };
     const end = to > this.scope.asOf ? this.scope.asOf : to;
-    const rows = await this.db
+    // Receipts from this debtor: those allocated to its ledger entries, plus
+    // unallocated ones under its name. Newest first, so a long range keeps
+    // the receipts nearest the review date.
+    const allocated = this.db
+      .select({ id: t.receiptAllocations.bankTransactionId })
+      .from(t.receiptAllocations)
+      .innerJoin(
+        t.ledgerEntries,
+        eq(t.receiptAllocations.ledgerEntryId, t.ledgerEntries.id),
+      )
+      .where(
+        and(
+          eq(t.ledgerEntries.debtorId, debtorId),
+          eq(t.ledgerEntries.clientId, this.scope.clientId),
+        ),
+      );
+    const matches = await this.db
       .select()
       .from(t.bankTransactions)
       .where(
         and(
           eq(t.bankTransactions.clientId, this.scope.clientId),
-          eq(t.bankTransactions.counterpartyName, debtor.name),
+          or(
+            inArray(t.bankTransactions.id, allocated),
+            eq(t.bankTransactions.counterpartyName, debtor.name),
+          ),
           gte(t.bankTransactions.date, from),
           lte(t.bankTransactions.date, end),
         ),
       )
-      .orderBy(asc(t.bankTransactions.date))
-      .limit(25);
+      .orderBy(desc(t.bankTransactions.date), asc(t.bankTransactions.id))
+      .limit(BANK_LIMIT + 1);
+    const truncated = matches.length > BANK_LIMIT;
+    const rows = matches.slice(0, BANK_LIMIT);
     const out = [];
     for (const b of rows) {
       const allocations = await this.db
@@ -296,7 +320,19 @@ export class ToolExecutor {
         }),
       );
     }
-    return { debtorId, from, to: end, transactions: out };
+    return {
+      debtorId,
+      from,
+      to: end,
+      transactions: out,
+      // The agent is told when results were cut, so it can narrow the range.
+      truncated,
+      ...(truncated
+        ? {
+            note: `Only the ${BANK_LIMIT} most recent receipts are shown; narrow the date range for older ones.`,
+          }
+        : {}),
+    };
   }
 
   async getDebtorHistory(debtorId: string) {
