@@ -274,7 +274,15 @@ async function IncidentPanel({
       {incident.severity === "HIGH" ? (
         <section className="flex flex-col gap-1 text-sm">
           <h3 className="font-semibold">Agent explanation</h3>
-          {explained && explained.explanation.validationStatus === "PASSED" ? (
+          {explained && asOf < incident.lastDetectedDate ? (
+            <p className="text-muted-foreground">
+              The explanation was written as of{" "}
+              {businessDate(incident.lastDetectedDate)}. Move to that date to
+              see it, so it does not describe a later state of the book than the
+              one on screen.
+            </p>
+          ) : explained &&
+            explained.explanation.validationStatus === "PASSED" ? (
             <>
               <p>{explained.explanation.summary}</p>
               <ul className="text-muted-foreground list-disc pl-5">

@@ -470,7 +470,8 @@ export class ToolExecutor {
       fundingId: incident.fundingId,
       invoiceId,
       firstDetectedDate: incident.firstDetectedDate,
-      lastDetectedDate: incident.lastDetectedDate,
+      // The latest detection visible at the scope date, never a later one.
+      lastDetectedDate: detection?.asOfDate ?? null,
       measured: detection?.details ?? null,
     });
   }

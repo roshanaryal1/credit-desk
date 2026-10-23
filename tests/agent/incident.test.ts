@@ -86,6 +86,24 @@ describe("incident agent", () => {
     });
   });
 
+  it("never returns a detection date later than the scope date", async () => {
+    const [incident] = await db
+      .select()
+      .from(t.incidents)
+      .where(eq(t.incidents.severity, "HIGH"))
+      .limit(1);
+    const { ToolExecutor } = await import("@/lib/agent/tools");
+    const scope = incident!.firstDetectedDate;
+    const tools = new ToolExecutor(db, {
+      clientId: incident!.clientId,
+      asOf: scope,
+    });
+    const out = (await tools.getIncident(incident!.id)) as {
+      lastDetectedDate: string | null;
+    };
+    expect(out.lastDetectedDate! <= scope).toBe(true);
+  });
+
   it("does not run on incidents below High", async () => {
     const [medium] = await db
       .select()
