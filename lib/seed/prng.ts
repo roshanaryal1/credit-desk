@@ -35,11 +35,16 @@ export class Rng {
   }
 
   /** Log-normal amount in cents, clamped to [minCents, maxCents]. */
-  amountCents(medianCents: number, minCents: number, maxCents: number): number {
+  amountCents(
+    medianCents: number,
+    minCents: number,
+    maxCents: number,
+    sigma = 0.6,
+  ): number {
     const u1 = Math.max(this.next(), 1e-12);
     const u2 = this.next();
     const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    const raw = Math.round(medianCents * Math.exp(0.6 * z));
+    const raw = Math.round(medianCents * Math.exp(sigma * z));
     return Math.min(maxCents, Math.max(minCents, raw));
   }
 }

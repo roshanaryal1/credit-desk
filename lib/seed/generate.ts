@@ -1,18 +1,18 @@
-import { addDays, daysBetween, maxDate } from "@/lib/dates";
-import { DEMO_TODAY, HISTORY_DAYS } from "@/lib/demo";
+import { addDays, daysBetween, maxDate, minDate } from "@/lib/dates";
+import { DEMO_TODAY } from "@/lib/demo";
 import type * as s from "@/lib/db/schema";
-import { incidentKey } from "@/lib/watch/keys";
 
 import { CLIENT_PROFILES, debtorNames, syntheticNzbn } from "./names";
 import { Rng } from "./prng";
+import { applyReferenceLabels } from "./reference";
 
 // Deterministic synthetic book (SPEC 5). `generate` is pure: the same params
 // always produce the same dataset. Writing it to a database is a separate step.
 //
-// Labels are the problems the generator injected. Two aggregate facts are
-// labelled from a reference calculation instead, because they depend on the
-// whole book rather than on one injection: ALREADY_PAID (receipts allocated
-// before submission cover 99% of the amount) and CONCENTRATION.
+// Labels start as the problems the generator injected. lib/seed/reference.ts
+// then adds facts that depend on the whole book rather than one injection
+// (ALREADY_PAID, CONCENTRATION, accidental duplicates) and derives every watch
+// label, so correct detections are never scored as false positives.
 
 export type ProblemType =
   | "DUP"
@@ -149,7 +149,6 @@ const INJECTABLE: ProblemType[] = [
 export function generate(params: SeedParams): Dataset {
   const rng = new Rng(params.seed);
   const today = params.demoToday;
-  const historyStart = addDays(today, -HISTORY_DAYS);
   const p = params.name === "dev" ? "" : "h";
   const id = (prefix: string, n: number) => `${prefix}_${p}${pad(n)}`;
 
@@ -323,12 +322,19 @@ export function generate(params: SeedParams): Dataset {
   for (const prof of profiles) {
     if (prof.kind === "NEW") continue;
     const clientId = ds.clients[prof.clientIndex]!.id!;
-    for (let m = 13; m >= 1; m--) {
-      const issue = addDays(today, -(m * 30) - rng.int(0, 10));
+    // The drifting debtor pays every ten days or so, which gives the drift
+    // rule enough payments in both of its windows (SPEC 7).
+    const step = prof.kind === "DRIFT" ? 10 : 30;
+    const count = prof.kind === "DRIFT" ? 40 : 13;
+    for (let m = count; m >= 1; m--) {
+      const issue = addDays(
+        today,
+        -(m * step) - rng.int(0, step === 10 ? 3 : 10),
+      );
       // The drifting debtor slows from about 35 to about 70 days to pay.
       const dtp =
         prof.kind === "DRIFT"
-          ? daysBetween(issue, today) <= 200
+          ? daysBetween(issue, today) <= 190
             ? 70 + rng.int(-3, 3)
             : 35 + rng.int(-3, 3)
           : prof.baseDaysToPay + rng.int(-4, 4);
@@ -370,14 +376,21 @@ export function generate(params: SeedParams): Dataset {
     );
     const normal = eligible.filter((e) => e.kind === "NORMAL");
     const count = rng.int(28, 34);
+    // Debtors are dealt round-robin so no debtor dominates a batch by chance.
+    const deck = rng.shuffle(normal);
     for (let k = 0; k < count; k++) {
       // Slow and new debtors appear rarely, keeping labels near the target rate.
-      let prof = rng.pick(eligible);
-      if ((prof.kind === "SLOW" || prof.kind === "NEW") && rng.next() < 0.75) {
-        prof = rng.pick(normal);
-      }
-      const issue = addDays(submitted, -rng.int(3, 40));
-      const amount = rng.amountCents(800_000, 80_000, 4_000_000);
+      let prof = deck[k % deck.length]!;
+      const rare = eligible.filter(
+        (e) => e.kind === "SLOW" || e.kind === "NEW",
+      );
+      if (rare.length > 0 && rng.next() < 0.06) prof = rng.pick(rare);
+      // Issued recently enough that a normal payer settles within 25 days of due.
+      const issue = addDays(
+        submitted,
+        -rng.int(3, Math.min(40, 20 + client.paymentTermsDays)),
+      );
+      const amount = rng.amountCents(800_000, 80_000, 4_000_000, 0.4);
       const invoiceId = nextId("inv");
       const number = `INV-${b.client + 1}${invoiceId.slice(-4)}`;
       const ledgerId = addLedger(client.id!, prof.id, number, amount, issue);
@@ -432,14 +445,16 @@ export function generate(params: SeedParams): Dataset {
     const inBatch = working.filter(
       (w) => w.batchIndex === batchIdx && w.problems.size === 0,
     );
-    for (const w of inBatch.slice(0, 6)) {
-      const amount = rng.amountCents(3_200_000, 2_500_000, 4_500_000);
+    inBatch.slice(0, 6).forEach((w, k) => {
+      // The offset keeps clamped amounts distinct, so they never look like DUPs.
+      const amount =
+        rng.amountCents(3_200_000, 2_500_000, 4_500_000) + k * 1_37;
       w.row.debtorId = concentrated.id;
       w.row.amountCents = amount;
       const led = ledgerRow(w.ledgerId!);
       led.debtorId = concentrated.id;
       led.amountCents = amount;
-    }
+    });
   }
 
   // Invoice-level problems
@@ -570,7 +585,8 @@ export function generate(params: SeedParams): Dataset {
   const target = Math.round(working.length * params.problemRate);
   const injections = Math.max(
     target - debtorLabelled - concentratedCount,
-    INJECTABLE.length + 2,
+    // At least two positives per injectable check, so every check is measurable.
+    2 * INJECTABLE.length + 2,
   );
   const candidates = rng.shuffle(
     working.filter(
@@ -704,10 +720,16 @@ export function generate(params: SeedParams): Dataset {
       prof.kind === "DRIFT"
         ? 70 + rng.int(-3, 3)
         : prof.baseDaysToPay + rng.int(-4, 6);
-    const paid = maxDate(
-      addDays(w.row.issueDate, dtp),
-      addDays(submitted, rng.int(5, 20)),
-    );
+    // Paid after funding, and for normal payers no later than 25 days past due.
+    const earliest = addDays(submitted, rng.int(5, 20));
+    const byDtp = addDays(w.row.issueDate, dtp);
+    const paid =
+      prof.kind === "DRIFT"
+        ? maxDate(byDtp, earliest)
+        : maxDate(
+            minDate(maxDate(byDtp, earliest), addDays(w.row.dueDate, 25)),
+            addDays(submitted, 5),
+          );
     exposures.set(fundingId, {
       debtorId: w.row.debtorId,
       clientId: w.row.clientId,
@@ -737,12 +759,6 @@ export function generate(params: SeedParams): Dataset {
       date: from,
       description: `Funded invoice ${w.row.invoiceNumber} unpaid more than 30 days after its due date`,
     });
-    ds.watchLabels.push({
-      ruleId: "OVERDUE_FUNDED",
-      incidentKey: incidentKey.overdueFunded(f.id!),
-      expectedFromDate: from,
-      expectedToDate: addDays(from, 1),
-    });
   }
 
   // Scripted: a credit note lands on a funded, still outstanding invoice.
@@ -767,12 +783,6 @@ export function generate(params: SeedParams): Dataset {
       kind: "FUNDED_CREDIT_NOTE",
       date,
       description: `Credit note for 30% of funded invoice ${w.row.invoiceNumber}`,
-    });
-    ds.watchLabels.push({
-      ruleId: "FUNDED_CREDIT_NOTE",
-      incidentKey: incidentKey.fundedCreditNote(cnTarget.id!),
-      expectedFromDate: date,
-      expectedToDate: addDays(date, 1),
     });
   }
 
@@ -801,68 +811,6 @@ export function generate(params: SeedParams): Dataset {
       date: addDays(today, -60),
       description: `Debtor ${debtorRow(drift.id).name} slows from about 35 to about 70 days to pay`,
     });
-    ds.watchLabels.push({
-      ruleId: "PAYMENT_DRIFT",
-      incidentKey: incidentKey.paymentDrift(drift.id),
-      expectedFromDate: historyStart,
-      expectedToDate: today,
-    });
-  }
-
-  // Reference calculations over the whole book
-
-  const exposureByDebtor = (clientId: string, date: string) => {
-    const byDebtor = new Map<string, number>();
-    for (const e of exposures.values()) {
-      if (e.clientId !== clientId || e.funded > date) continue;
-      if (e.collected !== null && e.collected <= date) continue;
-      byDebtor.set(e.debtorId, (byDebtor.get(e.debtorId) ?? 0) + e.face);
-    }
-    return byDebtor;
-  };
-  const overShare = (book: Map<string, number>, debtorId: string) => {
-    const total = [...book.values()].reduce((a, b) => a + b, 0);
-    return total > 0 && (book.get(debtorId) ?? 0) * 10_000 > total * 3000;
-  };
-
-  for (const w of working) {
-    const submitted = submittedOf(w);
-    // ALREADY_PAID: receipts allocated before submission cover 99% or more.
-    if (w.ledgerId !== null) {
-      const amount = ledgerRow(w.ledgerId).amountCents;
-      if (allocatedTo(w.ledgerId, submitted) * 10_000 >= amount * 9900) {
-        w.problems.add("ALREADY_PAID");
-      }
-    }
-    // CONCENTRATION: outstanding funded face value before submission plus this batch.
-    const book = exposureByDebtor(w.row.clientId, addDays(submitted, -1));
-    for (const o of working) {
-      if (o.batchIndex !== w.batchIndex) continue;
-      book.set(
-        o.row.debtorId,
-        (book.get(o.row.debtorId) ?? 0) + o.row.amountCents,
-      );
-    }
-    if (overShare(book, w.row.debtorId)) w.problems.add("CONCENTRATION");
-  }
-
-  if (concentrated) {
-    const clientId = ds.clients[concentrated.clientIndex]!.id!;
-    for (let d = historyStart; d <= today; d = addDays(d, 1)) {
-      if (!overShare(exposureByDebtor(clientId, d), concentrated.id)) continue;
-      ds.scriptedEvents.push({
-        kind: "CONCENTRATION_CREEP",
-        date: d,
-        description: `Debtor ${debtorRow(concentrated.id).name} passes 30% of the client's outstanding exposure`,
-      });
-      ds.watchLabels.push({
-        ruleId: "CONCENTRATION_CREEP",
-        incidentKey: incidentKey.concentrationCreep(clientId, concentrated.id),
-        expectedFromDate: d,
-        expectedToDate: addDays(d, 1),
-      });
-      break;
-    }
   }
 
   ds.invoices = [...working]
@@ -874,5 +822,8 @@ export function generate(params: SeedParams): Dataset {
       ...working.find((w) => w.row.id === row.id)!.problems,
     ].sort(),
   }));
-  return ds;
+  return applyReferenceLabels(ds, {
+    driftDebtorId: drift?.id ?? null,
+    concentratedDebtorId: concentrated?.id ?? null,
+  });
 }

@@ -63,16 +63,17 @@ describe("synthetic data generator", () => {
     expect(dev.labels.some((l) => l.expectedCheckIds.length > 1)).toBe(true);
   });
 
-  it("includes the tricky clean cases, labelled clean", () => {
+  it("includes the tricky clean cases without the labels they imitate", () => {
     const cases = Object.entries(dev.cleanCases);
     expect(cases.map(([, c]) => c).sort()).toEqual([
       "PARTIAL_PAYMENT",
       "REISSUED",
     ]);
-    for (const [invoiceId] of cases) {
-      expect(
-        dev.labels.find((l) => l.invoiceId === invoiceId)?.expectedCheckIds,
-      ).toEqual([]);
+    const labelOf = (id: string) =>
+      dev.labels.find((l) => l.invoiceId === id)?.expectedCheckIds ?? [];
+    for (const [invoiceId, kind] of cases) {
+      const imitated = kind === "PARTIAL_PAYMENT" ? "ALREADY_PAID" : "DUP";
+      expect(labelOf(invoiceId)).not.toContain(imitated);
     }
   });
 
@@ -92,7 +93,24 @@ describe("synthetic data generator", () => {
         `${e.kind} ${e.date}`,
       ).toBe(true);
     }
-    expect(dev.watchLabels).toHaveLength(5);
+    for (const kind of new Set(kinds)) {
+      expect(
+        dev.watchLabels.some((l) => l.ruleId === kind),
+        kind,
+      ).toBe(true);
+    }
+  });
+
+  it("labels every watch incident inside the history and none for facilities", () => {
+    const start = addDays(DEMO_TODAY, -HISTORY_DAYS);
+    for (const l of dev.watchLabels) {
+      expect(
+        l.expectedFromDate >= start && l.expectedFromDate <= DEMO_TODAY,
+      ).toBe(true);
+    }
+    expect(
+      dev.watchLabels.some((l) => l.ruleId === "FACILITY_UTILISATION"),
+    ).toBe(false);
   });
 
   it("never uses a valid NZBN check digit", () => {
