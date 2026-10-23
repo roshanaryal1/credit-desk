@@ -109,6 +109,7 @@ export class OpenAiCompatibleClient implements LlmClient {
       if (wait > 0 && Date.now() + wait < request.deadline) await sleep(wait);
       try {
         const remaining = request.deadline - Date.now();
+        if (remaining <= 0) throw new DeadlineExceeded();
         const data = await this.client.chat.completions.create(
           {
             model: this.model,
@@ -120,7 +121,7 @@ export class OpenAiCompatibleClient implements LlmClient {
               ? { response_format: { type: "json_object" as const } }
               : {}),
           },
-          { timeout: Math.max(1_000, remaining) },
+          { timeout: remaining },
         );
         const tokensIn = data.usage?.prompt_tokens ?? 0;
         const tokensOut = data.usage?.completion_tokens ?? 0;
@@ -129,6 +130,7 @@ export class OpenAiCompatibleClient implements LlmClient {
         if (!message) throw new Error("provider returned no choices");
         return { message, tokensIn, tokensOut };
       } catch (err) {
+        if (err instanceof DeadlineExceeded) throw err;
         if (
           !(err instanceof OpenAI.APIError) ||
           attempt >= AGENT_LIMITS.maxRateLimitRetries
