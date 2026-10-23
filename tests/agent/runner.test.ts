@@ -263,6 +263,44 @@ describe("agent tools", () => {
     expect(res.error).toMatch(/not found/);
   });
 
+  it("finds a debtor's receipts through allocations, whatever the counterparty name", async () => {
+    const [alloc] = await db
+      .select({
+        bankId: t.receiptAllocations.bankTransactionId,
+        debtorId: t.ledgerEntries.debtorId,
+        clientId: t.ledgerEntries.clientId,
+        date: t.bankTransactions.date,
+      })
+      .from(t.receiptAllocations)
+      .innerJoin(
+        t.ledgerEntries,
+        eq(t.receiptAllocations.ledgerEntryId, t.ledgerEntries.id),
+      )
+      .innerJoin(
+        t.bankTransactions,
+        eq(t.receiptAllocations.bankTransactionId, t.bankTransactions.id),
+      )
+      .limit(1);
+    await db
+      .update(t.bankTransactions)
+      .set({ counterpartyName: "SOME OTHER NAME" })
+      .where(eq(t.bankTransactions.id, alloc!.bankId));
+    const tools = new ToolExecutor(db, {
+      clientId: alloc!.clientId,
+      asOf: "2026-10-20",
+    });
+    const res = (await tools.getBankTransactions(
+      alloc!.debtorId,
+      "2025-01-01",
+      "2026-10-20",
+    )) as {
+      transactions: { id: string }[];
+      truncated: boolean;
+    };
+    expect(res.transactions.map((x) => x.id)).toContain(alloc!.bankId);
+    expect(typeof res.truncated).toBe("boolean");
+  });
+
   it("rejects malformed arguments as data, not exceptions", async () => {
     const tools = new ToolExecutor(db, {
       clientId: flagged.clientId,
