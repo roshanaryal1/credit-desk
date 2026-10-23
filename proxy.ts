@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { AUTH_COOKIE, gateConfig, verifySession } from "@/lib/auth";
+import {
+  AUTH_COOKIE,
+  DEV_SESSION_COOKIE,
+  gateConfig,
+  verifySession,
+} from "@/lib/auth";
 
 // Shared-password gate (SPEC 11). Every route except the login page, the cron
 // route and static assets needs a valid signed session cookie.
@@ -13,7 +18,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
 
   const gate = gateConfig();
-  if (!gate.enforce) return NextResponse.next();
+  if (!gate.enforce) {
+    // Gate off (development only): still give each browser its own session,
+    // so exposure and attribution stay per analyst.
+    const res = NextResponse.next();
+    if (!request.cookies.get(DEV_SESSION_COOKIE)) {
+      res.cookies.set(DEV_SESSION_COOKIE, crypto.randomUUID(), {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+      });
+    }
+    return res;
+  }
   if (!gate.configured) {
     return new NextResponse(
       "Credit Desk is not configured: set DEMO_PASSWORD and SESSION_SECRET.",

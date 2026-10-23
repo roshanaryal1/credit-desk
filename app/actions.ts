@@ -12,6 +12,7 @@ import { OpenAiCompatibleClient } from "@/lib/agent/llm";
 import { runAgentForInvoice } from "@/lib/agent/runner";
 import { getDb } from "@/lib/db/client";
 import { takeAll } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/request";
 import * as t from "@/lib/db/schema";
 import { MODE_COOKIE, currentAnalyst } from "@/lib/session";
 import { DecisionInputSchema, saveDecision } from "@/lib/trust/decide";
@@ -173,9 +174,7 @@ export async function rerunAgentAction(
     return { ok: false, message: "That invoice id is not valid." };
   }
   const analyst = await currentAnalyst();
-  const ip =
-    (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "unknown";
+  const ip = clientIp(await headers());
   const db = await getDb();
   const allowed = await takeAll(db, [
     { key: `rerun:session:${analyst.sessionId}`, max: 10, windowMs: HOUR },
