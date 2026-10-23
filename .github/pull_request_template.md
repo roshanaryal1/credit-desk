@@ -26,7 +26,7 @@ Closes #
 
 - [ ] Matches SPEC.md, or SPEC.md updated in this PR
 - [ ] Money in integer cents, dates ISO in NZ time
-- [ ] No secrets, real company names or lender branding
+- [ ] No secrets, real company names or logos (Runway named in text only)
 - [ ] LLM output (if any) goes through Zod and the citation validator
 - [ ] Migrations, env vars or config changes called out below
 

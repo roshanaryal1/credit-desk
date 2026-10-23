@@ -39,7 +39,8 @@ npm run build
 - Behaviour matches SPEC.md, or SPEC.md is updated in the same PR.
 - Tests cover the normal path, a failure path and an edge case.
 - Money is integer cents; dates are ISO strings in NZ time.
-- No secrets, no real company names, no lender branding.
+- No secrets. No real company names or logos; Runway appears only as the
+  named audience, in text, never as a logo or brand asset.
 - Any LLM output path goes through Zod and the citation validator.
 - Significant design choices get an ADR in `docs/adr/`.
 

@@ -6,9 +6,10 @@ pull request that edits this file.
 ## 1. Goal
 
 Build "Invoice Check": a prototype invoice verification tool for an NZ invoice
-finance lender. It flags risky invoices in a funding batch, explains each flag
-with cited evidence, keeps a human in the loop for every decision, and reports
-its own accuracy against a labelled synthetic dataset.
+finance lender, built for Runway as a conversation starter. It flags risky
+invoices in a funding batch, explains each flag with cited evidence, keeps a
+human in the loop for every decision, and reports its own accuracy against a
+labelled synthetic dataset.
 
 This is a prototype, not production. Optimise for clarity, correctness of the
 checks, honest evaluation and a clean demo. Do not over-engineer.
@@ -164,11 +165,14 @@ Runs only on flagged invoices.
   debtor concentration bar.
 - Status chips with colour and text (never colour alone).
 - Evidence shown inline next to each claim, linked by cited id.
-- Persistent banner: "Prototype for discussion. All data is synthetic."
+- Persistent banner: "Prototype built for Runway, for discussion. All data is
+  synthetic."
 - An About page: problem, approach, architecture diagram, what is real versus
   synthetic, what you would do next.
 - Responsive down to a phone width, keyboard accessible, light and dark themes.
-- No real company logos or names, and no lender branding.
+- Runway is named as the audience in text only ("a prototype built for
+  Runway"). No Runway logo, colours or brand assets, and no other real company
+  names or logos. Seeded clients and debtors are always fictional.
 
 ## 10. Security and operations (prototype level, stated honestly)
 

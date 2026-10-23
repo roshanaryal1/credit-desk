@@ -1,11 +1,12 @@
 # Invoice Check
 
-Prototype invoice verification tool for an invoice finance lender. Deterministic
-checks flag risky invoices in a funding batch, an LLM agent explains each flag
-with cited evidence, a validator rejects any explanation it cannot back up, and
-a credit analyst makes every decision.
+A prototype built for Runway: invoice verification for an invoice finance
+book. Deterministic checks flag risky invoices in a funding batch, an LLM
+agent explains each flag with cited evidence, a validator rejects any
+explanation it cannot back up, and a credit analyst makes every decision.
 
-> Prototype for discussion. All data is synthetic.
+> Prototype built for Runway, for discussion. All data is synthetic. Not
+> affiliated with or endorsed by Runway; no Runway data or brand assets are used.
 
 ## Status
 
