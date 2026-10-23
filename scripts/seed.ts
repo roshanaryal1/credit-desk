@@ -71,6 +71,7 @@ async function main() {
   console.log(
     `Checks run: ${results.length} invoices, ${flagged} with findings.`,
   );
+  console.log(`Watch run over ${HISTORY_DAYS} days: ${detections} detections.`);
 }
 
 main()
