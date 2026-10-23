@@ -13,7 +13,9 @@ export type ValidationResult =
 
 // Grouped thousands ($1,234.56) or a plain run of digits ($12345.67); the
 // grouped form needs at least one comma so plain digits are read in full.
-const MONEY = /\$\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?/g;
+// An optional minus before or after the dollar sign keeps the sign, so a
+// negative figure can never match positive evidence.
+const MONEY = /(-)?\$\s?(-)?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?/g;
 // Record fields that hold money in dollars; fields ending in Cents hold cents.
 // Other numbers (days to pay, counts, basis points) are never money evidence.
 const DOLLAR_FIELDS = new Set(["amount", "advance", "outstanding"]);
@@ -25,9 +27,10 @@ const FORBIDDEN =
 /** Dollar amounts in text, as integer cents. */
 export function moneyMentions(text: string): number[] {
   return [...text.matchAll(MONEY)].map((m) => {
-    const whole = Number((m[1] ?? "0").replace(/,/g, ""));
-    const fraction = Number((m[2] ?? "0").padEnd(2, "0"));
-    return whole * 100 + fraction;
+    const whole = Number((m[3] ?? "0").replace(/,/g, ""));
+    const fraction = Number((m[4] ?? "0").padEnd(2, "0"));
+    const sign = m[1] || m[2] ? -1 : 1;
+    return sign * (whole * 100 + fraction);
   });
 }
 

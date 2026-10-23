@@ -308,39 +308,43 @@ async function runAgentLoop(
   }
 
   const latencyMs = now() - started;
-  await db.insert(t.agentRuns).values({
-    id: runId,
-    subjectType: subject.type,
-    subjectId: subject.id,
-    provider: llm.provider,
-    model: llm.model,
-    promptVersion: PROMPT_VERSION,
-    configVersion: CONFIG_VERSION,
-    codeSha: opts.codeSha,
-    attempts,
-    status,
-    tokensIn,
-    tokensOut,
-    latencyMs,
-  });
-  const value = result?.value;
-  if (value) {
-    await db.insert(t.explanations).values({
-      id: `exp_${runId}`,
-      agentRunId: runId,
-      summary: value.summary,
-      riskLevel: value.risk_level.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
-      recommendation: value.recommendation,
-      questionsForClient: value.questions_for_client,
-      claims: value.claims.map((c) => ({
-        text: c.text,
-        evidenceIds: c.evidence_ids,
-      })),
-      citedEvidenceIds: value.cited_evidence_ids,
-      validationStatus: status === "PASSED" ? "PASSED" : "FAILED",
-      validationErrors: errors,
+  // The run and its explanation commit together, so resuming never treats
+  // a run as done when its explanation was not saved.
+  await db.transaction(async (tx) => {
+    await tx.insert(t.agentRuns).values({
+      id: runId,
+      subjectType: subject.type,
+      subjectId: subject.id,
+      provider: llm.provider,
+      model: llm.model,
+      promptVersion: PROMPT_VERSION,
+      configVersion: CONFIG_VERSION,
+      codeSha: opts.codeSha,
+      attempts,
+      status,
+      tokensIn,
+      tokensOut,
+      latencyMs,
     });
-  }
+    const value = result?.value;
+    if (value) {
+      await tx.insert(t.explanations).values({
+        id: `exp_${runId}`,
+        agentRunId: runId,
+        summary: value.summary,
+        riskLevel: value.risk_level.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
+        recommendation: value.recommendation,
+        questionsForClient: value.questions_for_client,
+        claims: value.claims.map((c) => ({
+          text: c.text,
+          evidenceIds: c.evidence_ids,
+        })),
+        citedEvidenceIds: value.cited_evidence_ids,
+        validationStatus: status === "PASSED" ? "PASSED" : "FAILED",
+        validationErrors: errors,
+      });
+    }
+  });
 
   log({
     event: "agent_run",
