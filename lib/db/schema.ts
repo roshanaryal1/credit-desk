@@ -475,3 +475,18 @@ export const APPEND_ONLY_TABLES = [
   "audit_events",
   "incident_events",
 ] as const;
+
+export type NewClient = typeof clients.$inferInsert;
+export type NewDebtor = typeof debtors.$inferInsert;
+export type NewLedgerEntry = typeof ledgerEntries.$inferInsert;
+export type NewLedgerStatusEvent = typeof ledgerStatusEvents.$inferInsert;
+export type NewCreditNote = typeof creditNotes.$inferInsert;
+export type NewBankTransaction = typeof bankTransactions.$inferInsert;
+export type NewReceiptAllocation = typeof receiptAllocations.$inferInsert;
+export type NewDebtorPayment = typeof debtorPayments.$inferInsert;
+export type NewBatch = typeof batches.$inferInsert;
+export type NewInvoice = typeof invoices.$inferInsert;
+export type NewFunding = typeof fundings.$inferInsert;
+export type NewFundingAdjustment = typeof fundingAdjustments.$inferInsert;
+export type NewLabel = typeof labels.$inferInsert;
+export type NewWatchLabel = typeof watchLabels.$inferInsert;
