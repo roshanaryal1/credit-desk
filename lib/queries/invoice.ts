@@ -12,7 +12,11 @@ import { resolveEvidence } from "./evidence";
  * withheld on the server until a decision exists for the invoice (SPEC 9.1).
  * Showing it before a decision records an exposure for this session.
  */
-export async function getInvoiceReview(invoiceId: string, analyst: Analyst) {
+export async function getInvoiceReview(
+  invoiceId: string,
+  analyst: Analyst,
+  batchId: string,
+) {
   const db = await getDb();
   const [row] = await db
     .select({ invoice: t.invoices, debtor: t.debtors, batch: t.batches })
@@ -20,7 +24,8 @@ export async function getInvoiceReview(invoiceId: string, analyst: Analyst) {
     .innerJoin(t.debtors, eq(t.invoices.debtorId, t.debtors.id))
     .innerJoin(t.batches, eq(t.invoices.batchId, t.batches.id))
     .where(eq(t.invoices.id, invoiceId));
-  if (!row) return null;
+  // The panel only reviews invoices of the batch on screen.
+  if (!row || row.invoice.batchId !== batchId) return null;
 
   const state = await reviewState(db, invoiceId);
   const findings = await db
@@ -38,6 +43,17 @@ export async function getInvoiceReview(invoiceId: string, analyst: Analyst) {
     .orderBy(asc(t.decisions.decidedAt));
 
   const decided = decisions.length > 0;
+  // Agreement is judged against the explanation the first decision was bound to.
+  const boundId = decisions[0]?.explanationIdAtDecision ?? null;
+  const [bound] = boundId
+    ? await db
+        .select({
+          recommendation: t.explanations.recommendation,
+          validationStatus: t.explanations.validationStatus,
+        })
+        .from(t.explanations)
+        .where(eq(t.explanations.id, boundId))
+    : [];
   const showAgent = analyst.mode === "ASSIST" || decided;
   const explanation = showAgent ? state.explanation : null;
   if (explanation && !decided) {
@@ -66,5 +82,6 @@ export async function getInvoiceReview(invoiceId: string, analyst: Analyst) {
     withheld: !showAgent && state.explanation !== null,
     explanation,
     evidence,
+    boundExplanation: bound ?? null,
   };
 }

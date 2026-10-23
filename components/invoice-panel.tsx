@@ -22,12 +22,13 @@ const AGREEMENT_MAP: Record<string, string> = {
 
 export async function InvoicePanel({
   invoiceId,
+  batchId,
 }: {
   invoiceId: string;
   batchId: string;
 }) {
   const analyst = await currentAnalyst();
-  const data = await getInvoiceReview(invoiceId, analyst);
+  const data = await getInvoiceReview(invoiceId, analyst, batchId);
   if (!data) {
     return (
       <aside className="rounded-md border p-4 text-sm">
@@ -76,12 +77,15 @@ export async function InvoicePanel({
         ) : (
           <ul className="flex flex-col gap-2">
             {findings.map((f) => (
-              <li
-                key={f.id}
-                className="flex items-start justify-between gap-2 text-sm"
-              >
-                <span>{checkLabel(f.checkId)}</span>
-                <SeverityChip severity={f.severity} />
+              <li key={f.id} className="flex flex-col gap-1 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <span>{checkLabel(f.checkId)}</span>
+                  <SeverityChip severity={f.severity} />
+                </div>
+                <FindingDetails
+                  details={f.details as Record<string, unknown>}
+                  evidence={evidence}
+                />
               </li>
             ))}
           </ul>
@@ -152,9 +156,11 @@ export async function InvoicePanel({
               </p>
               {first &&
               first.mode === "SHADOW" &&
-              !first.aiContentExposedBeforeDecision ? (
+              !first.aiContentExposedBeforeDecision &&
+              data.boundExplanation?.validationStatus === "PASSED" ? (
                 <p className="text-muted-foreground text-sm">
-                  {AGREEMENT_MAP[exp.recommendation] === first.decision
+                  {AGREEMENT_MAP[data.boundExplanation.recommendation] ===
+                  first.decision
                     ? "The first decision agreed with the agent."
                     : "The first decision differed from the agent."}
                 </p>
@@ -209,5 +215,82 @@ export async function InvoicePanel({
         ) : null}
       </section>
     </aside>
+  );
+}
+
+const DETAIL_LABELS: Record<string, string> = {
+  allocatedCents: "Received before submission",
+  amountCents: "Invoice amount",
+  creditedCents: "Credited",
+  debtorCents: "This debtor",
+  totalCents: "Book plus batch",
+  shareBps: "Share",
+  daysKnown: "Days since first seen",
+  ageDays: "Age at submission (days)",
+  meanDaysToPay: "Average days to pay",
+  paymentCount: "Payments counted",
+  thresholdDays: "Threshold (days)",
+  issueDate: "Issued",
+  submittedDate: "Submitted",
+  firstSeenDate: "First seen",
+  status: "Ledger status",
+  hasPaymentHistory: "Has payment history",
+};
+
+function formatDetail(key: string, value: unknown): string {
+  if (typeof value === "number" && /cents$/i.test(key)) return money(value);
+  if (key === "shareBps" && typeof value === "number")
+    return `${(value / 100).toFixed(1)}%`;
+  if (key === "meanDaysToPay" && typeof value === "number")
+    return value.toFixed(0);
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))
+    return businessDate(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
+}
+
+/** Deterministic finding details and their evidence, shown in every mode. */
+function FindingDetails({
+  details,
+  evidence,
+}: {
+  details: Record<string, unknown>;
+  evidence: Map<string, { id: string; kind: string; facts: string[] }>;
+}) {
+  const differences = details.differences as
+    Record<string, { submitted: unknown; ledger: unknown }> | undefined;
+  const rows = Object.entries(details).filter(([k]) => DETAIL_LABELS[k]);
+  const ids = ((details.evidenceIds as string[] | undefined) ?? [])
+    .filter((id) => evidence.has(id))
+    .slice(0, 6);
+  return (
+    <div className="text-muted-foreground flex flex-col gap-0.5 pl-2 text-xs">
+      {differences
+        ? Object.entries(differences).map(([field, d]) => (
+            <span key={field}>
+              {field === "amountCents"
+                ? "Amount"
+                : field === "issueDate"
+                  ? "Issue date"
+                  : "Debtor"}
+              : submitted {formatDetail(field, d.submitted)}, ledger{" "}
+              {formatDetail(field, d.ledger)}
+            </span>
+          ))
+        : null}
+      {rows.map(([k, v]) => (
+        <span key={k}>
+          {DETAIL_LABELS[k]}: {formatDetail(k, v)}
+        </span>
+      ))}
+      {ids.map((id) => {
+        const ev = evidence.get(id)!;
+        return (
+          <span key={id}>
+            {ev.kind}: {ev.facts.join(", ")} ({id})
+          </span>
+        );
+      })}
+    </div>
   );
 }
