@@ -128,6 +128,7 @@ export async function runAgentForInvoice(
 
   try {
     for (;;) {
+      if (now() >= deadline) throw new DeadlineExceeded();
       const allowTools = toolCalls < AGENT_LIMITS.maxToolCalls;
       const res = await llm.complete({
         messages,
@@ -155,6 +156,7 @@ export async function runAgentForInvoice(
           tool_calls: investigate,
         });
         for (const call of investigate) {
+          if (now() >= deadline) throw new DeadlineExceeded();
           toolCalls++;
           const output =
             toolCalls <= AGENT_LIMITS.maxToolCalls
@@ -177,6 +179,8 @@ export async function runAgentForInvoice(
       result = validateOutput(content, tools.evidence);
       if (result.ok) {
         status = "PASSED";
+        // Errors from an earlier attempt do not describe the accepted output.
+        errors = [];
         break;
       }
       errors = result.errors;

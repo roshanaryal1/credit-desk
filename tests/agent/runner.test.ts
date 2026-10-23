@@ -118,6 +118,43 @@ describe("agent runner", () => {
     expect(out).toMatchObject({ status: "PASSED", attempts: 2 });
   });
 
+  it("stores no stale errors on an explanation that passed on retry", async () => {
+    const bad = { ...grounded(), cited_evidence_ids: ["inv_does_not_exist"] };
+    const llm = new ScriptedLlm([
+      () => toolCall("get_invoice", { invoice_id: flagged.id }),
+      () => answer(bad),
+      () => answer(grounded()),
+    ]);
+    const out = await runAgentForInvoice(db, llm, flagged.id, {
+      codeSha: "test",
+      log: () => {},
+    });
+    expect(out).toMatchObject({ status: "PASSED", errors: [] });
+    const [exp] = await db
+      .select()
+      .from(t.explanations)
+      .where(eq(t.explanations.agentRunId, out.runId));
+    expect(exp?.validationErrors).toEqual([]);
+  });
+
+  it("stops at the run deadline without another model call", async () => {
+    let clock = 0;
+    const llm = new ScriptedLlm([
+      () => {
+        clock = 31_000;
+        return toolCall("get_invoice", { invoice_id: flagged.id });
+      },
+    ]);
+    const out = await runAgentForInvoice(db, llm, flagged.id, {
+      codeSha: "test",
+      log: () => {},
+      now: () => clock,
+    });
+    expect(out.status).toBe("ERROR");
+    expect(out.errors).toEqual(["run budget exceeded"]);
+    expect(llm.calls).toHaveLength(1);
+  });
+
   it("stores FAILED after a second invalid answer", async () => {
     const bad = { ...grounded(), summary: "Invoice is for $1.00." };
     const llm = new ScriptedLlm([
