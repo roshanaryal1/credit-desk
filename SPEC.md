@@ -58,7 +58,7 @@ workflows are out of scope (C15).
 | Tailwind CSS and shadcn/ui | Clean, professional UI fast |
 | Postgres on Neon (Vercel Marketplace), Drizzle ORM | Real relational model; free tier. Write paths use the Neon `Pool` over WebSocket, because the HTTP driver does not support interactive transactions (C3) |
 | Zod | Validate every input and every LLM output |
-| Groq via the `openai` TypeScript SDK (`baseURL = https://api.groq.com/openai/v1`) | Free tier with tool calling. `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` env vars. Default `openai/gpt-oss-120b`, fallback `llama-3.3-70b-versatile`. Only the default provider is tested; others are a documented config change, not a guarantee (X25) |
+| Groq via the `openai` TypeScript SDK (`baseURL = https://api.groq.com/openai/v1`) | Free tier with tool calling. `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` env vars. Default `openai/gpt-oss-120b`, fallback `openai/gpt-oss-20b` (`llama-3.3-70b-versatile` is not available on the project's Groq account, checked 2026-10-23). Only the default provider is tested; others are a documented config change, not a guarantee (X25) |
 | Recharts | Agreement and trend charts |
 | Vitest | Tests for every check, watch rule, the validator, agreement maths and snapshot hashing |
 | `scripts/eval.ts` | Deterministic evaluation report, run in CI |
@@ -267,9 +267,9 @@ $CRON_SECRET` (C13).
 - Budgets per run: 6 tool calls, fixed max tokens, 30 seconds total wall time
   covering all attempts and backoff (X19). Malformed tool arguments end the
   attempt with a validation error.
-- Groq free tier (roughly 30 requests/min, 8,000 tokens/min and 1,000
-  requests/day for `openai/gpt-oss-120b`; confirm on Groq's rate limits page
-  before relying on these): `scripts/precompute.ts` runs one item at a time,
+- Groq free tier for `openai/gpt-oss-120b`: 8,000 tokens/min and 1,000
+  requests/day (read from the API's `x-ratelimit-*` response headers on
+  2026-10-23; re-check before production runs): `scripts/precompute.ts` runs one item at a time,
   keeps a tokens-per-minute budget, retries 429s with exponential backoff that
   honours `retry-after`, and is resumable (skips subjects with a PASSED run for
   the current prompt and config version).

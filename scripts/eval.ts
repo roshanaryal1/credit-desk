@@ -1,9 +1,14 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 import { CONFIG_VERSION } from "@/lib/checks/config";
 import { runAllBatches } from "@/lib/checks/runner";
 import { createMemoryDb } from "@/lib/db/client";
 import { DEMO_TODAY } from "@/lib/demo";
+import {
+  agentMetrics,
+  type StoredExplanation,
+  type StoredRun,
+} from "@/lib/eval/agent";
 import { CHECK_IDS, gateFailures, scoreChecks } from "@/lib/eval/checks";
 import {
   DEV_PARAMS,
@@ -57,6 +62,22 @@ async function main() {
   const holdout = await evaluateSeed(HOLDOUT_PARAMS);
   const failures = gateFailures(holdout.checks);
 
+  // Agent metrics come from the precompute export; CI never calls the model.
+  const runsFile = "eval/agent-runs.json";
+  const agent = existsSync(runsFile)
+    ? (() => {
+        const data = JSON.parse(readFileSync(runsFile, "utf8")) as {
+          promptVersion: string;
+          runs: StoredRun[];
+          explanations: StoredExplanation[];
+        };
+        return {
+          promptVersion: data.promptVersion,
+          ...agentMetrics(data.runs, data.explanations),
+        };
+      })()
+    : null;
+
   const report = {
     schemaVersion: 1,
     demoToday: DEMO_TODAY,
@@ -68,6 +89,7 @@ async function main() {
       "Labels and checks both encode SPEC 6, so high scores show the code implements the specification; they do not show the rules catch real fraud.",
     ],
     checks: { dev, holdout },
+    agent,
     gate: { passed: failures.length === 0, failures },
   };
   mkdirSync("eval", { recursive: true });
@@ -96,6 +118,14 @@ async function main() {
       ),
     );
     if (seed.misses.length > 0) console.table(seed.misses);
+  }
+  if (agent) {
+    console.log("\nAgent (from stored runs):");
+    console.table(agent);
+  } else {
+    console.log(
+      "\nAgent: no eval/agent-runs.json yet; run npm run precompute.",
+    );
   }
   if (failures.length > 0) {
     console.error("\nEvaluation gate failed on the holdout seed:");

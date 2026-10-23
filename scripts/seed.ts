@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { parseArgs } from "node:util";
 
 import { runAllBatches } from "@/lib/checks/runner";
-import { getDb } from "@/lib/db/client";
+import { closeDb, getDb } from "@/lib/db/client";
 import { DEV_PARAMS, HOLDOUT_PARAMS, generate } from "@/lib/seed/generate";
 import { liveDecisionCount, summarise, writeDataset } from "@/lib/seed/write";
 
@@ -65,7 +65,10 @@ async function main() {
   );
 }
 
-main().catch((err: unknown) => {
-  console.error(err instanceof Error ? err.message : err);
-  process.exit(1);
-});
+main()
+  .then(() => closeDb())
+  .catch(async (err: unknown) => {
+    console.error(err instanceof Error ? err.message : err);
+    await closeDb();
+    process.exitCode = 1;
+  });
