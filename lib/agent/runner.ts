@@ -80,7 +80,9 @@ export async function runAgentForInvoice(
         eq(t.agentRuns.subjectId, invoiceId),
       ),
     );
-  const runId = `run_${invoiceId}_${(prior?.n ?? 0) + 1}`;
+  // The count keeps ids readable; the random suffix keeps concurrent runs
+  // for the same invoice from colliding.
+  const runId = `run_${invoiceId}_${(prior?.n ?? 0) + 1}_${crypto.randomUUID().slice(0, 6)}`;
 
   if (findingRows.length === 0) {
     // Clear invoices never go to the agent.
