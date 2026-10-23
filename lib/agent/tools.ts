@@ -33,6 +33,7 @@ const ARGS = {
   get_debtor_history: z.object({ debtor_id: Id }),
   get_findings: z.object({ invoice_id: Id }),
   get_funding: z.object({ invoice_id: Id }),
+  get_incident: z.object({ incident_id: z.string().min(1).max(200) }),
 } as const;
 
 export type ToolName = keyof typeof ARGS;
@@ -49,6 +50,8 @@ const DESCRIPTIONS: Record<ToolName, string> = {
     "Fetch the deterministic check findings for a submitted invoice.",
   get_funding:
     "Fetch the funding and repayments for an invoice, if it was funded.",
+  get_incident:
+    "Fetch a Portfolio Watch incident with the rule that raised it and what the rule measured on the latest detection.",
 };
 
 export const TOOL_DEFINITIONS: ChatCompletionTool[] = (
@@ -99,7 +102,8 @@ export class ToolExecutor {
     const parsed = ARGS[name as ToolName].safeParse(json);
     if (!parsed.success)
       return { error: `invalid arguments: ${parsed.error.message}` };
-    switch (name as ToolName) {
+    const tool = name as ToolName;
+    switch (tool) {
       case "get_invoice":
         return this.getInvoice(
           (parsed.data as { invoice_id: string }).invoice_id,
@@ -128,6 +132,15 @@ export class ToolExecutor {
         return this.getFunding(
           (parsed.data as { invoice_id: string }).invoice_id,
         );
+      case "get_incident":
+        return this.getIncident(
+          (parsed.data as { incident_id: string }).incident_id,
+        );
+      default: {
+        // Compile-time check that every declared tool is dispatched.
+        const unhandled: never = tool;
+        return { error: `unhandled tool ${String(unhandled)}` };
+      }
     }
   }
 
@@ -413,5 +426,52 @@ export class ToolExecutor {
         }),
       ),
     };
+  }
+
+  async getIncident(incidentId: string) {
+    const [incident] = await this.db
+      .select()
+      .from(t.incidents)
+      .where(
+        and(
+          eq(t.incidents.id, incidentId),
+          eq(t.incidents.clientId, this.scope.clientId),
+        ),
+      );
+    if (!incident || incident.firstDetectedDate > this.scope.asOf) {
+      return { error: `incident ${incidentId} not found for this client` };
+    }
+    const [detection] = await this.db
+      .select()
+      .from(t.watchDetections)
+      .where(
+        and(
+          eq(t.watchDetections.incidentKey, incident.incidentKey),
+          lte(t.watchDetections.asOfDate, this.scope.asOf),
+        ),
+      )
+      .orderBy(desc(t.watchDetections.asOfDate))
+      .limit(1);
+    let invoiceId: string | null = null;
+    if (incident.fundingId) {
+      const [f] = await this.db
+        .select({ invoiceId: t.fundings.invoiceId })
+        .from(t.fundings)
+        .where(eq(t.fundings.id, incident.fundingId));
+      invoiceId = f?.invoiceId ?? null;
+    }
+    return this.register({
+      id: incident.id,
+      clientId: incident.clientId,
+      type: "incident",
+      ruleId: incident.ruleId,
+      severity: incident.severity,
+      debtorId: incident.debtorId,
+      fundingId: incident.fundingId,
+      invoiceId,
+      firstDetectedDate: incident.firstDetectedDate,
+      lastDetectedDate: incident.lastDetectedDate,
+      measured: detection?.details ?? null,
+    });
   }
 }

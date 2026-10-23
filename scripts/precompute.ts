@@ -7,7 +7,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { AGENT_LIMITS, providerFromEnv } from "@/lib/agent/config";
 import { OpenAiCompatibleClient } from "@/lib/agent/llm";
 import { PROMPT_VERSION } from "@/lib/agent/prompts";
-import { runAgentForInvoice } from "@/lib/agent/runner";
+import { runAgentForIncident, runAgentForInvoice } from "@/lib/agent/runner";
 import { CONFIG_VERSION } from "@/lib/checks/config";
 import { closeDb, getDb } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -34,41 +34,62 @@ async function main() {
   const llm = new OpenAiCompatibleClient(providerFromEnv());
   const sha = codeSha();
 
-  const flagged = await db
-    .selectDistinct({ invoiceId: t.findings.invoiceId })
-    .from(t.findings)
-    .where(eq(t.findings.configVersion, CONFIG_VERSION))
-    .orderBy(asc(t.findings.invoiceId));
-  const done = new Set(
-    (
-      await db
-        .select({ id: t.agentRuns.subjectId })
-        .from(t.agentRuns)
-        .where(
-          and(
-            eq(t.agentRuns.subjectType, "INVOICE"),
-            eq(t.agentRuns.status, "PASSED"),
-            eq(t.agentRuns.promptVersion, PROMPT_VERSION),
-            eq(t.agentRuns.configVersion, CONFIG_VERSION),
-          ),
-        )
-    ).map((r) => r.id),
-  );
-  const todo = flagged.map((f) => f.invoiceId).filter((id) => !done.has(id));
+  const passed = async (type: "INVOICE" | "INCIDENT") =>
+    new Set(
+      (
+        await db
+          .select({ id: t.agentRuns.subjectId })
+          .from(t.agentRuns)
+          .where(
+            and(
+              eq(t.agentRuns.subjectType, type),
+              eq(t.agentRuns.status, "PASSED"),
+              eq(t.agentRuns.promptVersion, PROMPT_VERSION),
+              eq(t.agentRuns.configVersion, CONFIG_VERSION),
+            ),
+          )
+      ).map((r) => r.id),
+    );
+  const flagged = (
+    await db
+      .selectDistinct({ id: t.findings.invoiceId })
+      .from(t.findings)
+      .where(eq(t.findings.configVersion, CONFIG_VERSION))
+      .orderBy(asc(t.findings.invoiceId))
+  ).map((r) => r.id);
+  const high = (
+    await db
+      .select({ id: t.incidents.id })
+      .from(t.incidents)
+      .where(eq(t.incidents.severity, "HIGH"))
+      .orderBy(asc(t.incidents.id))
+  ).map((r) => r.id);
+  const doneInvoices = await passed("INVOICE");
+  const doneIncidents = await passed("INCIDENT");
+  const todo = [
+    ...flagged
+      .filter((id) => !doneInvoices.has(id))
+      .map((id) => ({ type: "INVOICE" as const, id })),
+    ...high
+      .filter((id) => !doneIncidents.has(id))
+      .map((id) => ({ type: "INCIDENT" as const, id })),
+  ];
   const limit = values.limit ? Number(values.limit) : todo.length;
   console.log(
-    `${flagged.length} flagged invoices, ${done.size} done, running ${Math.min(limit, todo.length)}.`,
+    `${flagged.length} flagged invoices and ${high.length} high incidents; ${doneInvoices.size + doneIncidents.size} done; running ${Math.min(limit, todo.length)}.`,
   );
 
   const tally = { PASSED: 0, FAILED: 0, ERROR: 0, SKIPPED: 0 };
-  for (const [i, invoiceId] of todo.slice(0, limit).entries()) {
+  for (const [i, item] of todo.slice(0, limit).entries()) {
     // Wait for headroom outside the run, so the wait is not charged to its budget.
     const wait = llm.budget.waitFor(AGENT_LIMITS.tokensPerRun);
     if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-    const out = await runAgentForInvoice(db, llm, invoiceId, { codeSha: sha });
+    const run =
+      item.type === "INVOICE" ? runAgentForInvoice : runAgentForIncident;
+    const out = await run(db, llm, item.id, { codeSha: sha });
     tally[out.status]++;
     console.log(
-      `[${i + 1}/${Math.min(limit, todo.length)}] ${invoiceId} ${out.status}`,
+      `[${i + 1}/${Math.min(limit, todo.length)}] ${item.id} ${out.status}`,
     );
   }
   console.log("Run totals:", tally);
