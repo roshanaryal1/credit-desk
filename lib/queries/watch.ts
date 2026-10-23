@@ -1,3 +1,5 @@
+import "server-only";
+
 import { asc, desc, eq, lte } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";

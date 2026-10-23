@@ -1,3 +1,5 @@
+import "server-only";
+
 import { asc, eq } from "drizzle-orm";
 
 import { CONFIG_VERSION } from "@/lib/checks/config";

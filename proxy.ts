@@ -1,20 +1,35 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Gives every visitor an analyst session id (SPEC 9.1). The password gate and
-// signed sessions are added in SPEC 11 work.
+import { AUTH_COOKIE, gateConfig, verifySession } from "@/lib/auth";
 
-export function proxy(request: NextRequest) {
-  const response = NextResponse.next();
-  if (!request.cookies.get("cd_session")) {
-    response.cookies.set("cd_session", crypto.randomUUID(), {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 12,
-    });
+// Shared-password gate (SPEC 11). Every route except the login page, the cron
+// route and static assets needs a valid signed session cookie.
+
+const OPEN_PATHS = ["/login", "/api/watch/run"];
+
+export async function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  if (OPEN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`)))
+    return NextResponse.next();
+
+  const gate = gateConfig();
+  if (!gate.enforce) return NextResponse.next();
+  if (!gate.configured) {
+    return new NextResponse(
+      "Credit Desk is not configured: set DEMO_PASSWORD and SESSION_SECRET.",
+      { status: 503 },
+    );
   }
-  return response;
+  const session = await verifySession(
+    request.cookies.get(AUTH_COOKIE)?.value,
+    gate.secret,
+  );
+  if (session) return NextResponse.next();
+
+  const login = request.nextUrl.clone();
+  login.pathname = "/login";
+  login.search = `?next=${encodeURIComponent(pathname + search)}`;
+  return NextResponse.redirect(login);
 }
 
 export const config = {

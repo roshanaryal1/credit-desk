@@ -1,6 +1,7 @@
 import { DecisionChip, SeverityChip, StatusChip } from "@/components/chips";
 import { DecisionForm } from "@/components/decision-form";
 import { ModeSwitch } from "@/components/mode-switch";
+import { RerunButton } from "@/components/rerun-button";
 import { checkLabel } from "@/lib/checks/labels";
 import { businessDate, instant, money } from "@/lib/format";
 import { getInvoiceReview } from "@/lib/queries/invoice";
@@ -171,6 +172,7 @@ export async function InvoicePanel({
               Explanation unavailable, see the raw findings.
             </p>
           )}
+          {!data.withheld ? <RerunButton invoiceId={invoice.id} /> : null}
         </section>
       ) : null}
 

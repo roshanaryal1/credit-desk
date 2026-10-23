@@ -1,3 +1,5 @@
+import "server-only";
+
 import { and, asc, eq, inArray, lte, sql } from "drizzle-orm";
 
 import { CONFIG_VERSION } from "@/lib/checks/config";
