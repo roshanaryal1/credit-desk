@@ -1,0 +1,8 @@
+.next
+node_modules
+coverage
+package-lock.json
+lib/db/migrations
+eval/report.json
+AGENTS.md
+*.md
