@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, eq, gte } from "drizzle-orm";
+import { and, count, eq, gte, sql } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -29,14 +29,34 @@ export async function recordHit(db: Db, key: string): Promise<void> {
   await db.insert(t.rateLimitEvents).values({ key });
 }
 
-/** Records one hit per key if every key is under its limit; otherwise records nothing. */
+/**
+ * Records one hit per key if every key is under its limit; otherwise records
+ * nothing. Check and record happen in one transaction holding an advisory
+ * lock per key, so concurrent callers cannot all slip under the limit.
+ */
 export async function takeAll(
   db: Db,
   limits: { key: string; max: number; windowMs: number }[],
 ): Promise<boolean> {
-  for (const l of limits) {
-    if ((await hitsSince(db, l.key, l.windowMs)) >= l.max) return false;
-  }
-  for (const l of limits) await recordHit(db, l.key);
-  return true;
+  const sorted = [...limits].sort((a, b) => (a.key < b.key ? -1 : 1));
+  return db.transaction(async (tx) => {
+    for (const l of sorted) {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${l.key}))`);
+    }
+    for (const l of sorted) {
+      const [row] = await tx
+        .select({ n: count() })
+        .from(t.rateLimitEvents)
+        .where(
+          and(
+            eq(t.rateLimitEvents.key, l.key),
+            gte(t.rateLimitEvents.createdAt, new Date(Date.now() - l.windowMs)),
+          ),
+        );
+      if ((row?.n ?? 0) >= l.max) return false;
+    }
+    for (const l of sorted)
+      await tx.insert(t.rateLimitEvents).values({ key: l.key });
+    return true;
+  });
 }

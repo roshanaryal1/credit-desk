@@ -60,7 +60,9 @@ async function nextRunId(db: Db, type: Subject["type"], id: string) {
     .where(
       and(eq(t.agentRuns.subjectType, type), eq(t.agentRuns.subjectId, id)),
     );
-  return `run_${id}_${(prior?.n ?? 0) + 1}`;
+  // The count keeps ids readable; the random suffix keeps concurrent runs
+  // for the same subject from colliding.
+  return `run_${id}_${(prior?.n ?? 0) + 1}_${crypto.randomUUID().slice(0, 6)}`;
 }
 
 const skipped = (runId: string): RunOutcome => ({

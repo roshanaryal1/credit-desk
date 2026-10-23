@@ -53,8 +53,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Suspense fallback={<NavFallback />}>
               <Nav />
             </Suspense>
-            <div className="md:hidden">
+            <div className="flex flex-wrap items-center md:hidden">
               <ThemeToggle />
+              <Suspense>
+                <SignOut />
+              </Suspense>
             </div>
             <div className="hidden md:mt-auto md:flex md:flex-col">
               <ThemeToggle />
