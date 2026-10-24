@@ -10,6 +10,7 @@ const GROUPS = [
     heading: "Work",
     items: [
       { href: "/", label: "Overview" },
+      { href: "/queue", label: "Review Queue" },
       { href: "/batches", label: "Invoice Check" },
       { href: "/watch", label: "Portfolio Watch" },
       { href: "/clients", label: "Clients" },
