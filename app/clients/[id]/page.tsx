@@ -42,6 +42,20 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
         title={client.name}
         description={`Relationship dossier · ${client.industry} · synthetic position as of ${businessDate(dossier.asOf)}`}
       />
+      <div className="border-border bg-card flex flex-wrap items-center justify-between gap-3 rounded-sm border px-5 py-4">
+        <div>
+          <p className="text-sm font-semibold">Collateral and eligibility review</p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Reconcile this client's dated ledger and debtor exclusions; no funding authorisation.
+          </p>
+        </div>
+        <Link
+          href={`/borrowing-base/clients/${encodeURIComponent(client.id)}`}
+          className="border-border text-primary hover:bg-accent/60 rounded-sm border px-3 py-2 text-sm font-semibold"
+        >
+          Open reconciliation →
+        </Link>
+      </div>
       <section aria-label="Facility position">
         <h2 className="mb-3 text-base font-semibold">Facility position</h2>
         <dl className="border-border bg-card grid rounded-sm border sm:grid-cols-2 xl:grid-cols-4">
