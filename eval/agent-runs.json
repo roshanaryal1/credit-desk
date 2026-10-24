@@ -1,0 +1,2848 @@
+{
+  "promptVersion": "2026-10-23.4",
+  "configVersion": "2026-10-23.1",
+  "runs": [
+    {
+      "id": "run_inc_FUNDED_CREDIT_NOTE:fnd_0151_1",
+      "subjectType": "INCIDENT",
+      "subjectId": "inc_FUNDED_CREDIT_NOTE:fnd_0151",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 7511,
+      "tokensOut": 1274,
+      "latencyMs": 3996,
+      "asOfDate": "2026-10-20",
+      "createdAt": "2026-10-23T07:19:19.896Z"
+    },
+    {
+      "id": "run_inc_OVERDUE_FUNDED:fnd_0001_1",
+      "subjectType": "INCIDENT",
+      "subjectId": "inc_OVERDUE_FUNDED:fnd_0001",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "ERROR",
+      "tokensIn": 7438,
+      "tokensOut": 559,
+      "latencyMs": 28227,
+      "asOfDate": "2026-10-20",
+      "createdAt": "2026-10-23T07:20:48.129Z"
+    },
+    {
+      "id": "run_inc_OVERDUE_FUNDED:fnd_0001_2",
+      "subjectType": "INCIDENT",
+      "subjectId": "inc_OVERDUE_FUNDED:fnd_0001",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "PASSED",
+      "tokensIn": 9573,
+      "tokensOut": 2144,
+      "latencyMs": 14541,
+      "asOfDate": "2026-10-20",
+      "createdAt": "2026-10-23T07:29:03.580Z"
+    },
+    {
+      "id": "run_inc_OVERDUE_FUNDED:fnd_0002_1",
+      "subjectType": "INCIDENT",
+      "subjectId": "inc_OVERDUE_FUNDED:fnd_0002",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "ERROR",
+      "tokensIn": 2597,
+      "tokensOut": 208,
+      "latencyMs": 4144,
+      "asOfDate": "2026-10-20",
+      "createdAt": "2026-10-23T07:21:31.421Z"
+    },
+    {
+      "id": "run_inc_OVERDUE_FUNDED:fnd_0002_2",
+      "subjectType": "INCIDENT",
+      "subjectId": "inc_OVERDUE_FUNDED:fnd_0002",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "PASSED",
+      "tokensIn": 10134,
+      "tokensOut": 2923,
+      "latencyMs": 19459,
+      "asOfDate": "2026-10-20",
+      "createdAt": "2026-10-23T07:30:23.043Z"
+    },
+    {
+      "id": "run_inc_OVERDUE_FUNDED:fnd_0171_1",
+      "subjectType": "INCIDENT",
+      "subjectId": "inc_OVERDUE_FUNDED:fnd_0171",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 7443,
+      "tokensOut": 1483,
+      "latencyMs": 3982,
+      "asOfDate": "2026-09-27",
+      "createdAt": "2026-10-23T07:22:32.431Z"
+    },
+    {
+      "id": "run_inv_0002_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0002",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5490,
+      "tokensOut": 893,
+      "latencyMs": 3560,
+      "asOfDate": "2026-07-28",
+      "createdAt": "2026-10-23T06:31:40.466Z"
+    },
+    {
+      "id": "run_inv_0014_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0014",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 3674,
+      "tokensOut": 635,
+      "latencyMs": 2973,
+      "asOfDate": "2026-07-28",
+      "createdAt": "2026-10-23T06:32:43.437Z"
+    },
+    {
+      "id": "run_inv_0027_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0027",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 6850,
+      "tokensOut": 936,
+      "latencyMs": 5087,
+      "asOfDate": "2026-07-28",
+      "createdAt": "2026-10-23T06:33:48.524Z"
+    },
+    {
+      "id": "run_inv_0044_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0044",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5843,
+      "tokensOut": 1321,
+      "latencyMs": 4837,
+      "asOfDate": "2026-08-05",
+      "createdAt": "2026-10-23T06:34:53.363Z"
+    },
+    {
+      "id": "run_inv_0045_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0045",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5841,
+      "tokensOut": 779,
+      "latencyMs": 3171,
+      "asOfDate": "2026-08-05",
+      "createdAt": "2026-10-23T06:35:56.535Z"
+    },
+    {
+      "id": "run_inv_0051_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0051",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5843,
+      "tokensOut": 798,
+      "latencyMs": 3223,
+      "asOfDate": "2026-08-05",
+      "createdAt": "2026-10-23T06:36:59.760Z"
+    },
+    {
+      "id": "run_inv_0054_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0054",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 10257,
+      "tokensOut": 1124,
+      "latencyMs": 4582,
+      "asOfDate": "2026-08-05",
+      "createdAt": "2026-10-23T06:38:04.343Z"
+    },
+    {
+      "id": "run_inv_0065_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0065",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5108,
+      "tokensOut": 820,
+      "latencyMs": 2583,
+      "asOfDate": "2026-08-13",
+      "createdAt": "2026-10-23T06:39:06.928Z"
+    },
+    {
+      "id": "run_inv_0090_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0090",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 3675,
+      "tokensOut": 602,
+      "latencyMs": 2124,
+      "asOfDate": "2026-08-13",
+      "createdAt": "2026-10-23T06:40:09.054Z"
+    },
+    {
+      "id": "run_inv_0092_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0092",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 8531,
+      "tokensOut": 590,
+      "latencyMs": 3181,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T06:41:12.237Z"
+    },
+    {
+      "id": "run_inv_0092_2",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0092",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 90,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:09:47.596Z"
+    },
+    {
+      "id": "run_inv_0092_3",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0092",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 129,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:10:05.180Z"
+    },
+    {
+      "id": "run_inv_0092_4",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0092",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 3897,
+      "tokensOut": 279,
+      "latencyMs": 2645,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:10:57.418Z"
+    },
+    {
+      "id": "run_inv_0092_5",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0092",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "PASSED",
+      "tokensIn": 5474,
+      "tokensOut": 904,
+      "latencyMs": 24574,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:23:23.206Z"
+    },
+    {
+      "id": "run_inv_0093_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0093",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 8455,
+      "tokensOut": 692,
+      "latencyMs": 2849,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T06:42:14.717Z"
+    },
+    {
+      "id": "run_inv_0093_2",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0093",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 54,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:09:47.655Z"
+    },
+    {
+      "id": "run_inv_0093_3",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0093",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "dbg",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 97,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:10:26.209Z"
+    },
+    {
+      "id": "run_inv_0093_4",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0093",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 3898,
+      "tokensOut": 286,
+      "latencyMs": 3582,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:12:00.290Z"
+    },
+    {
+      "id": "run_inv_0093_5",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0093",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 8480,
+      "tokensOut": 1448,
+      "latencyMs": 10228,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:24:33.437Z"
+    },
+    {
+      "id": "run_inv_0094_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0094",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 8453,
+      "tokensOut": 488,
+      "latencyMs": 2604,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T06:43:16.842Z"
+    },
+    {
+      "id": "run_inv_0094_2",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0094",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 53,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:09:47.709Z"
+    },
+    {
+      "id": "run_inv_0094_3",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0094",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 3897,
+      "tokensOut": 228,
+      "latencyMs": 2865,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:13:01.525Z"
+    },
+    {
+      "id": "run_inv_0094_4",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0094",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 3897,
+      "tokensOut": 1248,
+      "latencyMs": 3127,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:25:36.572Z"
+    },
+    {
+      "id": "run_inv_0095_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0095",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 8453,
+      "tokensOut": 596,
+      "latencyMs": 2729,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T06:44:19.145Z"
+    },
+    {
+      "id": "run_inv_0095_2",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0095",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 94,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:09:47.805Z"
+    },
+    {
+      "id": "run_inv_0095_3",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0095",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 6120,
+      "tokensOut": 399,
+      "latencyMs": 9378,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:14:10.134Z"
+    },
+    {
+      "id": "run_inv_0095_4",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0095",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "ERROR",
+      "tokensIn": 3897,
+      "tokensOut": 622,
+      "latencyMs": 4351,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:26:40.932Z"
+    },
+    {
+      "id": "run_inv_0095_5",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0095",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 3897,
+      "tokensOut": 231,
+      "latencyMs": 19959,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:30:50.302Z"
+    },
+    {
+      "id": "run_inv_0096_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0096",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 8457,
+      "tokensOut": 766,
+      "latencyMs": 3270,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T06:45:22.008Z"
+    },
+    {
+      "id": "run_inv_0096_2",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0096",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 57,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:09:47.863Z"
+    },
+    {
+      "id": "run_inv_0096_3",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0096",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "PASSED",
+      "tokensIn": 2530,
+      "tokensOut": 833,
+      "latencyMs": 2829,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T07:15:06.110Z"
+    },
+    {
+      "id": "run_inv_0097_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0097",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 3721,
+      "tokensOut": 827,
+      "latencyMs": 2849,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T06:46:24.499Z"
+    },
+    {
+      "id": "run_inv_0102_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0102",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 2,
+      "status": "PASSED",
+      "tokensIn": 10015,
+      "tokensOut": 1254,
+      "latencyMs": 3579,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T06:47:28.080Z"
+    },
+    {
+      "id": "run_inv_0120_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0120",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 10077,
+      "tokensOut": 1396,
+      "latencyMs": 4329,
+      "asOfDate": "2026-08-26",
+      "createdAt": "2026-10-23T06:48:32.411Z"
+    },
+    {
+      "id": "run_inv_0123_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0123",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 6524,
+      "tokensOut": 671,
+      "latencyMs": 2185,
+      "asOfDate": "2026-09-09",
+      "createdAt": "2026-10-23T06:49:34.597Z"
+    },
+    {
+      "id": "run_inv_0131_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0131",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 7660,
+      "tokensOut": 1473,
+      "latencyMs": 4374,
+      "asOfDate": "2026-09-09",
+      "createdAt": "2026-10-23T06:50:38.974Z"
+    },
+    {
+      "id": "run_inv_0142_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0142",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5066,
+      "tokensOut": 728,
+      "latencyMs": 1974,
+      "asOfDate": "2026-09-09",
+      "createdAt": "2026-10-23T06:51:40.951Z"
+    },
+    {
+      "id": "run_inv_0146_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0146",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 6855,
+      "tokensOut": 1335,
+      "latencyMs": 3436,
+      "asOfDate": "2026-09-09",
+      "createdAt": "2026-10-23T06:52:44.389Z"
+    },
+    {
+      "id": "run_inv_0149_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0149",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5130,
+      "tokensOut": 990,
+      "latencyMs": 2717,
+      "asOfDate": "2026-09-09",
+      "createdAt": "2026-10-23T06:53:47.108Z"
+    },
+    {
+      "id": "run_inv_0150_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0150",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 2,
+      "status": "PASSED",
+      "tokensIn": 6943,
+      "tokensOut": 1093,
+      "latencyMs": 3233,
+      "asOfDate": "2026-09-09",
+      "createdAt": "2026-10-23T06:54:50.344Z"
+    },
+    {
+      "id": "run_inv_0151_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0151",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 7008,
+      "tokensOut": 1168,
+      "latencyMs": 3075,
+      "asOfDate": "2026-09-09",
+      "createdAt": "2026-10-23T06:55:53.421Z"
+    },
+    {
+      "id": "run_inv_0166_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0166",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 9654,
+      "tokensOut": 1479,
+      "latencyMs": 4509,
+      "asOfDate": "2026-09-23",
+      "createdAt": "2026-10-23T06:56:57.932Z"
+    },
+    {
+      "id": "run_inv_0170_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0170",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 6297,
+      "tokensOut": 1045,
+      "latencyMs": 3438,
+      "asOfDate": "2026-09-23",
+      "createdAt": "2026-10-23T06:58:01.372Z"
+    },
+    {
+      "id": "run_inv_0173_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0173",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5130,
+      "tokensOut": 715,
+      "latencyMs": 2000,
+      "asOfDate": "2026-09-23",
+      "createdAt": "2026-10-23T06:59:03.374Z"
+    },
+    {
+      "id": "run_inv_0182_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0182",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5132,
+      "tokensOut": 960,
+      "latencyMs": 2666,
+      "asOfDate": "2026-09-23",
+      "createdAt": "2026-10-23T07:00:06.042Z"
+    },
+    {
+      "id": "run_inv_0183_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0183",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5066,
+      "tokensOut": 913,
+      "latencyMs": 3309,
+      "asOfDate": "2026-09-23",
+      "createdAt": "2026-10-23T07:01:09.354Z"
+    },
+    {
+      "id": "run_inv_0184_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0184",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 6706,
+      "tokensOut": 1202,
+      "latencyMs": 4459,
+      "asOfDate": "2026-09-23",
+      "createdAt": "2026-10-23T07:02:13.815Z"
+    },
+    {
+      "id": "run_inv_0196_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0196",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5133,
+      "tokensOut": 1017,
+      "latencyMs": 3639,
+      "asOfDate": "2026-10-17",
+      "createdAt": "2026-10-23T07:03:17.455Z"
+    },
+    {
+      "id": "run_inv_0214_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0214",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5131,
+      "tokensOut": 982,
+      "latencyMs": 3012,
+      "asOfDate": "2026-10-17",
+      "createdAt": "2026-10-23T07:04:20.468Z"
+    },
+    {
+      "id": "run_inv_0215_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0215",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 9648,
+      "tokensOut": 1324,
+      "latencyMs": 6578,
+      "asOfDate": "2026-10-17",
+      "createdAt": "2026-10-23T07:05:27.048Z"
+    },
+    {
+      "id": "run_inv_0218_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0218",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 5183,
+      "tokensOut": 1073,
+      "latencyMs": 3379,
+      "asOfDate": "2026-10-17",
+      "createdAt": "2026-10-23T07:06:30.429Z"
+    },
+    {
+      "id": "run_inv_0222_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0222",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 6066,
+      "tokensOut": 1043,
+      "latencyMs": 3162,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:07:33.591Z"
+    },
+    {
+      "id": "run_inv_0223_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0223",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 2,
+      "status": "ERROR",
+      "tokensIn": 5585,
+      "tokensOut": 1283,
+      "latencyMs": 3695,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:08:37.287Z"
+    },
+    {
+      "id": "run_inv_0223_2",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0223",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 54,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:09:47.921Z"
+    },
+    {
+      "id": "run_inv_0223_3",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0223",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "FAILED",
+      "tokensIn": 2659,
+      "tokensOut": 1367,
+      "latencyMs": 3111,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:16:09.227Z"
+    },
+    {
+      "id": "run_inv_0223_4",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0223",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "PASSED",
+      "tokensIn": 7971,
+      "tokensOut": 2052,
+      "latencyMs": 10203,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:27:49.034Z"
+    },
+    {
+      "id": "run_inv_0229_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0229",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 163,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:09:37.395Z"
+    },
+    {
+      "id": "run_inv_0229_2",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0229",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 52,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:09:47.974Z"
+    },
+    {
+      "id": "run_inv_0229_3",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0229",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 2,
+      "status": "PASSED",
+      "tokensIn": 7264,
+      "tokensOut": 1443,
+      "latencyMs": 3069,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:17:12.301Z"
+    },
+    {
+      "id": "run_inv_0237_1",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0237",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "9856294",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 55,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:09:37.452Z"
+    },
+    {
+      "id": "run_inv_0237_2",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0237",
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "ERROR",
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 53,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:09:48.029Z"
+    },
+    {
+      "id": "run_inv_0237_3",
+      "subjectType": "INVOICE",
+      "subjectId": "inv_0237",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b",
+      "promptVersion": "2026-10-23.4",
+      "configVersion": "2026-10-23.1",
+      "codeSha": "44445bb",
+      "attempts": 1,
+      "status": "PASSED",
+      "tokensIn": 6304,
+      "tokensOut": 1546,
+      "latencyMs": 3584,
+      "asOfDate": "2026-10-19",
+      "createdAt": "2026-10-23T07:18:15.895Z"
+    }
+  ],
+  "explanations": [
+    {
+      "id": "exp_run_inv_0002_1",
+      "agentRunId": "run_inv_0002_1",
+      "summary": "Invoice INV-10002 is 112 days old at submission, exceeding age limits, and is recorded as VOIDED in the ledger.",
+      "riskLevel": "HIGH",
+      "recommendation": "REJECT",
+      "questionsForClient": [
+        "Please provide documentation explaining why the invoice was marked VOIDED.",
+        "If a corrected invoice exists, submit the new invoice with supporting evidence."
+      ],
+      "claims": [
+        {
+          "text": "The invoice is 112 days old at submission, exceeding the permissible age limit.",
+          "evidenceIds": [
+            "fdg_inv_0002_OVER_AGE_2026-10-23.1",
+            "inv_0002"
+          ]
+        },
+        {
+          "text": "The ledger entry records the invoice status as VOIDED as of 2026-07-09.",
+          "evidenceIds": [
+            "fdg_inv_0002_VOIDED_2026-10-23.1",
+            "led_0484"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0002_OVER_AGE_2026-10-23.1",
+        "fdg_inv_0002_VOIDED_2026-10-23.1",
+        "inv_0002",
+        "led_0484"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0014_1",
+      "agentRunId": "run_inv_0014_1",
+      "summary": "Invoice INV-10014 has an issue date of 2026-08-10, which is after its submission date of 2026-07-28, triggering a HIGH severity FUTURE_DATED finding.",
+      "riskLevel": "HIGH",
+      "recommendation": "REJECT",
+      "questionsForClient": [
+        "Can you provide a corrected invoice with an issue date on or before 2026-07-28?",
+        "Is there a documented reason for the invoice being dated after submission?"
+      ],
+      "claims": [
+        {
+          "text": "The invoice issue date (2026-08-10) is later than the submission date (2026-07-28), violating the FUTURE_DATED check.",
+          "evidenceIds": [
+            "fdg_inv_0014_FUTURE_DATED_2026-10-23.1",
+            "inv_0014"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0014_FUTURE_DATED_2026-10-23.1",
+        "inv_0014"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0027_1",
+      "agentRunId": "run_inv_0027_1",
+      "summary": "Invoice INV-10027 for $6,000.38 was fully paid on 2026-07-27 before submission, as shown by ledger entry and bank transaction, triggering a HIGH ALREADY_PAID finding.",
+      "riskLevel": "HIGH",
+      "recommendation": "REJECT",
+      "questionsForClient": [],
+      "claims": [
+        {
+          "text": "The submitted invoice INV-10027 amount is $6,000.38, issued 2026-07-09 and submitted for funding on 2026-07-28.",
+          "evidenceIds": [
+            "inv_0027"
+          ]
+        },
+        {
+          "text": "Ledger entry led_0509 records the invoice as PAID with status date 2026-07-27.",
+          "evidenceIds": [
+            "led_0509"
+          ]
+        },
+        {
+          "text": "Bank transaction bnk_0483 on 2026-07-27 allocated $6,000.38 to ledger entry led_0509, confirming full payment.",
+          "evidenceIds": [
+            "bnk_0483"
+          ]
+        },
+        {
+          "text": "Deterministic check flagged ALREADY_PAID with HIGH severity, referencing the same evidence.",
+          "evidenceIds": [
+            "fdg_inv_0027_ALREADY_PAID_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inv_0027",
+        "led_0509",
+        "bnk_0483",
+        "fdg_inv_0027_ALREADY_PAID_2026-10-23.1"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0044_1",
+      "agentRunId": "run_inv_0044_1",
+      "summary": "Debtor Nettlebank Motors Ltd averages 64 days to pay, exceeding the 50‑day threshold, triggering a medium‑severity slow‑payer flag for invoice $4,418.88 due 2026‑08‑10.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you provide payment confirmations for any invoices settled by dbt_0019 after 2026-07-22?",
+        "Do you have a payment plan or explanation for the debtor’s historically slow payments?"
+      ],
+      "claims": [
+        {
+          "text": "Debtor dbt_0019 has paid 9 invoices in the last 12 months with a mean days‑to‑pay of 64, exceeding the slow‑payer threshold of 50 days, resulting in a medium‑severity finding.",
+          "evidenceIds": [
+            "fdg_inv_0044_SLOW_PAYER_2026-10-23.1",
+            "pay_0241",
+            "pay_0242",
+            "pay_0243",
+            "pay_0244",
+            "pay_0245",
+            "pay_0246",
+            "pay_0247",
+            "pay_0248",
+            "pay_0249"
+          ]
+        },
+        {
+          "text": "Invoice inv_0044 is for $4,418.88, issued 2026-07-21, due 2026-08-10, and was submitted for funding on 2026-08-05.",
+          "evidenceIds": [
+            "inv_0044"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0044_SLOW_PAYER_2026-10-23.1",
+        "pay_0241",
+        "pay_0242",
+        "pay_0243",
+        "pay_0244",
+        "pay_0245",
+        "pay_0246",
+        "pay_0247",
+        "pay_0248",
+        "pay_0249",
+        "inv_0044"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0045_1",
+      "agentRunId": "run_inv_0045_1",
+      "summary": "Debtor Nettlebank Motors Ltd consistently pays 61‑67 days, mean 64, exceeding the 50‑day threshold, triggering a medium‑severity slow‑payer finding.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "HOLD",
+      "questionsForClient": [
+        "Can you provide recent cash flow statements for Nettlebank Motors Ltd to assess their ability to meet payment terms?"
+      ],
+      "claims": [
+        {
+          "text": "Invoice inv_0045 for debtor dbt_0019 was issued on 2026-07-10, due 2026-07-30, amount $5,728.25, and submitted for funding on 2026-08-05.",
+          "evidenceIds": [
+            "inv_0045"
+          ]
+        },
+        {
+          "text": "Deterministic check flagged a SLOW_PAYER finding (medium severity) with mean days to pay 63.56 across 9 payments, exceeding the 50‑day threshold.",
+          "evidenceIds": [
+            "fdg_inv_0045_SLOW_PAYER_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Debtor history shows 9 payments in the past 12 months with days‑to‑pay ranging from 61 to 67, averaging 64 days.",
+          "evidenceIds": [
+            "pay_0241",
+            "pay_0242",
+            "pay_0243",
+            "pay_0244",
+            "pay_0245",
+            "pay_0246",
+            "pay_0247",
+            "pay_0248",
+            "pay_0249"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inv_0045",
+        "fdg_inv_0045_SLOW_PAYER_2026-10-23.1",
+        "pay_0241",
+        "pay_0242",
+        "pay_0243",
+        "pay_0244",
+        "pay_0245",
+        "pay_0246",
+        "pay_0247",
+        "pay_0248",
+        "pay_0249"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0051_1",
+      "agentRunId": "run_inv_0051_1",
+      "summary": "Debtor Nettlebank Motors Ltd averages 64 days to pay, exceeding the 50‑day threshold, resulting in a medium‑severity SLOW_PAYER flag for invoice inv_0051.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "HOLD",
+      "questionsForClient": [
+        "Can you provide any recent communication indicating an expected change in payment behavior for debtor dbt_0019?"
+      ],
+      "claims": [
+        {
+          "text": "The SLOW_PAYER finding (fdg_inv_0051_SLOW_PAYER_2026-10-23.1) reports a mean days‑to‑pay of 63.56, above the 50‑day threshold.",
+          "evidenceIds": [
+            "fdg_inv_0051_SLOW_PAYER_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Debtor history shows nine payments (pay_0241‑pay_0249) with days‑to‑pay ranging from 61 to 67, yielding an overall mean of 64 days.",
+          "evidenceIds": [
+            "pay_0241",
+            "pay_0242",
+            "pay_0243",
+            "pay_0244",
+            "pay_0245",
+            "pay_0246",
+            "pay_0247",
+            "pay_0248",
+            "pay_0249"
+          ]
+        },
+        {
+          "text": "Invoice inv_0051 was submitted on 2026-08-05 for debtor dbt_0019, amount $15,056.05.",
+          "evidenceIds": [
+            "inv_0051"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0051_SLOW_PAYER_2026-10-23.1",
+        "pay_0241",
+        "pay_0242",
+        "pay_0243",
+        "pay_0244",
+        "pay_0245",
+        "pay_0246",
+        "pay_0247",
+        "pay_0248",
+        "pay_0249",
+        "inv_0051"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0054_1",
+      "agentRunId": "run_inv_0054_1",
+      "summary": "Invoice INV-20054 ($6,565.08) is flagged for SLOW_PAYER: debtor Nettlebank Motors Ltd averages 64 days to pay, above the 50‑day threshold, based on nine recent payments.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you provide any recent payments from Nettlebank Motors Ltd after 2026-07-22 that show improved payment speed?",
+        "Are there any agreed payment term adjustments or commitments from the debtor to reduce days to pay?"
+      ],
+      "claims": [
+        {
+          "text": "Invoice INV-20054 for $6,565.08 was issued on 2026-07-24, due 2026-08-13, and submitted for funding on 2026-08-05.",
+          "evidenceIds": [
+            "inv_0054"
+          ]
+        },
+        {
+          "text": "The SLOW_PAYER finding shows the debtor made nine payments in the last 12 months with a mean of 63.56 days, exceeding the 50‑day threshold, resulting in a medium‑severity flag.",
+          "evidenceIds": [
+            "fdg_inv_0054_SLOW_PAYER_2026-10-23.1",
+            "pay_0241",
+            "pay_0242",
+            "pay_0243",
+            "pay_0244",
+            "pay_0245",
+            "pay_0246",
+            "pay_0247",
+            "pay_0248",
+            "pay_0249"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inv_0054",
+        "fdg_inv_0054_SLOW_PAYER_2026-10-23.1",
+        "pay_0241",
+        "pay_0242",
+        "pay_0243",
+        "pay_0244",
+        "pay_0245",
+        "pay_0246",
+        "pay_0247",
+        "pay_0248",
+        "pay_0249"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0149_1",
+      "agentRunId": "run_inv_0149_1",
+      "summary": "Debtor Juniper Interiors Ltd (dbt_0010) first seen 2026-08-26, known 14 days, no payment history, triggering NEW_DEBTOR medium severity flag for invoice inv_0149.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you provide trade references or bank statements confirming the creditworthiness of Juniper Interiors Ltd?",
+        "Is there any prior informal payment activity with this debtor not captured in the system?"
+      ],
+      "claims": [
+        {
+          "text": "The debtor dbt_0010 was first seen on 2026-08-26 and has been known for only 14 days, with no recorded payment history, triggering a NEW_DEBTOR finding of medium severity.",
+          "evidenceIds": [
+            "fdg_inv_0149_NEW_DEBTOR_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0149_NEW_DEBTOR_2026-10-23.1",
+        "inv_0149",
+        "dbt_0010"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0065_1",
+      "agentRunId": "run_inv_0065_1",
+      "summary": "Invoice INV-30065 is flagged VOIDED; ledger entry shows status VOIDED on 2026-07-25, before its submission on 2026-08-13, indicating an invalid invoice.",
+      "riskLevel": "HIGH",
+      "recommendation": "REJECT",
+      "questionsForClient": [
+        "Provide the reason and supporting documentation for why invoice INV-30065 was voided.",
+        "If a replacement invoice exists, submit the corrected invoice and supporting evidence."
+      ],
+      "claims": [
+        {
+          "text": "Deterministic checks identified a HIGH severity VOIDED finding for invoice inv_0065.",
+          "evidenceIds": [
+            "fdg_inv_0065_VOIDED_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Ledger entry led_0547 records the invoice status as VOIDED with statusDate 2026-07-25.",
+          "evidenceIds": [
+            "led_0547"
+          ]
+        },
+        {
+          "text": "The invoice was submitted on 2026-08-13 (inv_0065) after it had been voided on 2026-07-25 (led_0547), indicating it was not a valid payable document at submission.",
+          "evidenceIds": [
+            "inv_0065",
+            "led_0547"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0065_VOIDED_2026-10-23.1",
+        "inv_0065",
+        "led_0547"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0090_1",
+      "agentRunId": "run_inv_0090_1",
+      "summary": "Invoice issue date (2026-08-22) postdates submission (2026-08-13), triggering a HIGH severity FUTURE_DATED finding.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Why does the invoice have an issue date later than its submission date?"
+      ],
+      "claims": [
+        {
+          "text": "The invoice issue date (2026-08-22) is later than its submitted date (2026-08-13), which the FUTURE_DATED check flagged as HIGH severity.",
+          "evidenceIds": [
+            "fdg_inv_0090_FUTURE_DATED_2026-10-23.1",
+            "inv_0090"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0090_FUTURE_DATED_2026-10-23.1",
+        "inv_0090"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0097_1",
+      "agentRunId": "run_inv_0097_1",
+      "summary": "Debtor dbt_0032 represents 51.90% of the client’s total invoice exposure ($218,912.99 of $421,728.25), triggering a medium‑severity concentration finding.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "HOLD",
+      "questionsForClient": [
+        "Can you provide a plan to mitigate the concentration risk with debtor dbt_0032, such as additional guarantees or diversification of the invoice portfolio?"
+      ],
+      "claims": [
+        {
+          "text": "The concentration check flagged a medium severity finding because debtor dbt_0032 accounts for 5,190 basis points (51.90%) of the client’s total invoice exposure ($218,912.99 of $421,728.25).",
+          "evidenceIds": [
+            "fdg_inv_0097_CONCENTRATION_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Invoice inv_0097 was issued to debtor dbt_0032 for $25,006.85 and submitted for funding on 2026-08-26.",
+          "evidenceIds": [
+            "inv_0097"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0097_CONCENTRATION_2026-10-23.1",
+        "inv_0097"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0102_1",
+      "agentRunId": "run_inv_0102_1",
+      "summary": "Invoice amount $12,224.91 does not match ledger amount $8,988.90, triggering a HIGH LEDGER_MISMATCH.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Provide documentation (credit note, amendment, or other justification) explaining the difference between the submitted invoice amount $12,224.91 and the ledger amount $8,988.90."
+      ],
+      "claims": [
+        {
+          "text": "The invoice record shows amount $12,224.91 (inv_0102) while the ledger entry records amount $8,988.90 (led_0584), a mismatch flagged as HIGH LEDGER_MISMATCH.",
+          "evidenceIds": [
+            "fdg_inv_0102_LEDGER_MISMATCH_2026-10-23.1",
+            "inv_0102",
+            "led_0584"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0102_LEDGER_MISMATCH_2026-10-23.1",
+        "inv_0102",
+        "led_0584"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": [
+        "claim 1 states $3236.01, which is not in its cited records",
+        "summary states $3236.01, which is not in any cited record"
+      ]
+    },
+    {
+      "id": "exp_run_inv_0120_1",
+      "agentRunId": "run_inv_0120_1",
+      "summary": "Invoice INV-40120 is 124 days old, exceeding allowed age; no payment record found, indicating high risk. Request clarification on the delay and supporting documentation.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Why was invoice INV-40120, dated 2026-04-24, submitted for funding on 2026-08-26 after 124 days?",
+        "Can you provide supporting documents confirming the invoice remains valid and payable (e.g., acceptance, delivery proof, or correspondence)?"
+      ],
+      "claims": [
+        {
+          "text": "The deterministic check flagged an OVER_AGE finding because the invoice is 124 days old (issue date 2026-04-24, submitted date 2026-08-26).",
+          "evidenceIds": [
+            "fdg_inv_0120_OVER_AGE_2026-10-23.1",
+            "inv_0120"
+          ]
+        },
+        {
+          "text": "No bank transaction records allocate payment to this invoice; the listed transactions reference other invoice numbers (H-0038-06 to H-0038-03).",
+          "evidenceIds": [
+            "bnk_0465",
+            "bnk_0466",
+            "bnk_0467",
+            "bnk_0468"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0120_OVER_AGE_2026-10-23.1",
+        "inv_0120",
+        "bnk_0465",
+        "bnk_0466",
+        "bnk_0467",
+        "bnk_0468"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0123_1",
+      "agentRunId": "run_inv_0123_1",
+      "summary": "Invoice INV-10123 is recorded as VOIDED in the client ledger, matching the high‑severity VOIDED finding.",
+      "riskLevel": "HIGH",
+      "recommendation": "REJECT",
+      "questionsForClient": [],
+      "claims": [
+        {
+          "text": "The deterministic check flagged the invoice as VOIDED with high severity.",
+          "evidenceIds": [
+            "fdg_inv_0123_VOIDED_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "The client ledger entry for this invoice shows status VOIDED as of 2026-09-07.",
+          "evidenceIds": [
+            "led_0605"
+          ]
+        },
+        {
+          "text": "Invoice details confirm submission for funding on 2026-09-09.",
+          "evidenceIds": [
+            "inv_0123"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0123_VOIDED_2026-10-23.1",
+        "led_0605",
+        "inv_0123"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0131_1",
+      "agentRunId": "run_inv_0131_1",
+      "summary": "Invoice INV-10131 was issued on 2026-05-28 and submitted 104 days later, triggering a HIGH severity OVER_AGE finding; debtor's payment record shows average 32 days, but the invoice age exceeds acceptable limits.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please provide justification for submitting an invoice that is 104 days old.",
+        "Was there any agreed extension or dispute that delayed the submission?",
+        "Can you supply any supporting documentation (e.g., correspondence) explaining the delay?"
+      ],
+      "claims": [
+        {
+          "text": "The invoice was issued on 2026-05-28 and submitted for funding on 2026-09-09, making it 104 days old, which triggered the OVER_AGE high severity finding.",
+          "evidenceIds": [
+            "fdg_inv_0131_OVER_AGE_2026-10-23.1",
+            "inv_0131"
+          ]
+        },
+        {
+          "text": "Debtor Ironsand Engineering Ltd typically pays within 27‑51 days (e.g., payments pay_0124 and pay_0500), with a mean of 32 days, so an invoice aged 104 days is outside normal payment behavior, increasing risk.",
+          "evidenceIds": [
+            "pay_0124",
+            "pay_0500"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0131_OVER_AGE_2026-10-23.1",
+        "inv_0131",
+        "pay_0124",
+        "pay_0500"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0142_1",
+      "agentRunId": "run_inv_0142_1",
+      "summary": "Invoice INV-10142 lacks a corresponding ledger entry, triggering a HIGH severity LEDGER_MISSING finding.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please provide the accounting ledger entry or supporting documentation for invoice INV-10142."
+      ],
+      "claims": [
+        {
+          "text": "No ledger entry was found for invoice INV-10142, confirming the LEDGER_MISSING finding.",
+          "evidenceIds": [
+            "fdg_inv_0142_LEDGER_MISSING_2026-10-23.1",
+            "inv_0142"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0142_LEDGER_MISSING_2026-10-23.1",
+        "inv_0142"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0146_1",
+      "agentRunId": "run_inv_0146_1",
+      "summary": "Invoice INV-10146 for $4,463.75 includes a $312.46 credit note issued before submission, lowering the net amount. The credit note is documented in the ledger, but verification of its justification is required.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please provide the credit note documentation and the reason it was issued.",
+        "Confirm the net invoice amount after the credit note that should be considered for financing."
+      ],
+      "claims": [
+        {
+          "text": "Invoice inv_0146 for $4,463.75 was submitted on 2026-09-09 for debtor dbt_0007.",
+          "evidenceIds": [
+            "inv_0146"
+          ]
+        },
+        {
+          "text": "A credit note cn_0003 for $312.46 was recorded on 2026-08-22 against ledger entry led_0628, reducing the invoice value.",
+          "evidenceIds": [
+            "led_0628",
+            "cn_0003"
+          ]
+        },
+        {
+          "text": "The deterministic check flagged a medium‑severity CREDIT_NOTE issue (fdg_inv_0146_CREDIT_NOTE_2026-10-23.1).",
+          "evidenceIds": [
+            "fdg_inv_0146_CREDIT_NOTE_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inv_0146",
+        "led_0628",
+        "cn_0003",
+        "fdg_inv_0146_CREDIT_NOTE_2026-10-23.1"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0150_1",
+      "agentRunId": "run_inv_0150_1",
+      "summary": "Submitted invoice amount $11,628.98 differs from ledger amount $9,378.21, flagged as HIGH severity.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please provide documentation explaining the difference between the submitted invoice amount $11,628.98 and the ledger entry amount $9,378.21.",
+        "Is there a credit note, amendment, or accounting adjustment that justifies the higher invoice amount?"
+      ],
+      "claims": [
+        {
+          "text": "The submitted invoice amount $11,628.98 does not match the ledger entry amount $9,378.21, a HIGH severity LEDGER_MISMATCH finding.",
+          "evidenceIds": [
+            "inv_0150",
+            "led_0632",
+            "fdg_inv_0150_LEDGER_MISMATCH_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inv_0150",
+        "led_0632",
+        "fdg_inv_0150_LEDGER_MISMATCH_2026-10-23.1"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": [
+        "claim 1 states $2250.77, which is not in its cited records",
+        "summary states $2250.77, which is not in any cited record"
+      ]
+    },
+    {
+      "id": "exp_run_inv_0151_1",
+      "agentRunId": "run_inv_0151_1",
+      "summary": "Invoice INV-10151 for $12,287.27 was paid on 2026-09-05, as shown by ledger entry and bank transaction, before its submission on 2026-09-09, triggering a high‑severity ALREADY_PAID finding.",
+      "riskLevel": "HIGH",
+      "recommendation": "REJECT",
+      "questionsForClient": [
+        "Please confirm whether the payment recorded on 2026-09-05 was intended for a different invoice or provide documentation explaining this payment."
+      ],
+      "claims": [
+        {
+          "text": "The invoice inv_0151 (INV-10151) for $12,287.27 was submitted for funding on 2026-09-09.",
+          "evidenceIds": [
+            "inv_0151"
+          ]
+        },
+        {
+          "text": "Ledger entry led_0633 shows the invoice status as PAID with statusDate 2026-09-05, indicating it was settled before submission.",
+          "evidenceIds": [
+            "led_0633"
+          ]
+        },
+        {
+          "text": "Bank transaction bnk_0484 records a payment of $12,287.27 on 2026-09-05 allocated to ledger entry led_0633, confirming the payment.",
+          "evidenceIds": [
+            "bnk_0484"
+          ]
+        },
+        {
+          "text": "Deterministic check found ALREADY_PAID (HIGH) for this invoice, referencing the same invoice, ledger entry, and bank transaction.",
+          "evidenceIds": [
+            "fdg_inv_0151_ALREADY_PAID_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inv_0151",
+        "led_0633",
+        "bnk_0484",
+        "fdg_inv_0151_ALREADY_PAID_2026-10-23.1"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0166_1",
+      "agentRunId": "run_inv_0166_1",
+      "summary": "Invoice inv_0166 was already paid on 2026-08-24 and duplicates earlier invoice inv_0034; both high‑severity findings suggest it should not be funded.",
+      "riskLevel": "HIGH",
+      "recommendation": "REJECT",
+      "questionsForClient": [
+        "Please confirm whether inv_0166 was intended as a new invoice or a re‑submission of inv_0034."
+      ],
+      "claims": [
+        {
+          "text": "Ledger entry led_0516 shows inv_0166 status PAID with amount $11,547.03 as of 2026-08-24.",
+          "evidenceIds": [
+            "led_0516"
+          ]
+        },
+        {
+          "text": "Bank transaction bnk_0514 on 2026-08-24 paid $11,547.03 and allocated it to ledger entry led_0516, confirming payment.",
+          "evidenceIds": [
+            "bnk_0514"
+          ]
+        },
+        {
+          "text": "Invoice inv_0034 matches inv_0166 on invoice number INV-20034, issue date 2026-07-24, amount $11,547.03, and debtor dbt_0014, indicating a duplicate.",
+          "evidenceIds": [
+            "inv_0166",
+            "inv_0034"
+          ]
+        },
+        {
+          "text": "Finding fdg_inv_0166_ALREADY_PAID_2026-10-23.1 flags the invoice as already paid, referencing inv_0166, led_0516, and bnk_0514.",
+          "evidenceIds": [
+            "fdg_inv_0166_ALREADY_PAID_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Finding fdg_inv_0166_DUP_2026-10-23.1 flags a duplicate with matching invoice inv_0034.",
+          "evidenceIds": [
+            "fdg_inv_0166_DUP_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "led_0516",
+        "bnk_0514",
+        "inv_0166",
+        "inv_0034",
+        "fdg_inv_0166_ALREADY_PAID_2026-10-23.1",
+        "fdg_inv_0166_DUP_2026-10-23.1"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0170_1",
+      "agentRunId": "run_inv_0170_1",
+      "summary": "Debtor Nettlebank Motors Ltd shows a mean payment period of 58.8 days across 15 invoices, exceeding the 50‑day threshold, triggering a MEDIUM SLOW_PAYER flag.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "HOLD",
+      "questionsForClient": [
+        "Can you provide recent cash‑flow statements or bank statements for Nettlebank Motors Ltd to assess current liquidity?"
+      ],
+      "claims": [
+        {
+          "text": "The debtor’s last 15 payments have a mean days‑to‑pay of 58.8 days, exceeding the 50‑day threshold used for the SLOW_PAYER check, resulting in a MEDIUM severity finding.",
+          "evidenceIds": [
+            "fdg_inv_0170_SLOW_PAYER_2026-10-23.1",
+            "pay_0241",
+            "pay_0242",
+            "pay_0243",
+            "pay_0244",
+            "pay_0245",
+            "pay_0246",
+            "pay_0247",
+            "pay_0248",
+            "pay_0249",
+            "pay_0529",
+            "pay_0250",
+            "pay_0523",
+            "pay_0522",
+            "pay_0532",
+            "pay_0251"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0170_SLOW_PAYER_2026-10-23.1",
+        "pay_0241",
+        "pay_0242",
+        "pay_0243",
+        "pay_0244",
+        "pay_0245",
+        "pay_0246",
+        "pay_0247",
+        "pay_0248",
+        "pay_0249",
+        "pay_0529",
+        "pay_0250",
+        "pay_0523",
+        "pay_0522",
+        "pay_0532",
+        "pay_0251"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0173_1",
+      "agentRunId": "run_inv_0173_1",
+      "summary": "Debtor Oakridge Foods Ltd is a new customer (first seen 2026-08-15) with no payment history; the invoice was submitted 39 days after onboarding, triggering a medium‑severity NEW_DEBTOR finding.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you provide references or credit checks for Oakridge Foods Ltd covering the period before 2026-08-15?",
+        "Do you have any internal risk assessments or guarantees for this new debtor?"
+      ],
+      "claims": [
+        {
+          "text": "The invoice inv_0173 was submitted for funding on 2026-09-23 for debtor dbt_0020.",
+          "evidenceIds": [
+            "inv_0173"
+          ]
+        },
+        {
+          "text": "Debtor dbt_0020 (Oakridge Foods Ltd) was first seen on 2026-08-15 and has no payment history in the last 12 months.",
+          "evidenceIds": [
+            "fdg_inv_0173_NEW_DEBTOR_2026-10-23.1",
+            "dbt_0020"
+          ]
+        },
+        {
+          "text": "The deterministic check raised a MEDIUM severity NEW_DEBTOR finding because the debtor has been known for only 39 days and has no prior payments.",
+          "evidenceIds": [
+            "fdg_inv_0173_NEW_DEBTOR_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inv_0173",
+        "fdg_inv_0173_NEW_DEBTOR_2026-10-23.1",
+        "dbt_0020"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0182_1",
+      "agentRunId": "run_inv_0182_1",
+      "summary": "Debtor Oakridge Foods Ltd (dbt_0020) is a new customer with only 39 days known and no payment history in the past 12 months, raising a medium‑severity NEW_DEBTOR flag for invoice inv_0182.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you provide any prior trade references, contracts, or evidence of earlier transactions with Oakridge Foods Ltd?",
+        "Do you have any internal credit assessment or approval documentation for this new debtor?"
+      ],
+      "claims": [
+        {
+          "text": "The NEW_DEBTOR finding flags debtor dbt_0020 as known for only 39 days (firstSeenDate 2026-08-15) with no payment history, as indicated in the finding details and the debtor profile.",
+          "evidenceIds": [
+            "fdg_inv_0182_NEW_DEBTOR_2026-10-23.1",
+            "inv_0182",
+            "dbt_0020"
+          ]
+        },
+        {
+          "text": "Debtor history shows zero payments in the last 12 months, confirming the lack of established payment behavior.",
+          "evidenceIds": [
+            "dbt_0020"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0182_NEW_DEBTOR_2026-10-23.1",
+        "inv_0182",
+        "dbt_0020"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0183_1",
+      "agentRunId": "run_inv_0183_1",
+      "summary": "Invoice INV-20183 lacks a matching ledger entry; the LEDGER_MISSING finding is high severity.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please provide the accounting ledger entry or supporting documentation confirming that invoice INV-20183 was posted in your ledger."
+      ],
+      "claims": [
+        {
+          "text": "The client's accounting ledger does not contain an entry for invoice INV-20183, as the ledger query returned found:false.",
+          "evidenceIds": [
+            "fdg_inv_0183_LEDGER_MISSING_2026-10-23.1",
+            "inv_0183"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0183_LEDGER_MISSING_2026-10-23.1",
+        "inv_0183"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0184_1",
+      "agentRunId": "run_inv_0184_1",
+      "summary": "Debtor Oakridge Foods Ltd is a new customer with 39 days known and no payment history, raising medium risk under NEW_DEBTOR check.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please provide trade references or a recent credit report for Oakridge Foods Ltd (debtor dbt_0020)."
+      ],
+      "claims": [
+        {
+          "text": "Debtor dbt_0020 was first seen on 2026-08-15 and has no payment history, triggering a medium severity NEW_DEBTOR finding.",
+          "evidenceIds": [
+            "fdg_inv_0184_NEW_DEBTOR_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Invoice inv_0184 (INV-20184) issued 2026-09-14 for $6,141.58 matches the ledger entry led_0666 and was submitted for funding on 2026-09-23.",
+          "evidenceIds": [
+            "inv_0184",
+            "led_0666"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0184_NEW_DEBTOR_2026-10-23.1",
+        "inv_0184",
+        "led_0666"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0196_1",
+      "agentRunId": "run_inv_0196_1",
+      "summary": "Debtor dbt_0030 is newly onboarded with no payment history; invoice predates debtor onboarding, raising credit risk.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Provide documentation of the onboarding process for debtor dbt_0030, including contracts or agreements.",
+        "Supply trade references or prior payment evidence for dbt_0030 to establish creditworthiness."
+      ],
+      "claims": [
+        {
+          "text": "Debtor dbt_0030 was first seen on 2026-09-24 and has no payment history, as indicated by the NEW_DEBTOR finding.",
+          "evidenceIds": [
+            "fdg_inv_0196_NEW_DEBTOR_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Invoice inv_0196 was issued on 2026-09-20, before the debtor was first recorded on 2026-09-24, suggesting the debtor was not yet established at invoice creation.",
+          "evidenceIds": [
+            "inv_0196",
+            "fdg_inv_0196_NEW_DEBTOR_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0196_NEW_DEBTOR_2026-10-23.1",
+        "inv_0196"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0214_1",
+      "agentRunId": "run_inv_0214_1",
+      "summary": "Debtor dbt_0034 is a new client with no payment history; invoice was issued shortly after onboarding, triggering a MEDIUM NEW_DEBTOR flag.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please provide any prior trade references or contracts that demonstrate an established relationship with debtor dbt_0030.",
+        "Can you supply bank statements or other evidence of past payments to or from dbt_0030?"
+      ],
+      "claims": [
+        {
+          "text": "Debtor dbt_0030 was first seen on 2026-09-24, known only 23 days at the time of the check, and has no payment history in the past 12 months.",
+          "evidenceIds": [
+            "fdg_inv_0214_NEW_DEBTOR_2026-10-23.1",
+            "inv_0214",
+            "dbt_0030"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0214_NEW_DEBTOR_2026-10-23.1",
+        "inv_0214",
+        "dbt_0030"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0215_1",
+      "agentRunId": "run_inv_0215_1",
+      "summary": "Invoice inv_0215 is already paid and duplicates a previously submitted invoice inv_0087; both findings are high severity.",
+      "riskLevel": "HIGH",
+      "recommendation": "REJECT",
+      "questionsForClient": [
+        "Please confirm whether inv_0215 was intended as a resubmission after payment and why it was submitted again."
+      ],
+      "claims": [
+        {
+          "text": "Ledger entry led_0569 shows inv_0215 status PAID as of 2026-09-04, and bank transaction bnk_0565 records a payment of $4,717.52 on that date allocated to led_0569.",
+          "evidenceIds": [
+            "led_0569",
+            "bnk_0565"
+          ]
+        },
+        {
+          "text": "Invoice inv_0215 and inv_0087 have identical invoice numbers (INV-30087), debtor, issue and due dates, and amount, indicating a duplicate submission.",
+          "evidenceIds": [
+            "inv_0215",
+            "inv_0087"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0215_ALREADY_PAID_2026-10-23.1",
+        "fdg_inv_0215_DUP_2026-10-23.1",
+        "inv_0215",
+        "led_0569",
+        "bnk_0565",
+        "inv_0087"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0218_1",
+      "agentRunId": "run_inv_0218_1",
+      "summary": "Invoice INV-30218 ($5,854.27) includes a $526.88 credit note dated 2026-10-13, flagged as medium risk; clarification needed on net invoice amount before funding.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please confirm the net amount of invoice INV-30218 after applying credit note cn_0002.",
+        "Provide documentation showing how the credit note impacts the invoice amount to be funded."
+      ],
+      "claims": [
+        {
+          "text": "Invoice inv_0218 (INV-30218) was issued for $5,854.27 and submitted for funding on 2026-10-17.",
+          "evidenceIds": [
+            "inv_0218"
+          ]
+        },
+        {
+          "text": "Ledger entry led_0700 records the same amount $5,854.27 and is authorised.",
+          "evidenceIds": [
+            "led_0700"
+          ]
+        },
+        {
+          "text": "A credit note cn_0002 for $526.88 dated 2026-10-13 is linked to the ledger entry.",
+          "evidenceIds": [
+            "cn_0002"
+          ]
+        },
+        {
+          "text": "Deterministic check flagged the credit note as a MEDIUM severity finding.",
+          "evidenceIds": [
+            "fdg_inv_0218_CREDIT_NOTE_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inv_0218",
+        "led_0700",
+        "cn_0002",
+        "fdg_inv_0218_CREDIT_NOTE_2026-10-23.1"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0222_1",
+      "agentRunId": "run_inv_0222_1",
+      "summary": "Debtor Driftwood Motors Ltd averages 60 days to pay, above the 44‑day threshold, leading to a medium‑severity SLOW_PAYER flag for invoice inv_0222.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "HOLD",
+      "questionsForClient": [
+        "Can you provide any recent payment commitments or evidence that the debtor will settle this invoice within the standard terms?"
+      ],
+      "claims": [
+        {
+          "text": "The SLOW_PAYER finding is based on 12 recent payments with a mean of 59.5 days, exceeding the 44‑day threshold.",
+          "evidenceIds": [
+            "fdg_inv_0222_SLOW_PAYER_2026-10-23.1",
+            "pay_0471",
+            "pay_0472",
+            "pay_0473",
+            "pay_0474",
+            "pay_0475",
+            "pay_0476",
+            "pay_0477",
+            "pay_0478",
+            "pay_0479",
+            "pay_0480",
+            "pay_0481",
+            "pay_0482"
+          ]
+        },
+        {
+          "text": "Debtor history shows a mean days‑to‑pay of 60 over the past 12 months, confirming a pattern of slow payments.",
+          "evidenceIds": [
+            "pay_0471",
+            "pay_0472",
+            "pay_0473",
+            "pay_0474",
+            "pay_0475",
+            "pay_0476",
+            "pay_0477",
+            "pay_0478",
+            "pay_0479",
+            "pay_0480",
+            "pay_0481",
+            "pay_0482"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0222_SLOW_PAYER_2026-10-23.1",
+        "pay_0471",
+        "pay_0472",
+        "pay_0473",
+        "pay_0474",
+        "pay_0475",
+        "pay_0476",
+        "pay_0477",
+        "pay_0478",
+        "pay_0479",
+        "pay_0480",
+        "pay_0481",
+        "pay_0482"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0223_1",
+      "agentRunId": "run_inv_0223_1",
+      "summary": "Invoice amount $4,229.61 does not match ledger entry $3,253.55, and a $253.78 credit note does not bridge the gap, triggering high and medium risk flags.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you provide a reconciliation showing how the invoice amount $4,229.61 aligns with the ledger entry amount $3,253.55 after accounting for the $253.78 credit note?",
+        "Is there an additional ledger entry, amendment, or adjustment that covers the remaining $976.06 difference?"
+      ],
+      "claims": [
+        {
+          "text": "The ledger entry amount $3,253.55 differs from the submitted invoice amount $4,229.61, causing a high‑severity ledger mismatch.",
+          "evidenceIds": [
+            "fdg_inv_0223_LEDGER_MISMATCH_2026-10-23.1",
+            "inv_0223",
+            "led_0705"
+          ]
+        },
+        {
+          "text": "A credit note of $253.78 is recorded against the ledger entry, but it does not resolve the $976.06 difference between ledger and invoice amounts.",
+          "evidenceIds": [
+            "fdg_inv_0223_CREDIT_NOTE_2026-10-23.1",
+            "inv_0223",
+            "led_0705",
+            "cn_0001"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0223_LEDGER_MISMATCH_2026-10-23.1",
+        "fdg_inv_0223_CREDIT_NOTE_2026-10-23.1",
+        "inv_0223",
+        "led_0705",
+        "cn_0001"
+      ],
+      "validationStatus": "FAILED",
+      "validationErrors": [
+        "run budget exceeded"
+      ]
+    },
+    {
+      "id": "exp_run_inv_0096_3",
+      "agentRunId": "run_inv_0096_3",
+      "summary": "Invoice inv_0096 flagged for medium concentration risk: debtor accounts for 51.90% of total funded invoices, with total funded value of $421,728.25 and debtor’s share $218,912.99. No additional invoice details available. Need further evidence to confirm concentration context and historical payments.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Could you provide the detailed invoice records for inv_0096, inv_0092, inv_0093, inv_0094, inv_0095, inv_0097, including amounts and dates, to assess concentration risk?",
+        "Do you have debtor payment history for these invoices within the last 12 months?"
+      ],
+      "claims": [
+        {
+          "text": "The deterministic check identified a medium concentration risk, with debtor contributing 51.90% of total funded invoices (shareBps 5190). The total funded amount is $421,728.25 and debtor’s share is $218,912.99.",
+          "evidenceIds": [
+            "fdg_inv_0096_CONCENTRATION_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0096_CONCENTRATION_2026-10-23.1"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0223_3",
+      "agentRunId": "run_inv_0223_3",
+      "summary": "Invoice inv_0223 shows a $253.78 credit note and a $3,253.55/$4,229.61 ledger mismatch. Evidence indicates discrepancy. More invoice details required.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Could you provide the original invoice document or details confirming the correct amount for inv_0223?"
+      ],
+      "claims": [
+        {
+          "text": "A credit note of $253.78 was applied to invoice inv_0223.",
+          "evidenceIds": [
+            "fdg_inv_0223_CREDIT_NOTE_2026-10-23.1",
+            "cn_0001"
+          ]
+        },
+        {
+          "text": "The ledger records a $3,253.55 amount for inv_0223, whereas the submitted amount is $4,229.61, indicating a ledger mismatch.",
+          "evidenceIds": [
+            "fdg_inv_0223_LEDGER_MISMATCH_2026-10-23.1",
+            "inv_0223",
+            "led_0705"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0223_CREDIT_NOTE_2026-10-23.1",
+        "fdg_inv_0223_LEDGER_MISMATCH_2026-10-23.1",
+        "inv_0223",
+        "led_0705",
+        "cn_0001"
+      ],
+      "validationStatus": "FAILED",
+      "validationErrors": [
+        "cited id inv_0223 was not returned by a tool in this run",
+        "cited id led_0705 was not returned by a tool in this run",
+        "cited id cn_0001 was not returned by a tool in this run",
+        "claim 1 cites cn_0001, which was not returned by a tool in this run",
+        "claim 2 cites inv_0223, which was not returned by a tool in this run",
+        "claim 2 cites led_0705, which was not returned by a tool in this run",
+        "claim 2 states $3253.55, which is not in its cited records",
+        "claim 2 states $4229.61, which is not in its cited records",
+        "summary states $3253.55, which is not in any cited record"
+      ]
+    },
+    {
+      "id": "exp_run_inv_0229_3",
+      "agentRunId": "run_inv_0229_3",
+      "summary": "LEDGER_MISMATCH: invoice amount $6,047.50 vs ledger $4,877.02. High risk. Request supporting documentation to resolve discrepancy.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Please provide the original supplier invoice or contract showing the agreed amount of $6,047.50, and any supporting documents explaining the $1,170.48 difference with the ledger entry."
+      ],
+      "claims": [
+        {
+          "text": "The deterministic check flagged a high‑severity LEDGER_MISMATCH on invoice inv_0229, indicating a discrepancy between submitted and ledger amounts.",
+          "evidenceIds": [
+            "fdg_inv_0229_LEDGER_MISMATCH_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Invoice inv_0229 lists an amount of $6,047.50, while the ledger entry led_0711 records $4,877.02 for the same invoice number.",
+          "evidenceIds": [
+            "inv_0229",
+            "led_0711"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0229_LEDGER_MISMATCH_2026-10-23.1",
+        "inv_0229",
+        "led_0711"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": [
+        "claim 2 states $1170.48, which is not in its cited records"
+      ]
+    },
+    {
+      "id": "exp_run_inv_0237_3",
+      "agentRunId": "run_inv_0237_3",
+      "summary": "Debtor shows a 60‑day average payment delay, above the 44‑day threshold, triggering a MEDIUM SLOW_PAYER flag. Invoice was overdue at submission. Request recent payment evidence before proceeding.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Could you provide recent evidence of on-time payments or improved payment terms for this debtor, such as payments made within 30 days for the latest invoices?"
+      ],
+      "claims": [
+        {
+          "text": "The debtor’s mean days to pay in the last 12 months is 60 days, exceeding the SLOW_PAYER threshold of 44 days, as shown by 12 payments (e.g., pay_0471 to pay_0482). This historical pattern triggered the MEDIUM severity SLOW_PAYER flag for invoice inv_0237.",
+          "evidenceIds": [
+            "fdg_inv_0237_SLOW_PAYER_2026-10-23.1",
+            "inv_0237",
+            "pay_0471",
+            "pay_0472",
+            "pay_0473",
+            "pay_0474",
+            "pay_0475",
+            "pay_0476",
+            "pay_0477",
+            "pay_0478",
+            "pay_0479",
+            "pay_0480",
+            "pay_0481",
+            "pay_0482"
+          ]
+        },
+        {
+          "text": "The invoice was submitted on 2026-10-19 but its due date is 2026-10-17, meaning it was already overdue by 2 days at submission.",
+          "evidenceIds": [
+            "inv_0237"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0237_SLOW_PAYER_2026-10-23.1",
+        "inv_0237",
+        "pay_0471",
+        "pay_0472",
+        "pay_0473",
+        "pay_0474",
+        "pay_0475",
+        "pay_0476",
+        "pay_0477",
+        "pay_0478",
+        "pay_0479",
+        "pay_0480",
+        "pay_0481",
+        "pay_0482"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inc_FUNDED_CREDIT_NOTE:fnd_0151_1",
+      "agentRunId": "run_inc_FUNDED_CREDIT_NOTE:fnd_0151_1",
+      "summary": "Credit note of $3,744.31 was issued on 2026‑10‑08, after invoice due date and after funding, with no repayment recorded. This reduces the funded exposure. The incident flagged high severity. Clarify the purpose and validity of the credit note before adjusting exposure.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Could you explain why credit note cn_0004 was issued after the invoice due date? Please provide any supporting documents such as debtor communication or refund receipt."
+      ],
+      "claims": [
+        {
+          "text": "Invoice INV-20165 was funded with $9,984.83 as shown in funding record fnd_0151.",
+          "evidenceIds": [
+            "fnd_0151"
+          ]
+        },
+        {
+          "text": "A credit note cn_0004 of $3,744.31 was issued on 2026‑10‑08, after the invoice due date 2026‑10‑07, as recorded in ledger entry led_0647.",
+          "evidenceIds": [
+            "cn_0004",
+            "led_0647"
+          ]
+        },
+        {
+          "text": "No repayments have been made against the funded invoice, matching the outstanding amount of $9,984.83 in funding record fnd_0151.",
+          "evidenceIds": [
+            "fnd_0151"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inc_FUNDED_CREDIT_NOTE:fnd_0151",
+        "inv_0165",
+        "fnd_0151",
+        "led_0647",
+        "cn_0004"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inc_OVERDUE_FUNDED:fnd_0171_1",
+      "agentRunId": "run_inc_OVERDUE_FUNDED:fnd_0171_1",
+      "summary": "Invoice inv_0251 is overdue by 44 days, funded after its due date with no repayments. The ledger entry is authorised post‑due with no credit notes. This constitutes a high‑severity overdue funded incident. Hold exposure, monitor, and seek debtor payment intent.",
+      "riskLevel": "HIGH",
+      "recommendation": "HOLD",
+      "questionsForClient": [
+        "Could you provide recent payment history or communication from the debtor explaining the delay or intent to pay?"
+      ],
+      "claims": [
+        {
+          "text": "The invoice was submitted on 2026-09-23, 30 days after its due date of 2026-08-14, making it overdue by 44 days.",
+          "evidenceIds": [
+            "inc_OVERDUE_FUNDED:fnd_0171",
+            "inv_0251"
+          ]
+        },
+        {
+          "text": "Funding was made on 2026-09-24, after the due date, which is flagged as overdue funded.",
+          "evidenceIds": [
+            "inc_OVERDUE_FUNDED:fnd_0171",
+            "fnd_0171"
+          ]
+        },
+        {
+          "text": "The outstanding amount of $5,780.86 equals the advance, indicating no repayments have been received.",
+          "evidenceIds": [
+            "fnd_0171"
+          ]
+        },
+        {
+          "text": "The ledger entry shows status AUTHORISED as of 2026-09-13, post‑due, and there are no credit notes, implying no payment adjustments.",
+          "evidenceIds": [
+            "led_0733"
+          ]
+        },
+        {
+          "text": "The incident rule detected high severity due to the invoice being both overdue and funded.",
+          "evidenceIds": [
+            "inc_OVERDUE_FUNDED:fnd_0171"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inc_OVERDUE_FUNDED:fnd_0171",
+        "fnd_0171",
+        "inv_0251",
+        "led_0733"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0092_5",
+      "agentRunId": "run_inv_0092_5",
+      "summary": "Invoice inv_0092 flagged for high concentration; debtor represents 51.90% of total. Medium risk; request further invoice details.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Could you provide copies of the invoices listed in the evidenceIds (inv_0093 to inv_0097) so we can confirm the portfolio spread?"
+      ],
+      "claims": [
+        {
+          "text": "The concentration finding (severity MEDIUM) indicates debtor dbt_0032 accounts for 51.90% of the total invoice portfolio, with a share of 5190 bps. The invoice amount is $34,644.53, submitted 2026-08-26.",
+          "evidenceIds": [
+            "fdg_inv_0092_CONCENTRATION_2026-10-23.1",
+            "inv_0092"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0092_CONCENTRATION_2026-10-23.1",
+        "inv_0092"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0093_5",
+      "agentRunId": "run_inv_0093_5",
+      "summary": "Debtor accounts for 51.9% of portfolio value, meeting MEDIUM concentration threshold. Invoice is authorised and debtor has consistent payment history. Request additional portfolio exposure details.",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you confirm the total outstanding invoice amount for dbt_0032 in your portfolio to verify the concentration exposure?",
+        "Have there been any recent changes to the debtor’s financial status or credit rating?"
+      ],
+      "claims": [
+        {
+          "text": "The deterministic check found the debtor accounts for 51.90% of the portfolio value (21891299¢ of 42172825¢), meeting the concentration threshold for a MEDIUM severity flag.",
+          "evidenceIds": [
+            "fdg_inv_0093_CONCENTRATION_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Invoice inv_0093 is for $45,001.37, issued 2026-08-14 and due 2026-08-28.",
+          "evidenceIds": [
+            "inv_0093"
+          ]
+        },
+        {
+          "text": "Ledger entry led_0575 shows the invoice was AUTHORISED on 2026-08-14 with no credit notes.",
+          "evidenceIds": [
+            "led_0575"
+          ]
+        },
+        {
+          "text": "Debtor Quarryside Agritech Ltd has a mean payment period of 10 days over the last 12 months, indicating consistent payment behaviour.",
+          "evidenceIds": [
+            "dbt_0032"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0093_CONCENTRATION_2026-10-23.1",
+        "inv_0093",
+        "led_0575",
+        "dbt_0032"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0094_4",
+      "agentRunId": "run_inv_0094_4",
+      "summary": "Invoice inv_0094 flagged for medium concentration; debtor dbt_0032 invoices represent 51.9% of portfolio value ($218,912.99 of $421,728.25).",
+      "riskLevel": "MEDIUM",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you confirm if there are any plans to diversify the debtor base or mitigation strategies for this concentration risk?"
+      ],
+      "claims": [
+        {
+          "text": "The concentration check indicates that debtor dbt_0032's invoices, including inv_0094 and related invoices, account for 5,190 basis points (51.9%) of the total portfolio value, with debtor invoiced amount $218,912.99 against total $421,728.25.",
+          "evidenceIds": [
+            "fdg_inv_0094_CONCENTRATION_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "Invoice inv_0094 was submitted for funding on 2026-08-26, after its due date of 2026-08-14, and the amount is $39,041.88.",
+          "evidenceIds": [
+            "inv_0094"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0094_CONCENTRATION_2026-10-23.1",
+        "inv_0094"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inv_0223_4",
+      "agentRunId": "run_inv_0223_4",
+      "summary": "Invoice amount $4,229.61 exceeds ledger $3,253.55, and credit note of $253.78 does not reconcile the discrepancy.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you confirm whether the $4,229.61 invoice includes additional charges not recorded in the ledger entry, and provide supporting documentation if so?",
+        "What is the rationale for the credit note not reducing the invoice to match the ledger entry?"
+      ],
+      "claims": [
+        {
+          "text": "The submitted invoice amount $4,229.61 (id inv_0223) exceeds the ledger entry amount $3,253.55 (id led_0705).",
+          "evidenceIds": [
+            "inv_0223",
+            "led_0705",
+            "fdg_inv_0223_LEDGER_MISMATCH_2026-10-23.1"
+          ]
+        },
+        {
+          "text": "A credit note of $253.78 (id cn_0001) is linked to the ledger entry, yet the invoice still overstates the value.",
+          "evidenceIds": [
+            "cn_0001",
+            "inv_0223",
+            "led_0705",
+            "fdg_inv_0223_CREDIT_NOTE_2026-10-23.1"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "fdg_inv_0223_CREDIT_NOTE_2026-10-23.1",
+        "fdg_inv_0223_LEDGER_MISMATCH_2026-10-23.1",
+        "inv_0223",
+        "led_0705",
+        "cn_0001"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inc_OVERDUE_FUNDED:fnd_0001_2",
+      "agentRunId": "run_inc_OVERDUE_FUNDED:fnd_0001_2",
+      "summary": "Invoice INV-10001 funded 2026-07-29 is 83 days overdue with $7,813.21 outstanding. No payment evidence or adjustments. High recovery risk. Request more info.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Can you provide proof of any payment attempts or partial payments on invoice INV-10001?",
+        "What is the current status of the debtor’s account and expected settlement date for this invoice?",
+        "Are there any disputes or contractual clauses that might affect recovery of the outstanding amount?"
+      ],
+      "claims": [
+        {
+          "text": "Invoice inv_0001 was issued on 2026-06-29, due 2026-07-29, and is 83 days overdue as of 2026-10-20.",
+          "evidenceIds": [
+            "inc_OVERDUE_FUNDED:fnd_0001",
+            "inv_0001"
+          ]
+        },
+        {
+          "text": "Funding fnd_0001 for invoice inv_0001 was provided on 2026-07-29 for $7,813.21 and the outstanding balance remains $7,813.21.",
+          "evidenceIds": [
+            "fnd_0001"
+          ]
+        },
+        {
+          "text": "The incident record shows the invoice is 83 days overdue with an outstanding amount of $7,813.21.",
+          "evidenceIds": [
+            "inc_OVERDUE_FUNDED:fnd_0001"
+          ]
+        },
+        {
+          "text": "The invoice amount is $9,766.52, meaning the funded advance covers only about 80% of the invoice, reducing recovery potential.",
+          "evidenceIds": [
+            "inv_0001"
+          ]
+        },
+        {
+          "text": "The ledger entry led_0483 indicates the invoice was AUTHORISED with no credit notes recorded, confirming no adjustments were made.",
+          "evidenceIds": [
+            "led_0483"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inc_OVERDUE_FUNDED:fnd_0001",
+        "fnd_0001",
+        "inv_0001",
+        "led_0483"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    },
+    {
+      "id": "exp_run_inc_OVERDUE_FUNDED:fnd_0002_2",
+      "agentRunId": "run_inc_OVERDUE_FUNDED:fnd_0002_2",
+      "summary": "Invoice INV-10003 funded on 2026-07-29 remains 64 days overdue as of 2026-10-20 with $12,976.65 outstanding. No payments recorded, high‑severity incident indicates risk; further client info needed.",
+      "riskLevel": "HIGH",
+      "recommendation": "REQUEST_INFO",
+      "questionsForClient": [
+        "Could you provide any communication or explanation from debtor dbt_0004 regarding the 64‑day overdue on invoice INV-10003?",
+        "Could you supply the 12‑month payment history for debtor dbt_0004 to assess typical payment patterns?"
+      ],
+      "claims": [
+        {
+          "text": "The invoice INV-10003 was funded on 2026-07-29 with an advance of $12,976.65 and an outstanding balance of $12,976.65.",
+          "evidenceIds": [
+            "fnd_0002"
+          ]
+        },
+        {
+          "text": "Its due date was 2026-08-17, and as of 2026-10-20 it is 64 days overdue with the full outstanding balance still due.",
+          "evidenceIds": [
+            "inc_OVERDUE_FUNDED:fnd_0002"
+          ]
+        },
+        {
+          "text": "The ledger entry records amount $16,220.82, status AUTHORISED, and shows no credit notes, confirming no payments have been applied.",
+          "evidenceIds": [
+            "led_0485"
+          ]
+        },
+        {
+          "text": "The outstanding balance of $12,976.65 remains fully due, matching the funding record and the authorized ledger amount.",
+          "evidenceIds": [
+            "fnd_0002",
+            "led_0485"
+          ]
+        },
+        {
+          "text": "The incident is marked HIGH severity, flagging a significant risk of default.",
+          "evidenceIds": [
+            "inc_OVERDUE_FUNDED:fnd_0002"
+          ]
+        }
+      ],
+      "citedEvidenceIds": [
+        "inc_OVERDUE_FUNDED:fnd_0002",
+        "fnd_0002",
+        "inv_0003",
+        "led_0485"
+      ],
+      "validationStatus": "PASSED",
+      "validationErrors": []
+    }
+  ]
+}

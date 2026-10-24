@@ -23,6 +23,14 @@ export async function createMemoryDb(): Promise<Db> {
 }
 
 let cached: Promise<Db> | undefined;
+let closeCached: (() => Promise<void>) | undefined;
+
+/** Closes the application database so scripts can exit cleanly. */
+export async function closeDb(): Promise<void> {
+  await closeCached?.();
+  cached = undefined;
+  closeCached = undefined;
+}
 
 /**
  * Application database. Neon (Pool over WebSocket, so interactive
@@ -39,15 +47,16 @@ async function open(): Promise<Db> {
   if (url) {
     neonConfig.webSocketConstructor = ws;
     // Both drivers expose the same Drizzle PgDatabase query API.
-    return drizzleNeon({
-      client: new Pool({ connectionString: url }),
-      schema,
-    }) as unknown as Db;
+    const pool = new Pool({ connectionString: url });
+    closeCached = () => pool.end();
+    return drizzleNeon({ client: pool, schema }) as unknown as Db;
   }
-  const db = drizzlePglite({
-    client: new PGlite(path.join(process.cwd(), ".pglite")),
-    schema,
+  const client = new PGlite(path.join(process.cwd(), ".pglite"), {
+    // Local development only: flush asynchronously; seeding is many small writes.
+    relaxedDurability: true,
   });
+  closeCached = () => client.close();
+  const db = drizzlePglite({ client, schema });
   await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
   return db;
 }

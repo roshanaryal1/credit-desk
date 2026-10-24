@@ -13,7 +13,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
-    "eval": "tsx scripts/eval.ts"
+    "eval": "tsx scripts/eval.ts",
+    "seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
+    "precompute": "tsx --env-file-if-exists=.env.local scripts/precompute.ts",
+    "simulate": "tsx --env-file-if-exists=.env.local scripts/simulate-decisions.ts",
+    "watch": "tsx --env-file-if-exists=.env.local scripts/watch.ts",
+    "check:bundle": "node scripts/check-client-bundle.mjs",
+    "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -49,7 +55,6 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^5.0.5"
   },
   "engines": {
