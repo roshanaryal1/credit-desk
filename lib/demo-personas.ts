@@ -86,6 +86,9 @@ export function demoRouteAllowed(persona: DemoPersona, path: string): boolean {
   );
 }
 
-export function demoCanWrite(persona: DemoPersona, publicDemo = false): boolean {
+export function demoCanWrite(
+  persona: DemoPersona,
+  publicDemo = false,
+): boolean {
   return persona === "ANALYST" && !publicDemo;
 }

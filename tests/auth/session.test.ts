@@ -19,15 +19,28 @@ describe("signed sessions", () => {
 
   it("signs and validates a read-only public-demo claim", async () => {
     const token = await signSession(
-      { sid: "public", name: "Public analyst", persona: "ANALYST", publicDemo: true, exp: 2000 },
+      {
+        sid: "public",
+        name: "Public analyst",
+        persona: "ANALYST",
+        publicDemo: true,
+        exp: 2000,
+      },
       SECRET,
     );
     expect((await verifySession(token, SECRET, 1000))?.publicDemo).toBe(true);
     const body = token.split(".")[0];
     const forged = btoa(
-      JSON.stringify({ sid: "public", name: "Public analyst", persona: "ANALYST", exp: 2000 }),
+      JSON.stringify({
+        sid: "public",
+        name: "Public analyst",
+        persona: "ANALYST",
+        exp: 2000,
+      }),
     ).replace(/=+$/, "");
-    expect(await verifySession(forged + "." + token.split(".")[1], SECRET, 1000)).toBeNull();
+    expect(
+      await verifySession(forged + "." + token.split(".")[1], SECRET, 1000),
+    ).toBeNull();
     expect(body).not.toBe(forged);
   });
 

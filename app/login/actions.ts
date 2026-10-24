@@ -97,7 +97,6 @@ export async function loginAction(
   );
 }
 
-
 /**
  * One-click public sessions: opt-in, synthetic-only, signed, short-lived and
  * always read-only. The shared reviewer password is never sent to the browser.
@@ -150,4 +149,3 @@ export async function logoutAction() {
   jar.delete(MODE_COOKIE);
   redirect("/login");
 }
-

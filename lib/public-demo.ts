@@ -21,7 +21,10 @@ export const PUBLIC_DEMO_TTL_SECONDS = 60 * 60;
  * customer records.
  */
 export function publicDemoEnabled(
-  env: Record<string, string | undefined> = process.env as Record<string, string | undefined>,
+  env: Record<string, string | undefined> = process.env as Record<
+    string,
+    string | undefined
+  >,
 ): boolean {
   return (
     env.PUBLIC_DEMO_ENABLED === "1" &&

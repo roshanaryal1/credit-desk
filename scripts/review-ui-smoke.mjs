@@ -242,32 +242,46 @@ try {
         errors.push("quick " + role.name + ": " + error.message),
       );
       await demoPage.goto(origin + "/login", { waitUntil: "domcontentloaded" });
-      await demoPage.getByRole("button", {
-        name: "Continue as " + role.name + " demo",
-      }).click();
+      await demoPage
+        .getByRole("button", {
+          name: "Continue as " + role.name + " demo",
+        })
+        .click();
       await demoPage.waitForURL(
         (url) => url.origin === origin && url.pathname === role.home,
         { timeout: 30000 },
       );
       const loginCookies = await demoContext.cookies();
       const session = loginCookies.find((c) => c.name === "cd_auth");
-      if (!session?.httpOnly) throw new Error("Quick-demo cookie missing HttpOnly flag");
+      if (!session?.httpOnly)
+        throw new Error("Quick-demo cookie missing HttpOnly flag");
       const body = session.value.split(".")[0];
       const sessionData = JSON.parse(
-        Buffer.from(body.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"),
+        Buffer.from(
+          body.replace(/-/g, "+").replace(/_/g, "/"),
+          "base64",
+        ).toString("utf8"),
       );
       if (sessionData.publicDemo !== true) {
-        throw new Error("Quick-demo session lacks read-only provenance: " + role.name);
+        throw new Error(
+          "Quick-demo session lacks read-only provenance: " + role.name,
+        );
       }
       if (role.name === "Client / borrower") {
-        await demoPage.goto(origin + "/queue", { waitUntil: "domcontentloaded" });
+        await demoPage.goto(origin + "/queue", {
+          waitUntil: "domcontentloaded",
+        });
         if (new URL(demoPage.url()).pathname !== "/demo/client") {
           throw new Error("Public client reached restricted lender queue");
         }
       }
       if (role.name === "Credit analyst") {
-        await demoPage.goto(origin + "/batches", { waitUntil: "domcontentloaded" });
-        if (await demoPage.getByRole("button", { name: /Re-run agent/i }).count()) {
+        await demoPage.goto(origin + "/batches", {
+          waitUntil: "domcontentloaded",
+        });
+        if (
+          await demoPage.getByRole("button", { name: /Re-run agent/i }).count()
+        ) {
           throw new Error("Public analyst has a writable agent control");
         }
       }
