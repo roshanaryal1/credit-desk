@@ -11,6 +11,44 @@
   "checks": {
     "dev": {
       "seed": "dev",
+      "watch": {
+        "PAYMENT_DRIFT": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FUNDED_CREDIT_NOTE": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "OVERDUE_FUNDED": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "CONCENTRATION_CREEP": {
+          "tp": 11,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FACILITY_UTILISATION": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null
+        }
+      },
+      "incidents": 21,
       "invoices": 251,
       "labelledInvoices": 38,
       "checks": {
@@ -107,6 +145,44 @@
     },
     "holdout": {
       "seed": "holdout",
+      "watch": {
+        "PAYMENT_DRIFT": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FUNDED_CREDIT_NOTE": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "OVERDUE_FUNDED": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "CONCENTRATION_CREEP": {
+          "tp": 14,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FACILITY_UTILISATION": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null
+        }
+      },
+      "incidents": 22,
       "invoices": 237,
       "labelledInvoices": 42,
       "checks": {
@@ -201,6 +277,54 @@
       },
       "misses": []
     }
+  },
+  "agent": {
+    "promptVersion": "2026-10-23.4",
+    "runs": 42,
+    "passRate": 0.9761904761904762,
+    "schemaPassRate": 1,
+    "citationValidity": 1,
+    "amountFaithfulness": 1,
+    "retryRate": 0.19047619047619047,
+    "errorRate": 0.023809523809523808,
+    "avgTokens": 7603,
+    "avgLatencyMs": 5324,
+    "byModel": {
+      "openai/gpt-oss-20b": {
+        "runs": 12,
+        "passRate": 0.9166666666666666,
+        "schemaPassRate": 1,
+        "citationValidity": 1,
+        "amountFaithfulness": 1,
+        "retryRate": 0.5,
+        "errorRate": 0.08333333333333333,
+        "avgTokens": 8167,
+        "avgLatencyMs": 9963
+      },
+      "openai/gpt-oss-120b": {
+        "runs": 30,
+        "passRate": 1,
+        "schemaPassRate": 1,
+        "citationValidity": 1,
+        "amountFaithfulness": 1,
+        "retryRate": 0.06666666666666667,
+        "errorRate": 0,
+        "avgTokens": 7377,
+        "avgLatencyMs": 3468
+      }
+    },
+    "allRuns": {
+      "runs": 68,
+      "passRate": 0.6029411764705882,
+      "schemaPassRate": 1,
+      "citationValidity": 0.9761904761904762,
+      "amountFaithfulness": 0.9761904761904762,
+      "retryRate": 0.19117647058823528,
+      "errorRate": 0.38235294117647056,
+      "avgTokens": 6030,
+      "avgLatencyMs": 4429
+    },
+    "note": "Headline figures use the latest run per item on the current prompt version. allRuns includes every attempt, including runs stopped by the provider's daily token cap and runs from earlier prompt versions."
   },
   "gate": {
     "passed": true,

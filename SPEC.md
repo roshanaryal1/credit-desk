@@ -267,9 +267,12 @@ $CRON_SECRET` (C13).
 - Budgets per run: 6 tool calls, fixed max tokens, 30 seconds total wall time
   covering all attempts and backoff (X19). Malformed tool arguments end the
   attempt with a validation error.
-- Groq free tier for `openai/gpt-oss-120b`: 8,000 tokens/min and 1,000
-  requests/day (read from the API's `x-ratelimit-*` response headers on
-  2026-10-23; re-check before production runs): `scripts/precompute.ts` runs one item at a time,
+- Groq free tier for `openai/gpt-oss-120b`: 8,000 tokens/min, 1,000
+  requests/day and 200,000 tokens/day (read from response headers and a 429
+  message on 2026-10-23; re-check before production runs). At about 7,000
+  tokens per explanation the daily cap allows roughly 28 runs, so a full
+  precompute can span two days or finish on the fallback model; every run
+  records its model: `scripts/precompute.ts` runs one item at a time,
   keeps a tokens-per-minute budget, retries 429s with exponential backoff that
   honours `retry-after`, and is resumable (skips subjects with a PASSED run for
   the current prompt and config version).
