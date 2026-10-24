@@ -4,10 +4,7 @@ import { and, eq, inArray, lte } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
-import {
-  debtorAgeing,
-  type AgeingReceivable,
-} from "@/lib/risk/debtor-ageing";
+import { debtorAgeing, type AgeingReceivable } from "@/lib/risk/debtor-ageing";
 
 function asOfDate(value: string): void {
   const millis = Date.parse(`${value}T00:00:00Z`);
@@ -21,17 +18,11 @@ function asOfDate(value: string): void {
 }
 
 function dueDate(issued: string, termsDays: number): string {
-  if (
-    !Number.isSafeInteger(termsDays) ||
-    termsDays < 0 ||
-    termsDays > 365
-  ) {
+  if (!Number.isSafeInteger(termsDays) || termsDays < 0 || termsDays > 365) {
     throw new Error("Invalid synthetic facility payment terms");
   }
   const time = Date.parse(`${issued}T00:00:00Z`);
-  return new Date(time + termsDays * 86_400_000)
-    .toISOString()
-    .slice(0, 10);
+  return new Date(time + termsDays * 86_400_000).toISOString().slice(0, 10);
 }
 
 /**
@@ -145,10 +136,7 @@ export async function getClientReceivablesAgeing(
     (sum, d) => sum + d.grossOutstandingCents,
     0,
   );
-  const overdueCents = grouped.reduce(
-    (sum, d) => sum + d.overdueCents,
-    0,
-  );
+  const overdueCents = grouped.reduce((sum, d) => sum + d.overdueCents, 0);
   const currentCents = totalOutstandingCents - overdueCents;
   if (
     !Number.isSafeInteger(totalOutstandingCents) ||
