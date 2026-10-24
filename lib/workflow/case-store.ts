@@ -1,6 +1,5 @@
 import "server-only";
 
-import { randomUUID } from "node:crypto";
 import { and, asc, eq } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
