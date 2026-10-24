@@ -6,6 +6,7 @@ import {
   gateConfig,
   verifySession,
 } from "@/lib/auth";
+import { DEMO_PERSONAS, demoRouteAllowed, parseDemoPersona } from "@/lib/demo-personas";
 
 // Shared-password gate (SPEC 11). Every route except the login page, the cron
 // route and static assets needs a valid signed session cookie.
@@ -41,7 +42,17 @@ export async function proxy(request: NextRequest) {
     request.cookies.get(AUTH_COOKIE)?.value,
     gate.secret,
   );
-  if (session) return NextResponse.next();
+  if (session) {
+    const persona = parseDemoPersona(session.persona) ?? "ANALYST";
+    // Restrict synthetic demo perspectives at the server edge, not only in UI.
+    if (!demoRouteAllowed(persona, pathname)) {
+      const destination = request.nextUrl.clone();
+      destination.pathname = DEMO_PERSONAS[persona].home;
+      destination.search = "";
+      return NextResponse.redirect(destination);
+    }
+    return NextResponse.next();
+  }
 
   const login = request.nextUrl.clone();
   login.pathname = "/login";
