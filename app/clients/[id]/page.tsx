@@ -8,6 +8,7 @@ import { DEMO_TODAY } from "@/lib/demo";
 import { businessDate, money, bpsToPercent } from "@/lib/format";
 import { getDb } from "@/lib/db/client";
 import { getClientDossier } from "@/lib/queries/client-360";
+import { getClientReceivablesAgeing } from "@/lib/queries/client-ageing";
 
 export default function ClientPage({ params }: PageProps<"/clients/[id]">) {
   return (
@@ -20,8 +21,12 @@ export default function ClientPage({ params }: PageProps<"/clients/[id]">) {
 async function ClientView({ params }: { params: Promise<{ id: string }> }) {
   await connection();
   const { id } = await params;
-  const dossier = await getClientDossier(await getDb(), id, DEMO_TODAY);
-  if (!dossier) notFound();
+  const db = await getDb();
+  const [dossier, ageing] = await Promise.all([
+    getClientDossier(db, id, DEMO_TODAY),
+    getClientReceivablesAgeing(db, id, DEMO_TODAY),
+  ]);
+  if (!dossier || !ageing) notFound();
   const { client, batches, debtors, incidents } = dossier;
   return (
     <>
@@ -121,6 +126,135 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </section>
 
+      <section aria-labelledby="ageing-heading">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-primary text-[10px] font-semibold tracking-[0.16em] uppercase">
+              Receivables / Collections
+            </p>
+            <h2
+              id="ageing-heading"
+              className="mt-1 text-lg font-semibold tracking-tight"
+            >
+              Debtor ageing
+            </h2>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Outstanding synthetic ledger receivables after dated allocations
+              and credit notes. Distinct from funded principal above.
+            </p>
+          </div>
+          <span className="text-muted-foreground text-xs">
+            Business as of {businessDate(ageing.asOf)}
+          </span>
+        </div>
+        <dl className="border-border bg-card mb-4 grid rounded-sm border sm:grid-cols-3">
+          {[
+            {
+              label: "Receivables outstanding",
+              value: ageing.totalOutstandingCents,
+            },
+            { label: "Past due", value: ageing.overdueCents },
+            { label: "Not past due", value: ageing.currentCents },
+          ].map((metric) => (
+            <div
+              className="border-border border-b p-4 sm:border-r sm:border-b-0"
+              key={metric.label}
+            >
+              <dt className="text-muted-foreground text-xs">{metric.label}</dt>
+              <dd className="num mt-2 text-xl font-semibold">
+                {money(metric.value)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <div className="border-border bg-card overflow-x-auto rounded-sm border">
+          <table className="w-full min-w-[760px] text-sm">
+            <caption className="sr-only">
+              Synthetic debtor receivables ageing by days past due
+            </caption>
+            <thead className="text-muted-foreground border-b text-xs">
+              <tr>
+                <th scope="col" className="px-3 py-3 text-left font-medium">
+                  Debtor
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Current
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  1–30
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  31–60
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  61–90
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  91+
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-border divide-y">
+              {ageing.debtors.map((d) => (
+                <tr key={d.debtorId}>
+                  <th scope="row" className="px-3 py-3 text-left font-medium">
+                    <details>
+                      <summary className="text-primary cursor-pointer font-semibold underline-offset-4 hover:underline">
+                        {d.debtorName}
+                      </summary>
+                      <ul className="text-muted-foreground mt-2 space-y-1 text-xs font-normal">
+                        {d.invoices.map((invoice) => (
+                          <li key={invoice.invoiceId}>
+                            {invoice.invoiceId}:{" "}
+                            {money(invoice.outstandingCents)} outstanding ·{" "}
+                            {invoice.daysPastDue} days past due
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                    <p className="text-muted-foreground mt-1 text-xs font-normal">
+                      Receipts, last 30 days: {money(d.paymentsLast30DaysCents)}
+                    </p>
+                  </th>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.CURRENT)}
+                  </td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.DAYS_1_30)}
+                  </td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.DAYS_31_60)}
+                  </td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.DAYS_61_90)}
+                  </td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.DAYS_90_PLUS)}
+                  </td>
+                  <td className="num px-3 py-3 text-right font-semibold">
+                    {money(d.grossOutstandingCents)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {ageing.debtors.length === 0 && (
+            <p className="text-muted-foreground p-6 text-sm">
+              No dated synthetic ledger receivables are recorded for this
+              client. This is not evidence of a zero real-world balance.
+            </p>
+          )}
+        </div>
+        <p className="text-muted-foreground mt-2 text-xs">
+          Due dates are estimated from current demo payment terms. Ledger
+          history is not a live accounting sync. Figures are descriptive only,
+          not an approved borrowing-base availability calculation.
+        </p>
+      </section>
+
       <div className="grid gap-7 xl:grid-cols-2">
         <section aria-labelledby="batches-heading">
           <h2 id="batches-heading" className="mb-3 text-base font-semibold">
@@ -194,8 +328,9 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
       </div>
       <p className="text-muted-foreground border-t pt-3 text-xs">
         All records are synthetic. This read-only dossier does not include
-        historical facility amendments, documents or source-verified outstanding
-        receivables. Those require the approved ingestion and data model.
+        historical facility amendments, authenticated client permissions,
+        production accounting sync or approved borrowing-base availability.
+        Those require the controlled source, identity and policy integrations.
       </p>
     </>
   );

@@ -450,6 +450,86 @@ export const rateLimitEvents = pgTable(
   (t) => [index("rate_limit_key_idx").on(t.key, t.createdAt)],
 );
 
+// Provider ingestion journal. Records are immutable once accepted.
+export const ingestionEvents = pgTable(
+  "ingestion_events",
+  {
+    id: text("id").primaryKey(),
+    sourceKind: text("source_kind").notNull(),
+    connectionId: text("connection_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    eventId: text("event_id").notNull(),
+    entityId: text("entity_id").notNull(),
+    effectiveDate: businessDate("effective_date").notNull(),
+    observedAt: instant("observed_at").notNull(),
+    payload: jsonb("payload_json").$type<unknown>().notNull(),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ingestion_event_identity_uq").on(
+      t.sourceKind,
+      t.connectionId,
+      t.clientId,
+      t.eventId,
+    ),
+    index("ingestion_client_asof_idx").on(
+      t.clientId,
+      t.effectiveDate,
+      t.observedAt,
+    ),
+  ],
+);
+
+// Connection checkpoints must be mutable, unlike accepted source events.
+export const ingestionCheckpoints = pgTable(
+  "ingestion_checkpoints",
+  {
+    sourceKind: text("source_kind").notNull(),
+    connectionId: text("connection_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    cursor: text("cursor"),
+    lastSuccessAt: instant("last_success_at"),
+    lastFailureAt: instant("last_failure_at"),
+    updatedAt: instant("updated_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.sourceKind, t.connectionId, t.clientId] })],
+);
+
+// Durable, recoverable provider sync jobs (synthetic source runners only until
+// provider consent, identity and credential controls are approved).
+export const ingestionSyncJobs = pgTable(
+  "ingestion_sync_jobs",
+  {
+    id: text("id").primaryKey(),
+    sourceKind: text("source_kind").notNull(),
+    connectionId: text("connection_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    state: text("state").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: instant("next_attempt_at").notNull(),
+    leaseToken: text("lease_token"),
+    leaseUntil: instant("lease_until"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorAt: instant("last_error_at"),
+    updatedAt: instant("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ingestion_sync_source_uq").on(
+      t.sourceKind,
+      t.connectionId,
+      t.clientId,
+    ),
+    index("ingestion_sync_due_idx").on(t.state, t.nextAttemptAt),
+  ],
+);
+
 // Evaluation only
 
 export const labels = pgTable("labels", {
@@ -477,6 +557,7 @@ export const APPEND_ONLY_TABLES = [
   "decision_snapshots",
   "audit_events",
   "incident_events",
+  "ingestion_events",
 ] as const;
 
 export type NewClient = typeof clients.$inferInsert;
