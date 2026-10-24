@@ -32,9 +32,10 @@ describe("source provenance and reconciliation", () => {
 
   it("fails closed when the same provider event ID has conflicting content", () => {
     expect(() =>
-      reconcileObservations([invoice], [
-        { ...invoice, payload: { amountCents: 9_000 } },
-      ]),
+      reconcileObservations(
+        [invoice],
+        [{ ...invoice, payload: { amountCents: 9_000 } }],
+      ),
     ).toThrow(/conflict/);
   });
 
@@ -71,20 +72,13 @@ describe("source provenance and reconciliation", () => {
     };
     const all = reconcileObservations([], [invoice, other]).observations;
     expect(
-      knownSnapshotAsOf(
-        all,
-        "2026-10-24",
-        "2026-10-24T12:00:00Z",
-        "client-a",
-      ),
+      knownSnapshotAsOf(all, "2026-10-24", "2026-10-24T12:00:00Z", "client-a"),
     ).toEqual([invoice]);
   });
 
   it("rejects malformed dates, missing metadata and contradictory persisted events", () => {
     expect(() =>
-      reconcileObservations([], [
-        { ...invoice, effectiveDate: "2026-09-31" },
-      ]),
+      reconcileObservations([], [{ ...invoice, effectiveDate: "2026-09-31" }]),
     ).toThrow(/effective/);
     expect(() =>
       reconcileObservations([], [{ ...invoice, observedAt: "10/02/26" }]),
@@ -103,22 +97,13 @@ describe("source provenance and reconciliation", () => {
   it("records unknown, stale, healthy and failed source states explicitly", () => {
     const now = "2026-10-24T08:00:00Z";
     expect(sourceHealth(now, null, null, 60)).toBe("UNKNOWN");
-    expect(sourceHealth(now, "2026-10-24T07:30:00Z", null, 60)).toBe(
-      "FRESH",
-    );
-    expect(sourceHealth(now, "2026-10-24T06:00:00Z", null, 60)).toBe(
-      "STALE",
-    );
+    expect(sourceHealth(now, "2026-10-24T07:30:00Z", null, 60)).toBe("FRESH");
+    expect(sourceHealth(now, "2026-10-24T06:00:00Z", null, 60)).toBe("STALE");
     expect(
-      sourceHealth(
-        now,
-        "2026-10-24T07:30:00Z",
-        "2026-10-24T07:45:00Z",
-        60,
-      ),
+      sourceHealth(now, "2026-10-24T07:30:00Z", "2026-10-24T07:45:00Z", 60),
     ).toBe("ERROR");
-    expect(() =>
-      sourceHealth(now, "2026-10-24T09:00:00Z", null, 60),
-    ).toThrow(/future/);
+    expect(() => sourceHealth(now, "2026-10-24T09:00:00Z", null, 60)).toThrow(
+      /future/,
+    );
   });
 });
