@@ -123,6 +123,46 @@ try {
     }
     await context.close();
   }
+
+  // Verify self-selected client perspective is read-only and cannot see
+  // lender queue/directories even when manually navigating to their URLs.
+  const clientContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+  });
+  const clientPage = await clientContext.newPage();
+  const clientLogin = await clientPage.goto(origin + "/login", {
+    waitUntil: "domcontentloaded",
+    timeout: 30_000,
+  });
+  if (!clientLogin?.ok()) throw new Error("Client demo sign-in unavailable");
+  await clientPage.getByRole("radio", { name: /Client \/ borrower/ }).check();
+  await clientPage.getByLabel("Your name").fill("Fictional client reviewer");
+  await clientPage.getByLabel("Password").fill(password);
+  await clientPage.getByRole("button", { name: "Sign in" }).click();
+  await clientPage.waitForURL((url) => url.pathname === "/demo/client", {
+    timeout: 30_000,
+  });
+  const title = await clientPage.locator("h1").first().textContent();
+  if (!title?.trim()) throw new Error("Client view missing a heading");
+  for (const forbidden of ["/queue", "/clients", "/audit", "/clients/cli_0002"]) {
+    await clientPage.goto(origin + forbidden, { waitUntil: "domcontentloaded" });
+    if (new URL(clientPage.url()).pathname !== "/demo/client") {
+      throw new Error("Client perspective accessed forbidden route " + forbidden);
+    }
+  }
+  await clientPage.screenshot({
+    path: path.join(screenshots, "fictional-client-mobile.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
+  results.push({
+    viewport: "mobile",
+    route: "/demo/client",
+    status: 200,
+    heading: title.trim(),
+    screenshot: "fictional-client-mobile.png",
+  });
+  await clientContext.close();
 } finally {
   await browser.close();
   await fs.writeFile(
