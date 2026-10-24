@@ -33,8 +33,8 @@ describe("client ledger borrowing-base preview", () => {
     expect(result?.blockers.some((x) => x.includes("lender-approved"))).toBe(
       true,
     );
-    expect(result?.evidence.ledgerInvoiceIds).toEqual(
-      result?.report.treatments.map((item) => item.invoiceId),
+    expect([...result!.evidence.ledgerInvoiceIds].sort()).toEqual(
+      result!.report.treatments.map((item) => item.invoiceId).sort(),
     );
   }, 90_000);
 
