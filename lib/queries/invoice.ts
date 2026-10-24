@@ -18,6 +18,7 @@ export async function getInvoiceReview(
   invoiceId: string,
   analyst: Analyst,
   batchId: string,
+  readOnly = false,
 ) {
   const db = await getDb();
   const [row] = await db
@@ -56,9 +57,9 @@ export async function getInvoiceReview(
         .from(t.explanations)
         .where(eq(t.explanations.id, boundId))
     : [];
-  const showAgent = analyst.mode === "ASSIST" || decided;
+  const showAgent = readOnly || analyst.mode === "ASSIST" || decided;
   const explanation = showAgent ? state.explanation : null;
-  if (explanation && !decided) {
+  if (explanation && !decided && !readOnly) {
     await db
       .insert(t.exposures)
       .values({ sessionId: analyst.sessionId, invoiceId })
