@@ -1,9 +1,9 @@
-"use client";
-
-import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-/** The login gets its own full-width presentation; workspace chrome stays intact. */
+/**
+ * Keep the workspace shell server-rendered. CSS scopes the full-bleed login
+ * based on its own landmark, without client-side router hooks on static routes.
+ */
 export function AppFrame({
   navigation,
   children,
@@ -11,23 +11,15 @@ export function AppFrame({
   navigation: ReactNode;
   children: ReactNode;
 }) {
-  const isLogin = usePathname() === "/login";
-  if (isLogin) {
-    return (
-      <main id="main" tabIndex={-1} className="flex w-full flex-1">
-        {children}
-      </main>
-    );
-  }
   return (
-    <div className="flex flex-1 flex-col md:flex-row">
+    <div className="credit-desk-frame flex flex-1 flex-col md:flex-row">
       {navigation}
       <main
         id="main"
         tabIndex={-1}
-        className="flex-1 px-4 py-6 md:px-8 md:py-8"
+        className="credit-desk-content flex-1 px-4 py-6 md:px-8 md:py-8"
       >
-        <div className="mx-auto flex max-w-7xl flex-col gap-8">
+        <div className="credit-desk-content-inner mx-auto flex max-w-7xl flex-col gap-8">
           {children}
         </div>
       </main>

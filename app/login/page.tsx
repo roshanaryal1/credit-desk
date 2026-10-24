@@ -38,7 +38,7 @@ const features = [
 
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
-    <div className="grid min-h-[calc(100dvh-33px)] w-full lg:grid-cols-[minmax(0,1fr)_minmax(460px,0.95fr)]">
+    <div data-login-page="" className="grid min-h-[calc(100dvh-33px)] w-full lg:grid-cols-[minmax(0,1fr)_minmax(460px,0.95fr)]">
       <section aria-label="About Credit Desk"
         className="relative isolate overflow-hidden bg-[#081e36] px-7 py-10 text-white sm:px-10 lg:px-14 lg:py-14">
         <div aria-hidden="true" className="pointer-events-none absolute -right-36 top-16 -z-10 h-[480px] w-[480px] rounded-full bg-blue-500/15 blur-[90px]" />
