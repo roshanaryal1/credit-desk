@@ -453,7 +453,6 @@ export const rateLimitEvents = pgTable(
 // Provider ingestion journal. Records are immutable once accepted.
 export const ingestionEvents = pgTable(
   "ingestion_events",
-  "credit_case_events",
   {
     id: text("id").primaryKey(),
     sourceKind: text("source_kind").notNull(),
@@ -608,6 +607,7 @@ export const APPEND_ONLY_TABLES = [
   "audit_events",
   "incident_events",
   "ingestion_events",
+  "credit_case_events",
 ] as const;
 
 export type NewClient = typeof clients.$inferInsert;
