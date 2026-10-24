@@ -1,0 +1,20 @@
+name: Temporary collections formatting report
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Format and print only new synthetic source files
+        run: |
+          npx prettier --write 'app/clients/[id]/collections/page.tsx' lib/risk/collections-insights.ts tests/risk/collections-insights.test.ts
+          node -e 'const fs=require("fs");for(const p of ["app/clients/[id]/collections/page.tsx","lib/risk/collections-insights.ts","tests/risk/collections-insights.test.ts"]){console.log("CD_FORMATTED "+JSON.stringify({path:p,content:fs.readFileSync(p,"utf8")}))}'
