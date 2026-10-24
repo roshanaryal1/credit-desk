@@ -61,7 +61,9 @@ export interface BorrowingBaseReport {
 
 function cents(value: number, field: string): void {
   if (!Number.isSafeInteger(value) || value < 0) {
-    throw new Error(`${field} must be a non-negative safe integer of NZD cents`);
+    throw new Error(
+      `${field} must be a non-negative safe integer of NZD cents`,
+    );
   }
 }
 
@@ -105,23 +107,35 @@ export function borrowingBase(
   cents(policy.facilityLimitCents, "facilityLimitCents");
   cents(policy.drawnCents, "drawnCents");
   cents(policy.reservesCents, "reservesCents");
-  if (policy.sublimitCents !== undefined) cents(policy.sublimitCents, "sublimitCents");
+  if (policy.sublimitCents !== undefined)
+    cents(policy.sublimitCents, "sublimitCents");
 
   const ids = new Set<string>();
   const rows: ReceivableTreatment[] = [...receivables]
     .sort((a, b) => a.invoiceId.localeCompare(b.invoiceId))
     .map((r) => {
-      if (!r.invoiceId.trim() || !r.debtorId.trim()) throw new Error("Invoice and debtor IDs required");
-      if (ids.has(r.invoiceId)) throw new Error(`Duplicate invoice ${r.invoiceId}`);
+      if (!r.invoiceId.trim() || !r.debtorId.trim())
+        throw new Error("Invoice and debtor IDs required");
+      if (ids.has(r.invoiceId))
+        throw new Error(`Duplicate invoice ${r.invoiceId}`);
       ids.add(r.invoiceId);
       cents(r.faceCents, `${r.invoiceId} faceCents`);
       cents(r.receivedCents, `${r.invoiceId} receivedCents`);
       cents(r.creditNoteCents, `${r.invoiceId} creditNoteCents`);
-      if (!Array.isArray(r.ineligibleReasons) || r.ineligibleReasons.some((v) => typeof v !== "string" || !v.trim())) {
-        throw new Error(`${r.invoiceId} requires an explicit eligibility assessment`);
+      if (
+        !Array.isArray(r.ineligibleReasons) ||
+        r.ineligibleReasons.some((v) => typeof v !== "string" || !v.trim())
+      ) {
+        throw new Error(
+          `${r.invoiceId} requires an explicit eligibility assessment`,
+        );
       }
-      const deductions = checkedSum([r.receivedCents, r.creditNoteCents], "receipts and credits");
-      if (deductions > r.faceCents) throw new Error(`${r.invoiceId} deductions exceed face`);
+      const deductions = checkedSum(
+        [r.receivedCents, r.creditNoteCents],
+        "receipts and credits",
+      );
+      if (deductions > r.faceCents)
+        throw new Error(`${r.invoiceId} deductions exceed face`);
       const netCents = r.faceCents - deductions;
       const excludedCents = r.ineligibleReasons.length > 0 ? netCents : 0;
       return {
@@ -137,11 +151,23 @@ export function borrowingBase(
       };
     });
 
-  const grossReceivablesCents = checkedSum(rows.map((r) => r.faceCents), "gross receivables");
-  const netReceivablesCents = checkedSum(rows.map((r) => r.netCents), "net receivables");
-  const excludedCents = checkedSum(rows.map((r) => r.excludedCents), "exclusions");
+  const grossReceivablesCents = checkedSum(
+    rows.map((r) => r.faceCents),
+    "gross receivables",
+  );
+  const netReceivablesCents = checkedSum(
+    rows.map((r) => r.netCents),
+    "net receivables",
+  );
+  const excludedCents = checkedSum(
+    rows.map((r) => r.excludedCents),
+    "exclusions",
+  );
   const eligibleBeforeConcentration = netReceivablesCents - excludedCents;
-  const debtorCap = advance(eligibleBeforeConcentration, policy.maximumDebtorShareBps);
+  const debtorCap = advance(
+    eligibleBeforeConcentration,
+    policy.maximumDebtorShareBps,
+  );
 
   // Stable invoice ordering produces stable per-invoice explanations.
   const usedByDebtor = new Map<string, number>();
@@ -155,11 +181,26 @@ export function borrowingBase(
     usedByDebtor.set(row.debtorId, used + kept);
   }
 
-  const concentrationExcessCents = checkedSum(rows.map((r) => r.concentrationExcessCents), "concentration");
-  const eligibleCollateralCents = checkedSum(rows.map((r) => r.eligibleCents), "eligible collateral");
-  const grossAdvanceCents = checkedSum(rows.map((r) => r.advanceCents), "gross advances");
-  const securedAdvanceCents = Math.max(0, grossAdvanceCents - policy.reservesCents);
-  const facilityHeadroomCents = Math.max(0, policy.facilityLimitCents - policy.drawnCents);
+  const concentrationExcessCents = checkedSum(
+    rows.map((r) => r.concentrationExcessCents),
+    "concentration",
+  );
+  const eligibleCollateralCents = checkedSum(
+    rows.map((r) => r.eligibleCents),
+    "eligible collateral",
+  );
+  const grossAdvanceCents = checkedSum(
+    rows.map((r) => r.advanceCents),
+    "gross advances",
+  );
+  const securedAdvanceCents = Math.max(
+    0,
+    grossAdvanceCents - policy.reservesCents,
+  );
+  const facilityHeadroomCents = Math.max(
+    0,
+    policy.facilityLimitCents - policy.drawnCents,
+  );
   const sublimitHeadroomCents =
     policy.sublimitCents === undefined
       ? null
