@@ -1,4 +1,4 @@
-import { count, eq } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -7,8 +7,11 @@ import type { Dataset } from "./generate";
 
 const CHUNK = 500;
 
+type SeedWriter = Pick<Db, "insert">;
+type SeedReader = Pick<Db, "select">;
+
 async function insertAll<T extends Record<string, unknown>>(
-  db: Db,
+  db: SeedWriter,
   table: Parameters<Db["insert"]>[0],
   rows: T[],
 ) {
@@ -18,7 +21,7 @@ async function insertAll<T extends Record<string, unknown>>(
 }
 
 /** Number of decisions made by people in the app (not simulated). */
-export async function liveDecisionCount(db: Db): Promise<number> {
+export async function liveDecisionCount(db: SeedReader): Promise<number> {
   const [row] = await db
     .select({ n: count() })
     .from(t.decisions)
@@ -30,7 +33,7 @@ export async function liveDecisionCount(db: Db): Promise<number> {
  * Inserts a dataset in foreign-key order. The caller is responsible for
  * starting from an empty schema (see scripts/seed.ts).
  */
-export async function writeDataset(db: Db, ds: Dataset): Promise<void> {
+export async function writeDataset(db: SeedWriter, ds: Dataset): Promise<void> {
   await insertAll(db, t.clients, ds.clients);
   await insertAll(db, t.debtors, ds.debtors);
   await insertAll(db, t.ledgerEntries, ds.ledgerEntries);
@@ -45,6 +48,36 @@ export async function writeDataset(db: Db, ds: Dataset): Promise<void> {
   await insertAll(db, t.fundingAdjustments, ds.fundingAdjustments);
   await insertAll(db, t.labels, ds.labels);
   await insertAll(db, t.watchLabels, ds.watchLabels);
+}
+
+/**
+ * Replace all demo data as one transaction. A failed insert or aborted seed
+ * rolls back the TRUNCATE, keeping the previous dataset intact.
+ */
+export async function replaceDataset(
+  db: Db,
+  ds: Dataset,
+  force = false,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const live = await liveDecisionCount(tx);
+    if (live > 0 && !force) {
+      throw new Error(
+        `refusing to reset: ${live} live decisions exist. Re-run with --force to discard them.`,
+      );
+    }
+
+    const tables = await tx.execute<{ tablename: string }>(
+      sql`select tablename from pg_tables where schemaname = 'public' and tablename not like '__drizzle%'`,
+    );
+    // Escape identifiers returned by PostgreSQL; never interpolate CLI input.
+    const names = tables.rows
+      .map((row) => `"${row.tablename.replaceAll('"', '""')}"`)
+      .join(", ");
+    // TRUNCATE and every insert are committed together or not at all.
+    if (names) await tx.execute(sql.raw(`TRUNCATE ${names} CASCADE`));
+    await writeDataset(tx, ds);
+  });
 }
 
 /** Counts used by the seed summary and tests. */
