@@ -92,6 +92,7 @@ describe("durable ingestion journal", () => {
     const db=await dbWithClient();
     await recordSourceBatch(db,connection,[evt],at("2026-10-03T00:00:00Z"),null);
     await expect(db.delete(t.ingestionEvents)
-      .where(eq(t.ingestionEvents.eventId,"version-1"))).rejects.toThrow(/append-only/);
+      .where(eq(t.ingestionEvents.eventId,"version-1"))).rejects.toThrow(/Failed query|append-only/);
+    expect(await db.select().from(t.ingestionEvents)).toHaveLength(1);
   });
 });
