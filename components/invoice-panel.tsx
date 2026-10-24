@@ -11,7 +11,7 @@ import { checkLabel } from "@/lib/checks/labels";
 import { businessDate, instant, money } from "@/lib/format";
 import { getInvoiceReview } from "@/lib/queries/invoice";
 import { currentAnalyst } from "@/lib/session";
-import { currentDemoPersona } from "@/lib/demo-session";
+import { canPerformDemoWrite } from "@/lib/demo-session";
 
 const statusOf = (severities: string[]) =>
   severities.includes("HIGH")
@@ -35,7 +35,7 @@ export async function InvoicePanel({
   batchId: string;
 }) {
   const analyst = await currentAnalyst();
-  const readOnly = (await currentDemoPersona()) !== "ANALYST";
+  const readOnly = !(await canPerformDemoWrite());
   const data = await getInvoiceReview(invoiceId, analyst, batchId, readOnly);
   if (!data) {
     return (

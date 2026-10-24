@@ -34,6 +34,12 @@ A READY Vercel build is not evidence of migrated tables or functioning login.
 Without `DEMO_PASSWORD` and `SESSION_SECRET` the production app returns 503
 rather than serving unprotected.
 
+## Optional one-click visitor demo
+
+For a **separate fictional-only** instance, verify the connected database has no live borrower, lender or bank records, run the non-destructive demo preflight, then (and only then) set both `PUBLIC_DEMO_ENABLED=1` and `CREDIT_DESK_DATA_CLASSIFICATION=SYNTHETIC`. The latter is an operator declaration, not a technical guarantee. `DEMO_PASSWORD` and `SESSION_SECRET` must also be configured, but neither is displayed to public visitors. The five one-click demo accounts are signed, short-lived (60 minutes) and read-only. They do not require real passwords; their displayed `.example` email addresses are labels only.
+
+**Never enable on a mixed/live dataset.** No new demo code should be deployed to the public custom domain until hosted migrations/fictional seed and accessibility/browser/security acceptance pass. Disable the switches to prevent new public sessions; rotate `SESSION_SECRET` to invalidate existing sessions. The reviewer-password path remains available for privileged synthetic demonstrations.
+
 ## Read-only synthetic database preflight
 
 Before any owner-authorised migration or seed, explicitly select the target

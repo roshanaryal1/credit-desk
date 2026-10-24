@@ -55,6 +55,7 @@ describe("self-selected demo perspectives", () => {
 
   it("only enables synthetic write controls for the analyst", () => {
     expect(demoCanWrite("ANALYST")).toBe(true);
+    expect(demoCanWrite("ANALYST", true)).toBe(false);
     for (const persona of DEMO_PERSONA_KEYS.filter(
       (key) => key !== "ANALYST",
     )) {

@@ -10,6 +10,12 @@ This document describes a **self-selected demonstration experience**, not tenant
 | Client / borrower | Fictional client snapshot | Aggregate facility and receivables for server-pinned `cli_0001` | None |
 | Auditor | Audit history | Synthetic audit, replay and evidence | None |
 
+## Public one-click demo (issue #153)
+
+Five clickable fictional example email addresses are displayed under the reviewer sign-in. No public password is exposed or required; each button issues a separate short-lived signed session for its chosen perspective. These addresses do not receive mail. Public one-click sessions are **read-only even when Analyst is selected**, and do not allow incident changes, agent reruns, decision writes or mode changes. Existing password-protected reviewer sign-in retains the synthetic Analyst exercise.
+
+Enable only on an **isolated, seeded, verified fictional-data deployment**, with `PUBLIC_DEMO_ENABLED=1` and `CREDIT_DESK_DATA_CLASSIFICATION=SYNTHETIC`, and with valid `DEMO_PASSWORD` and `SESSION_SECRET` configured on the server. The second flag is an operator assertion, **not an automated database provenance verifier**; do not set either flag on a deployment with real borrower, lender or banking data. Never expose the actual shared password in the browser or documentation. Public sessions expire after 60 minutes and are limited by IP and global counters in the database. Turning off the flag prevents new one-click sessions; rotate `SESSION_SECRET` to revoke already issued sessions.
+
 ## Controls and limitations
 
 - Rate-limited shared-password gate remains mandatory in production; role selected via accessible fieldset and bound to signed expiring session cookie.

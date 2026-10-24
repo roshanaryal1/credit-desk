@@ -184,7 +184,7 @@ try {
     timeout: 30_000,
   });
   if (!clientLogin?.ok()) throw new Error("Client demo sign-in unavailable");
-  await clientPage.getByRole("radio", { name: /Client \/ borrower/ }).check();
+  await clientPage.getByLabel("Explore Credit Desk as").selectOption("CLIENT");
   await clientPage.getByLabel("Your name").fill("Fictional client reviewer");
   await clientPage.getByLabel("Password").fill(password);
   await clientPage.getByRole("button", { name: "Sign in" }).click();

@@ -17,6 +17,8 @@ export interface SessionPayload {
   name: string;
   /** Self-selected display role; never authoritative authentication. */
   persona?: DemoPersona;
+  /** Public one-click visitors never receive write privileges. */
+  publicDemo?: true;
   /** Expiry, epoch seconds. */
   exp: number;
 }
@@ -91,7 +93,8 @@ export async function verifySession(
       typeof payload.sid !== "string" ||
       typeof payload.exp !== "number" ||
       payload.exp <= nowSeconds ||
-      (payload.persona !== undefined && !parseDemoPersona(payload.persona))
+      (payload.persona !== undefined && !parseDemoPersona(payload.persona)) ||
+      (payload.publicDemo !== undefined && payload.publicDemo !== true)
     )
       return null;
     return payload;
