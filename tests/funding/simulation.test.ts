@@ -60,5 +60,8 @@ describe("dry-run drawdown model", () => {
     expect(() => transitionSimulation(first.intent,
       {kind:"APPROVE",reason:"Evidence reviewed and accepted"},
       {...checker,clientGrants:[]},1,now)).toThrow(/CLIENT_BOUNDARY/);
+    expect(() => transitionSimulation(first.intent,
+      {kind:"APPROVE",reason:"Evidence reviewed and accepted"},
+      {...checker,tenantId:"another-tenant"},1,now)).toThrow(/TENANT_BOUNDARY/);
   });
 });
