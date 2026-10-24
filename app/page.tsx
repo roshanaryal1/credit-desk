@@ -5,7 +5,12 @@ import { Suspense } from "react";
 import { Loading, PageHeader, Section } from "@/components/page";
 import { DEMO_TODAY } from "@/lib/demo";
 import { businessDate, money } from "@/lib/format";
+import { Chip } from "@/components/chips";
 import { listBatches, listClients } from "@/lib/queries/book";
+import { decisionRecords } from "@/lib/queries/trust";
+import { incidentsAsOf } from "@/lib/queries/watch";
+import { agreementReport } from "@/lib/trust/agreement";
+import { percent } from "@/lib/format";
 
 export default function OverviewPage() {
   return (
@@ -23,10 +28,61 @@ export default function OverviewPage() {
 
 async function OverviewData() {
   await connection();
-  const [clients, batches] = await Promise.all([listClients(), listBatches()]);
+  const [clients, batches, incidents, records] = await Promise.all([
+    listClients(),
+    listBatches(),
+    incidentsAsOf(DEMO_TODAY),
+    decisionRecords(),
+  ]);
   const pending = batches.filter((b) => b.status === "PENDING");
+  const open = incidents.filter((i) => i.status !== "RESOLVED");
+  const bySeverity = (sev: string) =>
+    open.filter((i) => i.severity === sev).length;
+  const live = agreementReport(records.filter((r) => !r.simulated));
+  const simulated = agreementReport(records.filter((r) => r.simulated));
   return (
     <>
+      <dl className="grid gap-4 sm:grid-cols-3">
+        <div className="bg-card rounded-md border p-4">
+          <dt className="text-muted-foreground text-sm">Batches waiting</dt>
+          <dd className="num mt-1 text-2xl font-semibold">{pending.length}</dd>
+        </div>
+        <div className="bg-card rounded-md border p-4">
+          <dt className="text-muted-foreground text-sm">Open incidents</dt>
+          <dd className="mt-1 flex flex-wrap items-center gap-2">
+            <Link
+              href="/watch"
+              className="num text-2xl font-semibold underline-offset-4 hover:underline"
+            >
+              {open.length}
+            </Link>
+            <Chip tone="high">{bySeverity("HIGH")} high</Chip>
+            <Chip tone="flagged">{bySeverity("MEDIUM")} medium</Chip>
+            <Chip tone="info">{bySeverity("LOW")} low</Chip>
+          </dd>
+        </div>
+        <div className="bg-card rounded-md border p-4">
+          <dt className="text-muted-foreground text-sm">
+            Agent agreement on flagged invoices
+          </dt>
+          <dd className="mt-1">
+            <Link
+              href="/trust"
+              className="num text-2xl font-semibold underline-offset-4 hover:underline"
+            >
+              {live.overall.n > 0 ? percent(live.overall.rate) : "n/a"}
+            </Link>
+            <span className="text-muted-foreground block text-xs">
+              Live: {live.overall.n} decisions. Simulated history:{" "}
+              {simulated.overall.n > 0
+                ? `${percent(simulated.overall.rate)} of ${simulated.overall.n}`
+                : "none"}
+              .
+            </span>
+          </dd>
+        </div>
+      </dl>
+
       <Section
         title="Funds in use"
         description="Outstanding advances against each client's facility limit."

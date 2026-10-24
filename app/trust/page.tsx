@@ -2,7 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
-import { Chip, DecisionChip } from "@/components/chips";
+import { Chip, DecisionChip, RecommendationChip } from "@/components/chips";
 import { Loading, PageHeader, Section } from "@/components/page";
 import { TrustTabs } from "@/components/trust-tabs";
 import { WeeklyChart } from "@/components/weekly-chart";
@@ -158,7 +158,7 @@ async function Agreement({
                           scope="row"
                           className="px-3 py-2 text-left font-normal"
                         >
-                          <DecisionChip decision={rec} />
+                          <RecommendationChip recommendation={rec} />
                         </th>
                         {(["APPROVE", "HOLD", "REJECT"] as const).map((d) => {
                           const agree =
@@ -239,7 +239,7 @@ async function Agreement({
                       {d.invoiceId}
                     </Link>
                     <span className="text-muted-foreground">agent</span>{" "}
-                    <DecisionChip decision={d.recommendation!} />
+                    <RecommendationChip recommendation={d.recommendation!} />
                     <span className="text-muted-foreground">analyst</span>{" "}
                     <DecisionChip decision={d.decision} />
                     {d.simulated ? <Chip tone="neutral">Simulated</Chip> : null}

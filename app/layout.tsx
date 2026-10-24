@@ -54,6 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Nav />
             </Suspense>
             <div className="flex flex-wrap items-center md:hidden">
+              <ThemeToggle />
               <Suspense>
                 <SignOut />
               </Suspense>

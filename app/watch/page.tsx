@@ -244,7 +244,7 @@ async function IncidentPanel({
         Incident not found.
       </aside>
     );
-  const { incident, latestDetection, detectionCount, events } = data;
+  const { incident, latestDetection, detectionCount, events, explained } = data;
   const details = (latestDetection?.details ?? {}) as Record<string, unknown>;
   const status = events.at(-1)?.status ?? "OPEN";
   return (
@@ -274,6 +274,47 @@ async function IncidentPanel({
           </p>
         ) : null}
       </section>
+      {incident.severity === "HIGH" ? (
+        <section className="flex flex-col gap-1 text-sm">
+          <h3 className="font-semibold">Agent explanation</h3>
+          {explained &&
+          explained.run.asOfDate &&
+          asOf < explained.run.asOfDate ? (
+            <p className="text-muted-foreground">
+              The explanation was written as of{" "}
+              {businessDate(explained.run.asOfDate)}. Move to that date to see
+              it, so it does not describe a later state of the book than the one
+              on screen.
+            </p>
+          ) : explained &&
+            explained.explanation.validationStatus === "PASSED" ? (
+            <>
+              <p>{explained.explanation.summary}</p>
+              <ul className="text-muted-foreground list-disc pl-5">
+                {explained.explanation.claims.map((c, i) => (
+                  <li key={i}>
+                    {c.text}{" "}
+                    <span className="text-xs">
+                      ({c.evidenceIds.join(", ")})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-muted-foreground text-xs">
+                {explained.run.model}, prompt {explained.run.promptVersion}.
+                Citations and figures were checked against the records.
+              </p>
+            </>
+          ) : explained ? (
+            <p>Explanation unavailable, see what changed above.</p>
+          ) : (
+            <p className="text-muted-foreground">
+              No explanation has been generated for this incident yet.
+            </p>
+          )}
+        </section>
+      ) : null}
+
       <section className="flex flex-col gap-1 text-sm">
         <h3 className="font-semibold">History</h3>
         <ol className="flex flex-col gap-1">
