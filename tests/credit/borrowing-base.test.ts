@@ -17,10 +17,38 @@ const policy: BorrowingPolicy = {
 };
 
 const invoices: Receivable[] = [
-  { invoiceId: "A", debtorId: "alpha", faceCents: 10_000, receivedCents: 2_000, creditNoteCents: 0, ineligibleReasons: [] },
-  { invoiceId: "B", debtorId: "alpha", faceCents: 5_000, receivedCents: 0, creditNoteCents: 1_000, ineligibleReasons: [] },
-  { invoiceId: "C", debtorId: "beta", faceCents: 20_000, receivedCents: 0, creditNoteCents: 0, ineligibleReasons: [] },
-  { invoiceId: "D", debtorId: "gamma", faceCents: 10_000, receivedCents: 0, creditNoteCents: 0, ineligibleReasons: ["DISPUTED"] },
+  {
+    invoiceId: "A",
+    debtorId: "alpha",
+    faceCents: 10_000,
+    receivedCents: 2_000,
+    creditNoteCents: 0,
+    ineligibleReasons: [],
+  },
+  {
+    invoiceId: "B",
+    debtorId: "alpha",
+    faceCents: 5_000,
+    receivedCents: 0,
+    creditNoteCents: 1_000,
+    ineligibleReasons: [],
+  },
+  {
+    invoiceId: "C",
+    debtorId: "beta",
+    faceCents: 20_000,
+    receivedCents: 0,
+    creditNoteCents: 0,
+    ineligibleReasons: [],
+  },
+  {
+    invoiceId: "D",
+    debtorId: "gamma",
+    faceCents: 10_000,
+    receivedCents: 0,
+    creditNoteCents: 0,
+    ineligibleReasons: ["DISPUTED"],
+  },
 ];
 
 describe("borrowing base (independent hand-calculated worksheet)", () => {
@@ -61,14 +89,31 @@ describe("borrowing base (independent hand-calculated worksheet)", () => {
   });
 
   it("calculates available funding by limiting collateral, commitment and sublimit", () => {
-    expect(borrowingBase("2026-10-24", { ...policy, drawnCents: 2_000 }, invoices).availableCents).toBe(18_000);
-    expect(borrowingBase("2026-10-24", { ...policy, drawnCents: 2_000, sublimitCents: 12_000 }, invoices).availableCents).toBe(10_000);
-    expect(borrowingBase("2026-10-24", { ...policy, drawnCents: 2_000, facilityLimitCents: 15_000 }, invoices).availableCents).toBe(13_000);
+    expect(
+      borrowingBase("2026-10-24", { ...policy, drawnCents: 2_000 }, invoices)
+        .availableCents,
+    ).toBe(18_000);
+    expect(
+      borrowingBase(
+        "2026-10-24",
+        { ...policy, drawnCents: 2_000, sublimitCents: 12_000 },
+        invoices,
+      ).availableCents,
+    ).toBe(10_000);
+    expect(
+      borrowingBase(
+        "2026-10-24",
+        { ...policy, drawnCents: 2_000, facilityLimitCents: 15_000 },
+        invoices,
+      ).availableCents,
+    ).toBe(13_000);
   });
 
   it("is independent of source ordering and does not mutate callers' rows", () => {
     const a = borrowingBase("2026-10-24", policy, invoices);
-    expect(borrowingBase("2026-10-24", policy, [...invoices].reverse())).toEqual(a);
+    expect(
+      borrowingBase("2026-10-24", policy, [...invoices].reverse()),
+    ).toEqual(a);
     expect(invoices[2]?.ineligibleReasons).toEqual([]);
   });
 
@@ -81,53 +126,87 @@ describe("borrowing base (independent hand-calculated worksheet)", () => {
       creditNoteCents: 0,
       ineligibleReasons: [],
     }));
-    const r = borrowingBase("2026-10-24", {
-      ...policy,
-      maximumDebtorShareBps: 10_000,
-      drawnCents: 0,
-      reservesCents: 0,
-      sublimitCents: undefined,
-    }, rows);
+    const r = borrowingBase(
+      "2026-10-24",
+      {
+        ...policy,
+        maximumDebtorShareBps: 10_000,
+        drawnCents: 0,
+        reservesCents: 0,
+        sublimitCents: undefined,
+      },
+      rows,
+    );
     expect(r.grossAdvanceCents).toBe(7_497);
   });
 
   it("rejects duplicate submissions, missing eligibility, corrupt amounts and invalid policy", () => {
-    expect(() => borrowingBase("2026-10-24", policy, [invoices[0]!, invoices[0]!])).toThrow(/Duplicate invoice/);
-    expect(() => borrowingBase("2026-10-24", policy, [{ ...invoices[0]!, ineligibleReasons: undefined! }])).toThrow(/eligibility assessment/);
-    expect(() => borrowingBase("2026-10-24", policy, [{ ...invoices[0]!, receivedCents: 10_001 }])).toThrow(/exceed face/);
-    expect(() => borrowingBase("2026-09-31", policy, invoices)).toThrow(/business date/);
-    expect(() => borrowingBase("2026-10-24", { ...policy, advanceRateBps: 10_001 }, invoices)).toThrow(/basis points/);
-    expect(() => borrowingBase("2026-10-24", { ...policy, drawnCents: -1 }, invoices)).toThrow(/non-negative/);
+    expect(() =>
+      borrowingBase("2026-10-24", policy, [invoices[0]!, invoices[0]!]),
+    ).toThrow(/Duplicate invoice/);
+    expect(() =>
+      borrowingBase("2026-10-24", policy, [
+        { ...invoices[0]!, ineligibleReasons: undefined! },
+      ]),
+    ).toThrow(/eligibility assessment/);
+    expect(() =>
+      borrowingBase("2026-10-24", policy, [
+        { ...invoices[0]!, receivedCents: 10_001 },
+      ]),
+    ).toThrow(/exceed face/);
+    expect(() => borrowingBase("2026-09-31", policy, invoices)).toThrow(
+      /business date/,
+    );
+    expect(() =>
+      borrowingBase(
+        "2026-10-24",
+        { ...policy, advanceRateBps: 10_001 },
+        invoices,
+      ),
+    ).toThrow(/basis points/);
+    expect(() =>
+      borrowingBase("2026-10-24", { ...policy, drawnCents: -1 }, invoices),
+    ).toThrow(/non-negative/);
   });
 
   it("handles zero collateral and completely reserved borrowing base", () => {
-    const result = borrowingBase("2026-10-24", {
-      ...policy,
-      drawnCents: 0,
-      reservesCents: 99_999,
-    }, invoices);
+    const result = borrowingBase(
+      "2026-10-24",
+      {
+        ...policy,
+        drawnCents: 0,
+        reservesCents: 99_999,
+      },
+      invoices,
+    );
     expect(result.availableCents).toBe(0);
     expect(result.securedAdvanceCents).toBe(0);
     expect(borrowingBase("2026-10-24", policy, []).availableCents).toBe(0);
   });
 
   it("can calculate near safe-integer cents without multiplying beyond precision", () => {
-    const safe = borrowingBase("2026-10-24", {
-      ...policy,
-      maximumDebtorShareBps: 10_000,
-      advanceRateBps: 8_000,
-      facilityLimitCents: Number.MAX_SAFE_INTEGER,
-      drawnCents: 0,
-      reservesCents: 0,
-      sublimitCents: undefined,
-    }, [{
-      invoiceId: "big",
-      debtorId: "large",
-      faceCents: 9_000_000_000_000,
-      receivedCents: 0,
-      creditNoteCents: 0,
-      ineligibleReasons: [],
-    }]);
+    const safe = borrowingBase(
+      "2026-10-24",
+      {
+        ...policy,
+        maximumDebtorShareBps: 10_000,
+        advanceRateBps: 8_000,
+        facilityLimitCents: Number.MAX_SAFE_INTEGER,
+        drawnCents: 0,
+        reservesCents: 0,
+        sublimitCents: undefined,
+      },
+      [
+        {
+          invoiceId: "big",
+          debtorId: "large",
+          faceCents: 9_000_000_000_000,
+          receivedCents: 0,
+          creditNoteCents: 0,
+          ineligibleReasons: [],
+        },
+      ],
+    );
     expect(safe.availableCents).toBe(7_200_000_000_000);
   });
 });
