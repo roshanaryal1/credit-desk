@@ -12,7 +12,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
           Sign in to Credit Desk
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          A prototype on synthetic data. Use the shared password you were given.
+          Choose a fictional perspective and enter the shared demonstration password. No real customer data or verified identity.
         </p>
       </div>
       <Suspense>
