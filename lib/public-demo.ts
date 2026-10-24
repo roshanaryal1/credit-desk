@@ -20,7 +20,12 @@ export const PUBLIC_DEMO_TTL_SECONDS = 60 * 60;
  * This is not automatic proof of data provenance or an access control for live
  * customer records.
  */
-export function publicDemoEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+export function publicDemoEnabled(
+  env: {
+    PUBLIC_DEMO_ENABLED?: string;
+    CREDIT_DESK_DATA_CLASSIFICATION?: string;
+  } = process.env,
+): boolean {
   return (
     env.PUBLIC_DEMO_ENABLED === "1" &&
     env.CREDIT_DESK_DATA_CLASSIFICATION === "SYNTHETIC"
