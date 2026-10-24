@@ -15,8 +15,11 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
   const db = await getDb();
-  const [client] = await db.select().from(t.clients)
-    .where(eq(t.clients.id, id)).limit(1);
+  const [client] = await db
+    .select()
+    .from(t.clients)
+    .where(eq(t.clients.id, id))
+    .limit(1);
   if (!client) return new Response("Not found", { status: 404 });
   const funds = await fundsInUseByClient();
   const memo = draftMemoFromSyntheticClient({
@@ -30,7 +33,8 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
-      "Content-Disposition": "attachment; filename=\"credit-memo-" + id + "-DRAFT.md\"",
+      "Content-Disposition":
+        'attachment; filename="credit-memo-' + id + '-DRAFT.md"',
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
     },

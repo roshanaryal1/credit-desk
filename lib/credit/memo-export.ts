@@ -18,8 +18,12 @@ export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
     throw new Error("Duplicate evidence reference");
   }
   for (const entry of memo.evidenceIndex) {
-    if (entry.clientId !== memo.clientId || entry.asOfDate > memo.asOfDate ||
-        !Number.isSafeInteger(entry.cents) || entry.cents < 0) {
+    if (
+      entry.clientId !== memo.clientId ||
+      entry.asOfDate > memo.asOfDate ||
+      !Number.isSafeInteger(entry.cents) ||
+      entry.cents < 0
+    ) {
       throw new Error("Invalid export evidence boundary");
     }
   }
@@ -43,10 +47,16 @@ export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
     "Signed off by: NONE",
   ];
   for (const [index, section] of memo.sections.entries()) {
-    lines.push("", "## " + (index + 1) + ". " + safeMarkdown(section.title), "");
+    lines.push(
+      "",
+      "## " + (index + 1) + ". " + safeMarkdown(section.title),
+      "",
+    );
     for (const statement of section.statements) {
       const suffix = statement.evidenceIds.length
-        ? " [Sources: " + statement.evidenceIds.map(safeMarkdown).join(", ") + "]"
+        ? " [Sources: " +
+          statement.evidenceIds.map(safeMarkdown).join(", ") +
+          "]"
         : "";
       lines.push("- " + safeMarkdown(statement.text) + suffix);
     }
@@ -54,10 +64,18 @@ export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
   lines.push("", "## Evidence register", "");
   for (const evidence of memo.evidenceIndex) {
     lines.push(
-      "- " + safeMarkdown(evidence.id) + " | " + safeMarkdown(evidence.fact) +
-      " | " + safeMarkdown(evidence.sourceLabel) + " | Source " +
-      safeMarkdown(evidence.sourceId) + " | As of " + evidence.asOfDate +
-      " | NZD cents " + evidence.cents,
+      "- " +
+        safeMarkdown(evidence.id) +
+        " | " +
+        safeMarkdown(evidence.fact) +
+        " | " +
+        safeMarkdown(evidence.sourceLabel) +
+        " | Source " +
+        safeMarkdown(evidence.sourceId) +
+        " | As of " +
+        evidence.asOfDate +
+        " | NZD cents " +
+        evidence.cents,
     );
   }
   lines.push("", "## Missing evidence — mandatory reviewer checks", "");
