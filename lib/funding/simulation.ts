@@ -16,6 +16,7 @@ export interface SyntheticAvailability {
 
 export interface SimulatedDraw {
   id: string;
+  tenantId: string;
   clientId: string;
   invoiceId: string;
   requestedCents: number;
@@ -73,7 +74,7 @@ export function proposeSimulation(
       args.availability.availableCents < args.requestedCents)
     throw new Error("Insufficient simulated availability");
   const intent: SimulatedDraw = {
-    id:args.id,clientId:args.clientId,invoiceId:args.invoiceId,
+    id:args.id,tenantId:actor.tenantId,clientId:args.clientId,invoiceId:args.invoiceId,
     requestedCents:args.requestedCents,availabilitySourceId:args.availability.sourceId,
     asOfDate:args.availability.asOfDate,makerId:actor.subject,checkerId:null,
     state:"PENDING_CHECK",version:1,reason:null,
@@ -93,7 +94,7 @@ export function transitionSimulation(
   occurredAt: string,
 ): {intent:SimulatedDraw;event:DrawEvent} {
   const at=time(occurredAt);
-  requireAccess(actor,{tenantId:actor.tenantId,clientId:old.clientId},"CASE_CHECK",at);
+  requireAccess(actor,{tenantId:old.tenantId,clientId:old.clientId},"CASE_CHECK",at);
   if (old.version !== expectedVersion) throw new Error("Stale funding intent");
   if (actor.subject === old.makerId) throw new Error("Maker cannot check their own draw");
   if (!operation.reason.trim() || operation.reason.trim().length < 8)
