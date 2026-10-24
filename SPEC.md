@@ -429,3 +429,156 @@ Done means:
 - README with screenshots, a mermaid architecture diagram, how to run locally,
   evaluation results, limitations and production needs.
 - A 3-minute walkthrough recording.
+
+## 14. Credit Desk 2.0 — proposed scope amendment (NOT approved or released)
+
+**Status:** Proposed for human review under #99. This section is a roadmap and
+acceptance contract, **not** evidence that features exist on `main`, have been
+credit-policy approved, or are ready for actual customer data or money movement.
+The v1 scope, security disclosures, financial semantics and seeded synthetic
+demo remain authoritative until this amendment is reviewed and adopted.
+On 2026-10-25 the owner authorized correcting and merging the synthetic v2
+prototype. This adopts the synthetic implementation scope only. Live providers,
+enterprise identity, lender policy sign-off and payments remain deferred.
+
+The full staged delivery charter is proposed in PR #115. Supporting issue
+register: #100–#114, with foundational contracts split from product UI to
+avoid duplicate implementations.
+
+### 14.1 Product model and user experience
+
+A credit analyst should be able to locate urgent work, inspect a relationship,
+trace receivables and facility capacity to individual dated records, submit a
+proposal for independent approval when required, and replay the decision.
+A risk manager should see exposure and incidents, rather than decorative
+AI activity. A checker should only see duly submitted work and its evidence.
+The current shared-password prototype is **not** a verified multi-user system.
+
+Product interfaces:
+- **Executive workbench (#110):** current exposure, pending work, high-risk
+  incidents, *commitment* headroom, and (only once validated) borrowing-base
+  availability and data-refresh state. Every monetary KPI must reconcile to
+  named underlying records, business date and client permissions.
+- **Client 360 (#111):** complete facility, receivable, debtor, activity and
+  incident dossier with cross-client separation and an as-of timeline.
+  Documents are metadata-only until a lawful storage/retention policy exists.
+- **Borrowing-base waterfall (#112):** gross AR, dated receipts and credits,
+  exclusions, concentration haircuts, eligible collateral, advance value,
+  reserves, facility/sub-limit headroom, drawn balance and available amount;
+  each line drills into dated evidence. Scenario mode must be clearly separate
+  from the authoritative stored result.
+- **Analyst case queue (#113):** assigned work, owners, priorities, deadlines,
+  next action, exception evidence and separate checker inbox.
+- **Credit assessment memo (#114):** verifiable client/facility context,
+  exceptions, mitigants, conditions and *draft* recommendation with citations;
+  edits and approval remain human-authored and auditable.
+
+Visual rules: restrained institutional typography, exact NZD and business-date
+labels, fine dividers, purposeful status colours, responsive finance tables,
+strong keyboard/focus handling, clear source freshness, and explicit
+empty/error/stale cases. No fake risk scores, decorative AI widgets or
+unsupported automation claims. See design proposal in #117.
+
+### 14.2 Source ingestion and replay (#100; external connectors #106)
+
+An ingestion observation carries source/provider kind, authorized connection
+and client IDs, immutable source event ID, logical entity ID, effective
+business date, first-observed UTC instant and typed payload.
+
+Reconciliation rules:
+- Exact provider event replays are idempotent; conflicting reuse of an event
+  identity fails closed, with recorded remediation rather than silent overwrite.
+- As-of historical views must respect **both** event effective date and the
+  knowledge cutoff; an analyst cannot be shown information first learned later.
+- Source states are FRESH, STALE, ERROR or UNKNOWN, with last successful sync,
+  last failure, retry state and explicit freshness thresholds.
+- Empty results and stale/unavailable sources must never silently become zero
+  receivables or an apparent credit-approved balance.
+- Real Xero/Akahu use requires independent consent/authorization, tenant
+  mapping, token-security design, API usage checks, data retention/privacy
+  decisions and a separate controlled pilot. Synthetic input remains default.
+
+### 14.3 Finance policy and calculation (#102; view #112)
+
+**Proposed formula for review, not an agreed lender contract:**
+
+1. Per invoice: `net receivable = face - effective allocated receipts -
+   effective credit notes`; reject deductions greater than face.
+2. Exclude ineligible net receivables with a separately recorded set of
+   deterministic, versioned reasons.
+3. Concentration policy caps each debtor's contribution as a share of the
+   eligible net pool *before concentration*, with a deterministic,
+   reproducible invoice-level allocation of any excess.
+4. `gross advance = sum(floor(eligible invoice cents * advance bps / 10000))`.
+5. `secured advance value = max(0, gross advance - reserves)`.
+6. `available = max(0, min(secured advance - drawn, facility limit - drawn,
+   optional sublimit - drawn))`.
+
+All amounts are safe integer NZD cents; use versioned facility policy,
+effective business date, independent hand-worked fixtures and validation
+of incomplete/stale source data. Policy precedence, reserve rules and legal
+facility definitions require independent **credit-domain sign-off** before
+the result is surfaced as definitive drawable funding.
+
+### 14.4 Debtor ageing and risk intelligence (#104)
+
+Age outstanding receivable balance after effective receipt allocations and
+credit notes, never full invoice face or previously advanced cash. Bands are
+current; 1–30, 31–60, 61–90, and 91+ calendar days past due (the last is
+displayed as 90+ for convenience; labels must not imply overlap). Source dates
+are explicit and historic snapshots exclude future events. Display recent and
+prior 30-day receipt volume, exposure and concentration with source context.
+These descriptive metrics are **not** calibrated loss predictions.
+
+### 14.5 Risk-policy configuration and human workflow (#101, #105)
+
+Versioned risk thresholds must identify author, reviewer, effective date and
+the input/source version. Historical decisions are reproducible after policy
+changes, and backfill never creates duplicate incident notifications.
+
+A case records owner, client, policy version, evidence, state, deadline and
+audit history. Proposal may pass to a different authenticated checker;
+**maker identity cannot be checker identity**, even when one individual
+has both roles. Enforce server-side transition guards, per-client access,
+idempotency and compare-and-swap transaction concurrency. A case approval
+does not automatically create a payment or loan disbursement.
+
+### 14.6 Authentication, access controls and operations (#109)
+
+Before multi-user or real-data use, replace self-declared analyst names and
+the shared password with verified OIDC-backed identities, MFA for privileged
+roles, deny-by-default RBAC, tenant/client boundary checks, key rotation,
+audit trails with meaningful retention, job/source-health metrics, alerts,
+incident response procedures, backup/restore tests and negative-access tests.
+The shared-password mode may survive only as a clearly labelled
+synthetic/local demonstration feature. No raw credentials or bank details may
+be logged or sent to model tools.
+
+### 14.7 Deferred regulated/live extensions (#106–#108)
+
+Provider connections, controlled drawdowns/disbursements, reconciliation,
+revolving facilities and term loans belong to a separately authorized later
+release. All require product and financial-model sign-off, security/privacy
+review and operational rollback. Real disbursements are disabled by default
+and must never be triggered by an LLM. No production customer data should
+reach any provider without the appropriate legal, consent and data-residency
+review.
+
+### 14.8 Definition of done and delivery controls
+
+- Every feature references its own issue, tests, architectural decision and
+  PR; domain and UI sub-features have one implementation owner each.
+- A passing build/test is not a lender's acceptance of a financial formula.
+  Independent hand-calculated worksheets, permission matrix and
+  cross-client/identity negative tests are required before UAT.
+- `npm run typecheck`, lint, format, test, build, client-bundle secret check
+  and `npm run eval` must pass, with additional finance/security fixtures.
+- Mobile and desktop captures come from an *actually running* application;
+  no fabricated screenshots or untested accessibility claims.
+- Existing v1 behaviour and seeded evaluation should remain reproducible.
+- Issue closure requires full acceptance evidence; PRs delivering only a pure
+  domain foundation stay open as **draft** and refer to the issue without
+  claiming to close it.
+- The owner lifted the review merge freeze on 2026-10-25. Merge corrected,
+  verified synthetic scope through PRs; real-data and release gates remain.
+

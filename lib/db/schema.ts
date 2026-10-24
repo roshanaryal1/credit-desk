@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   index,
   integer,
@@ -450,6 +452,166 @@ export const rateLimitEvents = pgTable(
   (t) => [index("rate_limit_key_idx").on(t.key, t.createdAt)],
 );
 
+// Provider ingestion journal. Records are immutable once accepted.
+export const ingestionEvents = pgTable(
+  "ingestion_events",
+  {
+    id: text("id").primaryKey(),
+    sourceKind: text("source_kind").notNull(),
+    connectionId: text("connection_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    eventId: text("event_id").notNull(),
+    entityId: text("entity_id").notNull(),
+    effectiveDate: businessDate("effective_date").notNull(),
+    observedAt: instant("observed_at").notNull(),
+    payload: jsonb("payload_json").$type<unknown>().notNull(),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ingestion_event_identity_uq").on(
+      t.sourceKind,
+      t.connectionId,
+      t.clientId,
+      t.eventId,
+    ),
+    index("ingestion_client_asof_idx").on(
+      t.clientId,
+      t.effectiveDate,
+      t.observedAt,
+    ),
+  ],
+);
+
+// Connection checkpoints must be mutable, unlike accepted source events.
+export const ingestionCheckpoints = pgTable(
+  "ingestion_checkpoints",
+  {
+    sourceKind: text("source_kind").notNull(),
+    connectionId: text("connection_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    cursor: text("cursor"),
+    lastSuccessAt: instant("last_success_at"),
+    lastFailureAt: instant("last_failure_at"),
+    updatedAt: instant("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({
+      name: "ingestion_checkpoints_pk",
+      columns: [t.sourceKind, t.connectionId, t.clientId],
+    }),
+  ],
+);
+
+// Durable, recoverable provider sync jobs (synthetic source runners only until
+// provider consent, identity and credential controls are approved).
+export const ingestionSyncJobs = pgTable(
+  "ingestion_sync_jobs",
+  {
+    id: text("id").primaryKey(),
+    sourceKind: text("source_kind").notNull(),
+    connectionId: text("connection_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    state: text("state").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: instant("next_attempt_at").notNull(),
+    leaseToken: text("lease_token"),
+    leaseUntil: instant("lease_until"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorAt: instant("last_error_at"),
+    updatedAt: instant("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ingestion_sync_source_uq").on(
+      t.sourceKind,
+      t.connectionId,
+      t.clientId,
+    ),
+    index("ingestion_sync_due_idx").on(t.state, t.nextAttemptAt),
+    check(
+      "sync_attempts_valid",
+      sql`${t.attempts} >= 0 AND ${t.maxAttempts} > 0 AND ${t.attempts} <= ${t.maxAttempts}`,
+    ),
+    check(
+      "sync_state_valid",
+      sql`${t.state} IN ('PENDING', 'LEASED', 'SUCCEEDED', 'DEAD')`,
+    ),
+    check(
+      "sync_lease_pair",
+      sql`(${t.leaseToken} IS NULL) = (${t.leaseUntil} IS NULL)`,
+    ),
+    check(
+      "sync_leased_has_token",
+      sql`(${t.state} = 'LEASED') = (${t.leaseToken} IS NOT NULL)`,
+    ),
+  ],
+);
+
+// Proposed durable synthetic case workflow. Privileged routes remain disabled until
+// verified OIDC sessions are enforced on every query and action.
+export const creditCases = pgTable(
+  "credit_cases",
+  {
+    id: text("id").primaryKey(),
+    tenantId: text("tenant_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    subjectType: subjectType("subject_type").notNull(),
+    subjectId: text("subject_id").notNull(),
+    priority: severity("priority").notNull(),
+    dueDate: businessDate("due_date"),
+    state: text("state").notNull(),
+    version: integer("version").notNull().default(0),
+    ownerId: text("owner_id"),
+    makerId: text("maker_id"),
+    checkerId: text("checker_id"),
+    decisionReason: text("decision_reason"),
+    updatedAt: instant("updated_at").notNull(),
+  },
+  (t) => [
+    index("credit_cases_client_state_idx").on(t.clientId, t.state),
+    index("credit_cases_tenant_client_idx").on(t.tenantId, t.clientId),
+    check("credit_case_version_valid", sql`${t.version} >= 0`),
+    check(
+      "credit_case_state_valid",
+      sql`${t.state} IN ('NEW','ASSIGNED','IN_REVIEW','CHECKER_REVIEW','RETURNED','APPROVED','HELD','REJECTED','CLOSED')`,
+    ),
+    check(
+      "credit_case_separation",
+      sql`${t.checkerId} IS NULL OR ${t.makerId} IS NULL OR ${t.checkerId} <> ${t.makerId}`,
+    ),
+  ],
+);
+
+export const creditCaseEvents = pgTable(
+  "credit_case_events",
+  {
+    id: text("id").primaryKey(),
+    caseId: text("case_id")
+      .notNull()
+      .references(() => creditCases.id),
+    fromState: text("from_state"),
+    toState: text("to_state").notNull(),
+    version: integer("version").notNull(),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    reason: text("reason"),
+    occurredAt: instant("occurred_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("credit_case_event_version_uq").on(t.caseId, t.version),
+    index("credit_case_event_history_idx").on(t.caseId, t.occurredAt),
+    check("credit_case_event_version_valid", sql`${t.version} >= 0`),
+  ],
+);
+
 // Evaluation only
 
 export const labels = pgTable("labels", {
@@ -477,6 +639,8 @@ export const APPEND_ONLY_TABLES = [
   "decision_snapshots",
   "audit_events",
   "incident_events",
+  "ingestion_events",
+  "credit_case_events",
 ] as const;
 
 export type NewClient = typeof clients.$inferInsert;

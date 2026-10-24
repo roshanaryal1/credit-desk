@@ -12,6 +12,48 @@ decided without seeing it, and replays any decision exactly as it was made.
 **Rules detect, the model explains, a validator checks the model, and a person
 decides.** The agent never approves, funds or changes anything.
 
+## Credit Desk 2.0 — combined synthetic review candidate
+
+> **Status: draft, unmerged and not a production lending application.**
+> The v2 code is currently assembled on `review/credit-desk-v2-integrated`
+> (draft PR #136). The original implementation PRs remain open for review.
+> No real financial accounts, bank payments or authenticated enterprise tenant
+> have been connected.
+
+The review branch expands the original invoice-finance prototype:
+
+| User journey | Review route | Scope and verification limit |
+| --- | --- | --- |
+| Institutional workbench | `/` | Synthetic exposure and attention priorities |
+| Analyst review queue | `/queue` | Read-only invoice and incident triage; no verified owner or checker session |
+| Client 360 | `/clients` → client | Synthetic facilities, debtors, dated collections and risk history |
+| Client-specific collateral scenario | `/clients/cli_0001/borrowing-base` | Reconciles *that client's synthetic ledger* to invoice-level haircuts; **not drawable funding** |
+| Formula demonstration | `/borrowing-base` | Separate hand-worked hypothetical cases for finance policy review |
+| Credit assessment drafts | `/credit-memos` | Only evidenced amounts, explicit missing facts; no signature or auto-approval |
+| Trust and audit | `/trust`, `/audit` | Existing shadow comparison, historic decision replay and audit records |
+
+Additional server-side foundations include a durable source-event journal, leased
+and fenced retry/dead-letter state, client-scoped authorization policy, and
+transactional case history with maker-checker separation. **These foundations
+are not automatically active production workflows:** an external verified
+identity provider, server-side role enforcement, real provider consent and
+operator-run production monitoring are still required.
+
+### How to review without deploying
+
+The optional `Review UI smoke (synthetic only)` GitHub Actions workflow
+starts a disposable locally seeded production-mode server with fresh temporary
+login credentials, visits the synthetic review routes on desktop and mobile,
+and uploads *actual captured screenshots* plus a test manifest as a temporary
+workflow artifact. Its successful run is evidence of route rendering, not
+credit-policy approval, a full accessibility audit, or bank-grade security.
+
+For implementation provenance, dependency order, known gaps and the
+one-pass review checklist, see
+[`docs/review/integrated-acceptance.md`](docs/review/integrated-acceptance.md)
+and GitHub issues #99 and #135. The original v1 screenshots below remain
+historic examples and are not the full v2 visual acceptance evidence.
+
 ## Contents
 
 - [What it does](#what-it-does)
