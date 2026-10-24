@@ -42,6 +42,18 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
         title={client.name}
         description={`Relationship dossier · ${client.industry} · synthetic position as of ${businessDate(dossier.asOf)}`}
       />
+      <div>
+        <Link
+          href={`/clients/${encodeURIComponent(id)}/borrowing-base`}
+          className="border-border bg-card hover:bg-accent/50 focus-visible:ring-ring inline-flex items-center gap-2 rounded-sm border px-4 py-3 text-sm font-semibold focus-visible:ring-2"
+        >
+          Examine synthetic borrowing-base scenario →
+        </Link>
+        <p className="text-muted-foreground mt-2 text-xs">
+          Scenario calculations use ledger receipts and are not approved drawable
+          funding.
+        </p>
+      </div>
       <section aria-label="Facility position">
         <h2 className="mb-3 text-base font-semibold">Facility position</h2>
         <dl className="border-border bg-card grid rounded-sm border sm:grid-cols-2 xl:grid-cols-4">
