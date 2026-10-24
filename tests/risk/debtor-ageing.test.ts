@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  debtorAgeing,
-  type AgeingReceivable,
-} from "@/lib/risk/debtor-ageing";
+import { debtorAgeing, type AgeingReceivable } from "@/lib/risk/debtor-ageing";
 
 const rows: AgeingReceivable[] = [
   {
@@ -104,12 +101,10 @@ describe("debtor as-of ageing and collections", () => {
   });
 
   it("refuses malformed business dates, duplication and impossible allocations", () => {
-    expect(() =>
-      debtorAgeing("2026-09-31", rows),
-    ).toThrow(/business date/);
-    expect(() =>
-      debtorAgeing("2026-10-24", [rows[0]!, rows[0]!]),
-    ).toThrow(/Duplicate invoice/);
+    expect(() => debtorAgeing("2026-09-31", rows)).toThrow(/business date/);
+    expect(() => debtorAgeing("2026-10-24", [rows[0]!, rows[0]!])).toThrow(
+      /Duplicate invoice/,
+    );
     expect(() =>
       debtorAgeing("2026-10-24", [
         {
