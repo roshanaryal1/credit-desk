@@ -24,7 +24,9 @@ export default function CaseWorkboard({
   searchParams,
 }: PageProps<"/queue/cases">) {
   return (
-    <Suspense fallback={<Loading label="Loading fictional case assignments..." />}>
+    <Suspense
+      fallback={<Loading label="Loading fictional case assignments..." />}
+    >
       <CaseList searchParams={searchParams} />
     </Suspense>
   );
@@ -38,8 +40,9 @@ async function CaseList({
   await connection();
   const sp = await searchParams;
   const filter: CaseViewFilter =
-    typeof sp.filter === "string" && CASE_FILTERS.includes(sp.filter as CaseViewFilter)
-      ? sp.filter as CaseViewFilter
+    typeof sp.filter === "string" &&
+    CASE_FILTERS.includes(sp.filter as CaseViewFilter)
+      ? (sp.filter as CaseViewFilter)
       : "all";
   const rows = await listDemoCases(await getDb(), filter, DEMO_TODAY);
   return (
@@ -52,7 +55,9 @@ async function CaseList({
       </Link>
       <PageHeader
         title="Synthetic case workboard"
-        description={"Persisted fictional case states · " + businessDate(DEMO_TODAY)}
+        description={
+          "Persisted fictional case states · " + businessDate(DEMO_TODAY)
+        }
       />
       <div className="border-border bg-card rounded-sm border p-5">
         <p className="text-sm font-semibold">
@@ -74,7 +79,9 @@ async function CaseList({
             aria-current={filter === key ? "page" : undefined}
             className={
               "focus-visible:ring-ring rounded-sm border px-3 py-2 text-sm focus-visible:ring-2 " +
-              (filter === key ? "border-primary bg-accent font-semibold" : "border-border hover:bg-accent/60")
+              (filter === key
+                ? "border-primary bg-accent font-semibold"
+                : "border-border hover:bg-accent/60")
             }
           >
             {FILTER_LABELS[key]}
@@ -92,7 +99,10 @@ async function CaseList({
         </div>
         <ul className="border-border bg-card divide-border divide-y rounded-sm border">
           {rows.map((row) => (
-            <li key={row.id} className="grid gap-3 p-5 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <li
+              key={row.id}
+              className="grid gap-3 p-5 sm:grid-cols-[minmax(0,1fr)_auto]"
+            >
               <div>
                 <p className="text-sm font-semibold">{row.clientName}</p>
                 <p className="text-muted-foreground mt-1 text-xs">

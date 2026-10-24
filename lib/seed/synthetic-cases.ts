@@ -7,13 +7,20 @@ import type { Dataset } from "@/lib/seed/generate";
 
 /** Reproducible fictional work-in-progress examples, never real approvals. */
 export async function seedSyntheticCaseWorkboard(db: Db, dataset: Dataset) {
-  const candidates = dataset.invoices.filter((invoice) =>
-    dataset.labels.some((label) =>
-      label.invoiceId === invoice.id && label.expectedCheckIds.length > 0,
-    ),
-  ).slice(0, 5);
+  const candidates = dataset.invoices
+    .filter((invoice) =>
+      dataset.labels.some(
+        (label) =>
+          label.invoiceId === invoice.id && label.expectedCheckIds.length > 0,
+      ),
+    )
+    .slice(0, 5);
   const states = [
-    "NEW", "ASSIGNED", "IN_REVIEW", "CHECKER_REVIEW", "RETURNED",
+    "NEW",
+    "ASSIGNED",
+    "IN_REVIEW",
+    "CHECKER_REVIEW",
+    "RETURNED",
   ] as const;
   const recordedAt = new Date(DEMO_TODAY + "T00:00:00Z");
   for (const [index, invoice] of candidates.entries()) {

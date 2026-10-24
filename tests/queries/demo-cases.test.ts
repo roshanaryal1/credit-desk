@@ -13,12 +13,22 @@ import { DEV_PARAMS, generate } from "@/lib/seed/generate";
 import { seedSyntheticCaseWorkboard } from "@/lib/seed/synthetic-cases";
 import { writeDataset } from "@/lib/seed/write";
 
-const row = (id: string, state: string, dueDate: string | null,
-  ownerId: string | null): CaseWorkRow => ({
-  id, state, dueDate, ownerId,
-  clientId: "c1", clientName: "Fictional",
-  subjectType: "INVOICE", subjectId: "inv1",
-  priority: "HIGH", version: 0,
+const row = (
+  id: string,
+  state: string,
+  dueDate: string | null,
+  ownerId: string | null,
+): CaseWorkRow => ({
+  id,
+  state,
+  dueDate,
+  ownerId,
+  clientId: "c1",
+  clientName: "Fictional",
+  subjectType: "INVOICE",
+  subjectId: "inv1",
+  priority: "HIGH",
+  version: 0,
 });
 
 describe("synthetic case workboard", () => {
@@ -29,12 +39,15 @@ describe("synthetic case workboard", () => {
       row("c", "CLOSED", "2026-10-01", "maker"),
       row("d", "IN_REVIEW", "2026-10-18", "maker"),
     ];
-    expect(filterCaseWork(rows, "unassigned", "2026-10-20").map((r) => r.id))
-      .toEqual(["a"]);
-    expect(filterCaseWork(rows, "checker", "2026-10-20").map((r) => r.id))
-      .toEqual(["b"]);
-    expect(filterCaseWork(rows, "overdue", "2026-10-20").map((r) => r.id))
-      .toEqual(["d", "a"]);
+    expect(
+      filterCaseWork(rows, "unassigned", "2026-10-20").map((r) => r.id),
+    ).toEqual(["a"]);
+    expect(
+      filterCaseWork(rows, "checker", "2026-10-20").map((r) => r.id),
+    ).toEqual(["b"]);
+    expect(
+      filterCaseWork(rows, "overdue", "2026-10-20").map((r) => r.id),
+    ).toEqual(["d", "a"]);
     expect(rows).toHaveLength(4);
     expect(() => filterCaseWork(rows, "checker", "2026-02-30")).toThrow();
   });
@@ -49,7 +62,9 @@ describe("synthetic case workboard", () => {
     expect(all).toHaveLength(5);
     expect(checking).toHaveLength(1);
     expect(checking[0]?.state).toBe("CHECKER_REVIEW");
-    expect(all.every((r) => ds.clients.some((c) => c.id === r.clientId))).toBe(true);
+    expect(all.every((r) => ds.clients.some((c) => c.id === r.clientId))).toBe(
+      true,
+    );
     const events = await db.select().from(t.creditCaseEvents);
     expect(events).toHaveLength(5);
     expect(events.every((e) => e.action === "CREATE_DEMO_EXAMPLE")).toBe(true);
@@ -59,7 +74,12 @@ describe("synthetic case workboard", () => {
   }, 90_000);
 
   it("does not interpret final cases as overdue", () => {
-    expect(filterCaseWork([row("closed", "APPROVED", "2026-01-01", "maker")],
-      "overdue", DEMO_TODAY)).toEqual([]);
+    expect(
+      filterCaseWork(
+        [row("closed", "APPROVED", "2026-01-01", "maker")],
+        "overdue",
+        DEMO_TODAY,
+      ),
+    ).toEqual([]);
   });
 });

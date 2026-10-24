@@ -71,10 +71,12 @@ async function QueueData({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border p-4">
         <div>
-          <p className="text-sm font-semibold">Assigned synthetic case examples</p>
+          <p className="text-sm font-semibold">
+            Assigned synthetic case examples
+          </p>
           <p className="text-muted-foreground mt-1 text-xs">
-            Persisted fictional owners, deadlines and checker-review states.
-            No genuine user approval or settlement authority.
+            Persisted fictional owners, deadlines and checker-review states. No
+            genuine user approval or settlement authority.
           </p>
         </div>
         <Link

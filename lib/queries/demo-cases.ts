@@ -11,7 +11,10 @@ export { CASE_DEMO_TENANT } from "@/lib/queue/demo-case-tenant";
 import { CASE_DEMO_TENANT } from "@/lib/queue/demo-case-tenant";
 export type CaseViewFilter = "all" | "unassigned" | "checker" | "overdue";
 export const CASE_FILTERS: CaseViewFilter[] = [
-  "all", "unassigned", "checker", "overdue",
+  "all",
+  "unassigned",
+  "checker",
+  "overdue",
 ];
 
 export interface CaseWorkRow {
@@ -35,19 +38,25 @@ export function filterCaseWork(
   asOf: string,
 ): CaseWorkRow[] {
   daysBetween(asOf, asOf);
-  if (!CASE_FILTERS.includes(filter)) throw new Error("Unsupported case filter");
-  return rows.filter((row) => {
-    if (filter === "unassigned") return !row.ownerId && !FINAL.has(row.state);
-    if (filter === "checker") return row.state === "CHECKER_REVIEW";
-    if (filter === "overdue") return row.dueDate !== null &&
-      row.dueDate < asOf && !FINAL.has(row.state);
-    return true;
-  }).sort((a, b) =>
-    ({ HIGH: 0, MEDIUM: 1, LOW: 2 }[a.priority] ?? 3) -
-    ({ HIGH: 0, MEDIUM: 1, LOW: 2 }[b.priority] ?? 3) ||
-    (a.dueDate ?? "9999-12-31").localeCompare(b.dueDate ?? "9999-12-31") ||
-    a.id.localeCompare(b.id),
-  );
+  if (!CASE_FILTERS.includes(filter))
+    throw new Error("Unsupported case filter");
+  return rows
+    .filter((row) => {
+      if (filter === "unassigned") return !row.ownerId && !FINAL.has(row.state);
+      if (filter === "checker") return row.state === "CHECKER_REVIEW";
+      if (filter === "overdue")
+        return (
+          row.dueDate !== null && row.dueDate < asOf && !FINAL.has(row.state)
+        );
+      return true;
+    })
+    .sort(
+      (a, b) =>
+        (({ HIGH: 0, MEDIUM: 1, LOW: 2 })[a.priority] ?? 3) -
+          ({ HIGH: 0, MEDIUM: 1, LOW: 2 }[b.priority] ?? 3) ||
+        (a.dueDate ?? "9999-12-31").localeCompare(b.dueDate ?? "9999-12-31") ||
+        a.id.localeCompare(b.id),
+    );
 }
 
 /** Scoped strictly to the disposable synthetic tenant; never real OIDC auth. */
