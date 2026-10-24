@@ -44,6 +44,12 @@ function instant(value: string): number {
   }
   const millis = Date.parse(value);
   if (!Number.isFinite(millis)) throw new Error("Invalid observed instant");
+  const normalised = value.includes(".")
+    ? value.replace(/\.(\d{1,3})Z$/, (_, digits: string) => `.${digits.padEnd(3, "0")}Z`)
+    : value.replace(/Z$/, ".000Z");
+  if (new Date(millis).toISOString() !== normalised) {
+    throw new Error("Invalid observed instant");
+  }
   return millis;
 }
 
@@ -88,7 +94,7 @@ function key(r: SourceObservation<unknown>): string {
 
 function order<T>(a: SourceObservation<T>, b: SourceObservation<T>): number {
   return (
-    a.observedAt.localeCompare(b.observedAt) ||
+    instant(a.observedAt) - instant(b.observedAt) ||
     a.sourceKind.localeCompare(b.sourceKind) ||
     a.connectionId.localeCompare(b.connectionId) ||
     a.clientId.localeCompare(b.clientId) ||
@@ -186,7 +192,7 @@ export function sourceHealth(
   if ((success !== null && success > now) || (failure !== null && failure > now)) {
     throw new Error("Source health cannot include future events");
   }
-  if (failure !== null && (success === null || failure > success)) return "ERROR";
+  if (failure !== null && (success === null || failure >= success)) return "ERROR";
   if (success === null || now - success > maxAgeMinutes * 60_000) return "STALE";
   return "FRESH";
 }
