@@ -31,8 +31,17 @@ export interface AccessTarget {
 
 export type AccessDecision =
   | { allowed: true; reason: "AUTHORIZED" }
-  | { allowed: false; reason: "NO_SESSION" | "EXPIRED" | "TENANT_BOUNDARY" |
-      "CLIENT_BOUNDARY" | "ROLE_REQUIRED" | "MFA_REQUIRED" | "DISABLED" };
+  | {
+      allowed: false;
+      reason:
+        | "NO_SESSION"
+        | "EXPIRED"
+        | "TENANT_BOUNDARY"
+        | "CLIENT_BOUNDARY"
+        | "ROLE_REQUIRED"
+        | "MFA_REQUIRED"
+        | "DISABLED";
+    };
 
 const ACTION_ROLES: Record<Action, readonly Role[]> = {
   CLIENT_READ: ["ANALYST", "CHECKER", "RISK_MANAGER", "ADMIN", "AUDITOR"],
@@ -45,7 +54,10 @@ const ACTION_ROLES: Record<Action, readonly Role[]> = {
   FUNDING_EXECUTE: [],
 };
 const MFA_ACTIONS = new Set<Action>([
-  "CASE_CHECK", "POLICY_EDIT", "AUDIT_READ", "CONNECTION_MANAGE",
+  "CASE_CHECK",
+  "POLICY_EDIT",
+  "AUDIT_READ",
+  "CONNECTION_MANAGE",
 ]);
 
 /**
@@ -58,8 +70,13 @@ export function authorize(
   action: Action,
   nowMs: number,
 ): AccessDecision {
-  if (!actor || !actor.subject.trim() || !actor.issuer.trim() ||
-      !actor.tenantId.trim()) return { allowed: false, reason: "NO_SESSION" };
+  if (
+    !actor ||
+    !actor.subject.trim() ||
+    !actor.issuer.trim() ||
+    !actor.tenantId.trim()
+  )
+    return { allowed: false, reason: "NO_SESSION" };
   if (!Number.isFinite(nowMs) || actor.authenticatedUntilMs <= nowMs)
     return { allowed: false, reason: "EXPIRED" };
   if (target.tenantId !== actor.tenantId || !target.tenantId.trim())
@@ -68,7 +85,7 @@ export function authorize(
     return { allowed: false, reason: "CLIENT_BOUNDARY" };
   if (action === "FUNDING_EXECUTE")
     return { allowed: false, reason: "DISABLED" };
-  if (!ACTION_ROLES[action].some(role => actor.roles.includes(role)))
+  if (!ACTION_ROLES[action].some((role) => actor.roles.includes(role)))
     return { allowed: false, reason: "ROLE_REQUIRED" };
   if (MFA_ACTIONS.has(action) && !actor.mfaSatisfied)
     return { allowed: false, reason: "MFA_REQUIRED" };
@@ -76,8 +93,10 @@ export function authorize(
 }
 
 export function requireAccess(
-  actor: IdentityContext | null, target: AccessTarget,
-  action: Action, nowMs: number,
+  actor: IdentityContext | null,
+  target: AccessTarget,
+  action: Action,
+  nowMs: number,
 ): void {
   const decision = authorize(actor, target, action, nowMs);
   if (!decision.allowed) throw new Error(`Access denied: ${decision.reason}`);
