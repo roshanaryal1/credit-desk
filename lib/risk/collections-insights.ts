@@ -113,7 +113,10 @@ export function collectionsInsights(
         code: "ARREARS_INCREASE",
         description: "Past-due receivables increased over 30 calendar days.",
         invoiceIds: d.invoices
-          .filter((invoice) => invoice.outstandingCents > 0 && invoice.daysPastDue > 0)
+          .filter(
+            (invoice) =>
+              invoice.outstandingCents > 0 && invoice.daysPastDue > 0,
+          )
           .map((invoice) => invoice.invoiceId),
         sourceIds: [],
       });
@@ -135,7 +138,8 @@ export function collectionsInsights(
       );
       signals.push({
         code: "PAYMENTS_SLOWED",
-        description: "Recorded receipt value is lower than in the preceding 30 days; this is not a credit-risk prediction.",
+        description:
+          "Recorded receipt value is lower than in the preceding 30 days; this is not a credit-risk prediction.",
         invoiceIds: [...new Set(receipts.map((r) => r.invoiceId))].sort(),
         sourceIds: [...new Set(receipts.map((r) => r.sourceId))].sort(),
       });
@@ -143,7 +147,8 @@ export function collectionsInsights(
     if (creditsLast30DaysCents > 0) {
       signals.push({
         code: "RECENT_CREDIT",
-        description: "Dated credit notes reduced receivables in the past 30 days.",
+        description:
+          "Dated credit notes reduced receivables in the past 30 days.",
         invoiceIds: [...new Set(creditEvents.map((c) => c.invoiceId))].sort(),
         sourceIds: [...new Set(creditEvents.map((c) => c.sourceId))].sort(),
       });
