@@ -42,6 +42,14 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
         title={client.name}
         description={`Relationship dossier · ${client.industry} · synthetic position as of ${businessDate(dossier.asOf)}`}
       />
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href={`/clients/${encodeURIComponent(id)}/collections`}
+          className="border-border bg-card hover:bg-accent/50 focus-visible:ring-ring inline-flex items-center rounded-sm border px-4 py-3 text-sm font-semibold focus-visible:ring-2"
+        >
+          View debtor collections insights →
+        </Link>
+      </div>
       <div>
         <Link
           href={`/clients/${encodeURIComponent(id)}/borrowing-base`}
