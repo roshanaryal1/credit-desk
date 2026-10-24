@@ -7,6 +7,7 @@ import { IncidentActions } from "@/components/incident-actions";
 import { Loading, PageHeader, Section } from "@/components/page";
 import { addDays, daysBetween } from "@/lib/dates";
 import { DEMO_TODAY, HISTORY_DAYS } from "@/lib/demo";
+import { currentDemoPersona } from "@/lib/demo-session";
 import { businessDate, instant, money } from "@/lib/format";
 import { incidentDetail, incidentsAsOf } from "@/lib/queries/watch";
 import { WATCH_LABELS, type WatchRuleId } from "@/lib/watch/config";
@@ -237,6 +238,7 @@ async function IncidentPanel({
   incidentId: string;
   asOf: string;
 }) {
+  const canEdit = (await currentDemoPersona()) === "ANALYST";
   const data = await incidentDetail(incidentId, asOf);
   if (!data)
     return (
@@ -334,7 +336,13 @@ async function IncidentPanel({
           ))}
         </ol>
       </section>
-      <IncidentActions incidentId={incident.id} status={status} />
+      {canEdit ? (
+        <IncidentActions incidentId={incident.id} status={status} />
+      ) : (
+        <p className="text-muted-foreground text-xs">
+          Observation only: this demo perspective cannot acknowledge or resolve incidents.
+        </p>
+      )}
     </aside>
   );
 }
