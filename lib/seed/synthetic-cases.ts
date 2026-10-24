@@ -2,7 +2,7 @@ import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import { addDays } from "@/lib/dates";
 import { DEMO_TODAY } from "@/lib/demo";
-import { CASE_DEMO_TENANT } from "@/lib/queries/demo-cases";
+import { CASE_DEMO_TENANT } from "@/lib/queue/demo-case-tenant";
 import type { Dataset } from "@/lib/seed/generate";
 
 /** Reproducible fictional work-in-progress examples, never real approvals. */
