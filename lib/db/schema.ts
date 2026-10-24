@@ -507,7 +507,9 @@ export const ingestionSyncJobs = pgTable(
     id: text("id").primaryKey(),
     sourceKind: text("source_kind").notNull(),
     connectionId: text("connection_id").notNull(),
-    clientId: text("client_id").notNull().references(() => clients.id),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
     state: text("state").notNull(),
     attempts: integer("attempts").notNull().default(0),
     maxAttempts: integer("max_attempts").notNull(),
