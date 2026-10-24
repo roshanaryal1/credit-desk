@@ -21,12 +21,14 @@ export interface SourceConnection {
 
 function stableId(input: SourceObservation<unknown>): string {
   return createHash("sha256")
-    .update(JSON.stringify([
-      input.sourceKind,
-      input.connectionId,
-      input.clientId,
-      input.eventId,
-    ]))
+    .update(
+      JSON.stringify([
+        input.sourceKind,
+        input.connectionId,
+        input.clientId,
+        input.eventId,
+      ]),
+    )
     .digest("hex");
 }
 
@@ -34,12 +36,16 @@ function sameSource(
   connection: SourceConnection,
   observation: SourceObservation<unknown>,
 ): boolean {
-  return connection.sourceKind === observation.sourceKind &&
+  return (
+    connection.sourceKind === observation.sourceKind &&
     connection.connectionId === observation.connectionId &&
-    connection.clientId === observation.clientId;
+    connection.clientId === observation.clientId
+  );
 }
 
-function readEvent(row: typeof t.ingestionEvents.$inferSelect): SourceObservation<unknown> {
+function readEvent(
+  row: typeof t.ingestionEvents.$inferSelect,
+): SourceObservation<unknown> {
   return {
     sourceKind: row.sourceKind as SourceKind,
     connectionId: row.connectionId,
@@ -64,59 +70,77 @@ export async function recordSourceBatch(
   syncedAt: Date,
   cursor: string | null,
 ): Promise<{ inserted: number; duplicates: number }> {
-  if (Number.isNaN(syncedAt.getTime()) || cursor !== null && cursor.length > 2048)
+  if (
+    Number.isNaN(syncedAt.getTime()) ||
+    (cursor !== null && cursor.length > 2048)
+  )
     throw new Error("Invalid sync timestamp or cursor");
   const unique = reconcileObservations([], incoming);
-  if (incoming.some(x => !sameSource(connection, x)))
+  if (incoming.some((x) => !sameSource(connection, x)))
     throw new Error("Source connection/client mismatch");
-  if (unique.observations.some(x => Date.parse(x.observedAt) > syncedAt.getTime()))
+  if (
+    unique.observations.some(
+      (x) => Date.parse(x.observedAt) > syncedAt.getTime(),
+    )
+  )
     throw new Error("Source cannot observe events after its sync timestamp");
 
-  return db.transaction(async tx => {
+  return db.transaction(async (tx) => {
     let inserted = 0;
     let duplicates = unique.duplicates;
     for (const event of unique.observations) {
       const id = stableId(event);
-      const recorded = await tx.insert(t.ingestionEvents).values({
-        id,
-        sourceKind: event.sourceKind,
-        connectionId: event.connectionId,
-        clientId: event.clientId,
-        eventId: event.eventId,
-        entityId: event.entityId,
-        effectiveDate: event.effectiveDate,
-        observedAt: new Date(event.observedAt),
-        payload: event.payload,
-      }).onConflictDoNothing().returning({ id: t.ingestionEvents.id });
+      const recorded = await tx
+        .insert(t.ingestionEvents)
+        .values({
+          id,
+          sourceKind: event.sourceKind,
+          connectionId: event.connectionId,
+          clientId: event.clientId,
+          eventId: event.eventId,
+          entityId: event.entityId,
+          effectiveDate: event.effectiveDate,
+          observedAt: new Date(event.observedAt),
+          payload: event.payload,
+        })
+        .onConflictDoNothing()
+        .returning({ id: t.ingestionEvents.id });
       if (recorded.length) {
         inserted++;
         continue;
       }
-      const [prior] = await tx.select().from(t.ingestionEvents)
-        .where(eq(t.ingestionEvents.id, id)).limit(1);
+      const [prior] = await tx
+        .select()
+        .from(t.ingestionEvents)
+        .where(eq(t.ingestionEvents.id, id))
+        .limit(1);
       if (!prior) throw new Error("Conflicting source identity is unavailable");
-      reconcileObservations([readEvent(prior)], [
-        { ...event, observedAt: new Date(event.observedAt).toISOString() },
-      ]);
+      reconcileObservations(
+        [readEvent(prior)],
+        [{ ...event, observedAt: new Date(event.observedAt).toISOString() }],
+      );
       duplicates++;
     }
-    await tx.insert(t.ingestionCheckpoints).values({
-      ...connection,
-      cursor,
-      lastSuccessAt: syncedAt,
-      updatedAt: syncedAt,
-    }).onConflictDoUpdate({
-      target: [
-        t.ingestionCheckpoints.sourceKind,
-        t.ingestionCheckpoints.connectionId,
-        t.ingestionCheckpoints.clientId,
-      ],
-      set: {
+    await tx
+      .insert(t.ingestionCheckpoints)
+      .values({
+        ...connection,
         cursor,
         lastSuccessAt: syncedAt,
         updatedAt: syncedAt,
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: [
+          t.ingestionCheckpoints.sourceKind,
+          t.ingestionCheckpoints.connectionId,
+          t.ingestionCheckpoints.clientId,
+        ],
+        set: {
+          cursor,
+          lastSuccessAt: syncedAt,
+          updatedAt: syncedAt,
+        },
+      });
     return { inserted, duplicates };
   });
 }
@@ -127,30 +151,43 @@ export async function recordSourceFailure(
   connection: SourceConnection,
   failedAt: Date,
 ): Promise<void> {
-  if (Number.isNaN(failedAt.getTime())) throw new Error("Invalid failure timestamp");
-  await db.insert(t.ingestionCheckpoints).values({
-    ...connection,
-    lastFailureAt: failedAt,
-    updatedAt: failedAt,
-  }).onConflictDoUpdate({
-    target: [
-      t.ingestionCheckpoints.sourceKind,
-      t.ingestionCheckpoints.connectionId,
-      t.ingestionCheckpoints.clientId,
-    ],
-    set: {
+  if (Number.isNaN(failedAt.getTime()))
+    throw new Error("Invalid failure timestamp");
+  await db
+    .insert(t.ingestionCheckpoints)
+    .values({
+      ...connection,
       lastFailureAt: failedAt,
       updatedAt: failedAt,
-    },
-  });
+    })
+    .onConflictDoUpdate({
+      target: [
+        t.ingestionCheckpoints.sourceKind,
+        t.ingestionCheckpoints.connectionId,
+        t.ingestionCheckpoints.clientId,
+      ],
+      set: {
+        lastFailureAt: failedAt,
+        updatedAt: failedAt,
+      },
+    });
 }
 
-export async function getSourceCheckpoint(db: Db, connection: SourceConnection) {
-  const [row] = await db.select().from(t.ingestionCheckpoints).where(and(
-    eq(t.ingestionCheckpoints.sourceKind, connection.sourceKind),
-    eq(t.ingestionCheckpoints.connectionId, connection.connectionId),
-    eq(t.ingestionCheckpoints.clientId, connection.clientId),
-  )).limit(1);
+export async function getSourceCheckpoint(
+  db: Db,
+  connection: SourceConnection,
+) {
+  const [row] = await db
+    .select()
+    .from(t.ingestionCheckpoints)
+    .where(
+      and(
+        eq(t.ingestionCheckpoints.sourceKind, connection.sourceKind),
+        eq(t.ingestionCheckpoints.connectionId, connection.connectionId),
+        eq(t.ingestionCheckpoints.clientId, connection.clientId),
+      ),
+    )
+    .limit(1);
   return row ?? null;
 }
 
@@ -161,14 +198,22 @@ export async function sourceSnapshot(
   businessAsOf: string,
   knowledgeCutoff: string,
 ): Promise<SourceObservation<unknown>[]> {
-  const rows = await db.select().from(t.ingestionEvents).where(and(
-    eq(t.ingestionEvents.clientId, connection.clientId),
-    eq(t.ingestionEvents.sourceKind, connection.sourceKind),
-    eq(t.ingestionEvents.connectionId, connection.connectionId),
-    lte(t.ingestionEvents.effectiveDate, businessAsOf),
-    lte(t.ingestionEvents.observedAt, new Date(knowledgeCutoff)),
-  ));
+  const rows = await db
+    .select()
+    .from(t.ingestionEvents)
+    .where(
+      and(
+        eq(t.ingestionEvents.clientId, connection.clientId),
+        eq(t.ingestionEvents.sourceKind, connection.sourceKind),
+        eq(t.ingestionEvents.connectionId, connection.connectionId),
+        lte(t.ingestionEvents.effectiveDate, businessAsOf),
+        lte(t.ingestionEvents.observedAt, new Date(knowledgeCutoff)),
+      ),
+    );
   return knownSnapshotAsOf(
-    rows.map(readEvent), businessAsOf, knowledgeCutoff, connection.clientId,
+    rows.map(readEvent),
+    businessAsOf,
+    knowledgeCutoff,
+    connection.clientId,
   );
 }
