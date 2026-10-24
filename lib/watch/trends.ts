@@ -13,7 +13,8 @@ export interface TrendAction {
 }
 
 function nzDay(date: Date): string {
-  if (!Number.isFinite(date.getTime())) throw new Error("Invalid trend action time");
+  if (!Number.isFinite(date.getTime()))
+    throw new Error("Invalid trend action time");
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Pacific/Auckland",
     day: "2-digit",
@@ -38,15 +39,19 @@ export function watchTrends(
   });
   const byId = new Map(visible.map((i) => [i.id, i]));
   const latest = new Map<string, TrendAction>();
-  const orderedActions = [...actions].sort((a, b) =>
-    a.occurredAt.getTime() - b.occurredAt.getTime() ||
-    a.id.localeCompare(b.id),
+  const orderedActions = [...actions].sort(
+    (a, b) =>
+      a.occurredAt.getTime() - b.occurredAt.getTime() ||
+      a.id.localeCompare(b.id),
   );
   for (const action of orderedActions) {
-    if (!byId.has(action.incidentId) || nzDay(action.occurredAt) > asOf) continue;
+    if (!byId.has(action.incidentId) || nzDay(action.occurredAt) > asOf)
+      continue;
     latest.set(action.incidentId, action);
   }
-  const unresolved = visible.filter((i) => latest.get(i.id)?.status !== "RESOLVED");
+  const unresolved = visible.filter(
+    (i) => latest.get(i.id)?.status !== "RESOLVED",
+  );
   const settled = visible.flatMap((i) => {
     const action = latest.get(i.id);
     return action?.status === "RESOLVED"
@@ -56,8 +61,8 @@ export function watchTrends(
   const last30 = addDays(asOf, -29);
   const prev30 = addDays(asOf, -59);
   const current = visible.filter((i) => i.firstDetectedDate >= last30);
-  const previous = visible.filter((i) =>
-    i.firstDetectedDate >= prev30 && i.firstDetectedDate < last30,
+  const previous = visible.filter(
+    (i) => i.firstDetectedDate >= prev30 && i.firstDetectedDate < last30,
   );
   const timeline = Array.from({ length: 14 }, (_, index) => {
     const date = addDays(asOf, index - 13);

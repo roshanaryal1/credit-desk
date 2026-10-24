@@ -8,9 +8,24 @@ const incidents = [
   { id: "future", severity: "HIGH" as const, firstDetectedDate: "2026-10-26" },
 ];
 const actions = [
-  { id: "res1", incidentId: "i1", status: "RESOLVED", occurredAt: new Date("2026-10-10T02:00:00Z") },
-  { id: "reopen", incidentId: "i1", status: "REOPENED", occurredAt: new Date("2026-10-25T00:00:00Z") },
-  { id: "future-resolve", incidentId: "i2", status: "RESOLVED", occurredAt: new Date("2026-10-25T00:00:00Z") },
+  {
+    id: "res1",
+    incidentId: "i1",
+    status: "RESOLVED",
+    occurredAt: new Date("2026-10-10T02:00:00Z"),
+  },
+  {
+    id: "reopen",
+    incidentId: "i1",
+    status: "REOPENED",
+    occurredAt: new Date("2026-10-25T00:00:00Z"),
+  },
+  {
+    id: "future-resolve",
+    incidentId: "i2",
+    status: "RESOLVED",
+    occurredAt: new Date("2026-10-25T00:00:00Z"),
+  },
 ];
 
 describe("deterministic synthetic watch trends", () => {
@@ -26,7 +41,9 @@ describe("deterministic synthetic watch trends", () => {
     });
     expect(before.timeline).toHaveLength(14);
     expect(before.timeline.every((row) => row.date <= "2026-10-20")).toBe(true);
-    expect(before.timeline.flatMap((row) => row.incidentIds)).not.toContain("future");
+    expect(before.timeline.flatMap((row) => row.incidentIds)).not.toContain(
+      "future",
+    );
   });
 
   it("excludes reopened incidents from resolved completion statistics", () => {
@@ -38,11 +55,18 @@ describe("deterministic synthetic watch trends", () => {
   });
 
   it("honours NZ midnight and daylight saving business dates", () => {
-    const midnight = watchTrends("2026-10-24", [
-      { id: "x", severity: "LOW", firstDetectedDate: "2026-10-23" },
-    ], [
-      { id: "r", incidentId: "x", status: "RESOLVED", occurredAt: new Date("2026-10-24T11:00:00Z") },
-    ]);
+    const midnight = watchTrends(
+      "2026-10-24",
+      [{ id: "x", severity: "LOW", firstDetectedDate: "2026-10-23" }],
+      [
+        {
+          id: "r",
+          incidentId: "x",
+          status: "RESOLVED",
+          occurredAt: new Date("2026-10-24T11:00:00Z"),
+        },
+      ],
+    );
     expect(midnight.resolved).toBe(0);
     expect(midnight.unresolved).toBe(1);
   });
