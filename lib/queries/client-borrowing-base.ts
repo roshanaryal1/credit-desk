@@ -60,8 +60,7 @@ export async function indicativeClientBorrowingBase(
         faceCents: face,
         receivedCents: invoice.countedReceiptCents,
         creditNoteCents: invoice.countedCreditCents,
-        ineligibleReasons:
-          invoice.daysPastDue > 90 ? ["AGE_OVER_90_DAYS"] : [],
+        ineligibleReasons: invoice.daysPastDue > 90 ? ["AGE_OVER_90_DAYS"] : [],
       };
     }),
   );
@@ -78,8 +77,7 @@ export async function indicativeClientBorrowingBase(
     };
   }
   const totalOutstanding = sourceRows.reduce(
-    (sum, row) =>
-      sum + row.faceCents - row.receivedCents - row.creditNoteCents,
+    (sum, row) => sum + row.faceCents - row.receivedCents - row.creditNoteCents,
     0,
   );
   if (
