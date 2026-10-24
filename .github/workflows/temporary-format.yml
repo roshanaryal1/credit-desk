@@ -1,0 +1,45 @@
+name: Temporary formatting for review branch
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/temporary-format.yml"
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feat/153-one-click-demo-accounts'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: feat/153-one-click-demo-accounts
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Format only the files touched by issue 153
+        run: |
+          npx prettier --write \
+            app/login/actions.ts app/login/login-form.tsx app/login/page.tsx \
+            app/layout.tsx app/globals.css \
+            components/app-frame.tsx components/invoice-panel.tsx \
+            app/watch/page.tsx \
+            lib/auth.ts lib/demo-personas.ts lib/demo-session.ts lib/public-demo.ts \
+            scripts/review-ui-smoke.mjs \
+            tests/auth/demo-personas.test.ts tests/auth/public-demo.test.ts tests/auth/session.test.ts
+      - name: Commit formatting only to the feature branch
+        run: |
+          git config user.name "Credit Desk CI Formatter"
+          git config user.email "actions@users.noreply.github.com"
+          git add app/login app/layout.tsx app/globals.css components/app-frame.tsx components/invoice-panel.tsx app/watch/page.tsx lib/auth.ts lib/demo-personas.ts lib/demo-session.ts lib/public-demo.ts scripts/review-ui-smoke.mjs tests/auth
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format one-click demo implementation (#153)"
+            git push origin HEAD:feat/153-one-click-demo-accounts
+          fi
