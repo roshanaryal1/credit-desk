@@ -9,6 +9,8 @@ decided without seeing it, and replays any decision exactly as it was made.
 
 > Prototype for discussion. All data is synthetic.
 
+**Canonical demo URL:** https://creditdesk.roshanaryal.com — an access-controlled synthetic preview, not a live lending platform. The legacy Vercel host has a configured redirect; its external HTTP behavior must still be smoke-tested.
+
 **Rules detect, the model explains, a validator checks the model, and a person
 decides.** The agent never approves, funds or changes anything.
 

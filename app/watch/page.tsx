@@ -30,6 +30,14 @@ export default function WatchPage({ searchParams }: PageProps<"/watch">) {
         title="Portfolio Watch"
         description="The same discipline after funding: rules run daily across the funded book. Move the date to watch incidents appear."
       />
+      <div>
+        <Link
+          href="/watch/trends"
+          className="border-border bg-card hover:bg-accent/50 focus-visible:ring-ring inline-flex items-center rounded-sm border px-4 py-2 text-sm font-semibold focus-visible:ring-2"
+        >
+          View deterministic incident trends →
+        </Link>
+      </div>
       <Suspense fallback={<Loading label="Loading the book..." />}>
         <Watch searchParams={searchParams} />
       </Suspense>

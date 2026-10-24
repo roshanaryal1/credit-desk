@@ -3,6 +3,14 @@
 Vercel hosts the app; Neon (through the Vercel Marketplace) holds the data.
 Each step below needs an account owner, so it is run by a person.
 
+## Fail-closed database requirement
+
+A hosted runtime must have `DATABASE_URL` configured for persistent PostgreSQL.
+Without it, the app fails closed instead of silently using temporary PGlite.
+Only disposable GitHub Actions browser smoke may set both `CI=true` and
+`CREDIT_DESK_CI_PGLITE=1`; Vercel must never set the exception.
+A READY Vercel build is not evidence of migrated tables or functioning login.
+
 ## 1. Project and database
 
 1. On vercel.com, import the `credit-desk` repository. Framework: Next.js.
@@ -25,6 +33,16 @@ Each step below needs an account owner, so it is run by a person.
 
 Without `DEMO_PASSWORD` and `SESSION_SECRET` the production app returns 503
 rather than serving unprotected.
+
+## Read-only synthetic database preflight
+
+Before any owner-authorised migration or seed, explicitly select the target
+with a secret `DATABASE_URL` in the operator environment. Run
+`npm run demo:preflight -- --target=preview` to inspect schema, migration journal
+and fictional fixture counts **without writing anything**. A successful
+preflight is preliminary, not a proof of live authentication or data provenance.
+See [the demo readiness runbook](runbooks/demo-readiness.md) for the full gates.
+Never run seed/reset against customer records or a production dataset.
 
 ## 3. Data
 

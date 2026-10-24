@@ -44,6 +44,12 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
       />
       <div className="flex flex-wrap gap-3">
         <Link
+          href={`/clients/${encodeURIComponent(id)}/activity`}
+          className="border-border bg-card hover:bg-accent/50 focus-visible:ring-ring inline-flex items-center rounded-sm border px-4 py-3 text-sm font-semibold focus-visible:ring-2"
+        >
+          Review dated client activity →
+        </Link>
+        <Link
           href={`/clients/${encodeURIComponent(id)}/collections`}
           className="border-border bg-card hover:bg-accent/50 focus-visible:ring-ring inline-flex items-center rounded-sm border px-4 py-3 text-sm font-semibold focus-visible:ring-2"
         >
