@@ -18,7 +18,7 @@ import {
 export class XeroLedger implements LedgerSource {
   readonly name = "xero";
 
-  async invoices(): Promise<LedgerInvoice[]> {
+  async invoices(_clientId: string, _asOf: string): Promise<LedgerInvoice[]> {
     throw new SourceNotConfiguredError("Xero");
   }
 }
