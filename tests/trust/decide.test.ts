@@ -202,6 +202,15 @@ describe("saving a decision", () => {
     );
   });
 
+  it("can read the checks frozen in each snapshot", async () => {
+    const res = await decide(flagged[11]!);
+    if (!res.ok) throw new Error("expected ok");
+    const out = await db.execute<{ checks: string[] }>(
+      sql`select jsonb_path_query_array(canonical_json::jsonb, '$.findings[*].checkId') as checks from decision_snapshots where decision_id = ${res.decisionId}`,
+    );
+    expect(out.rows[0]?.checks.length).toBeGreaterThan(0);
+  });
+
   it("freezes every record the explanation cites, allocated or not", async () => {
     const invoiceId = flagged[12]!;
     const [bank] = await db.select().from(t.bankTransactions).limit(1);

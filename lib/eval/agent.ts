@@ -46,7 +46,10 @@ export function agentMetrics(
   let amountsOk = 0;
   for (const r of finished) {
     const e = byRun.get(r.id);
-    const errors = e?.validationErrors ?? [];
+    // Errors describe the final output only when it failed; a PASSED
+    // explanation met every rule (older runs kept first-attempt errors).
+    const errors =
+      e?.validationStatus === "PASSED" ? [] : (e?.validationErrors ?? []);
     // No explanation row means the final output did not parse.
     if (
       !e ||
