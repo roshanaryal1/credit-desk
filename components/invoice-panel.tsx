@@ -11,6 +11,7 @@ import { checkLabel } from "@/lib/checks/labels";
 import { businessDate, instant, money } from "@/lib/format";
 import { getInvoiceReview } from "@/lib/queries/invoice";
 import { currentAnalyst } from "@/lib/session";
+import { currentDemoPersona } from "@/lib/demo-session";
 
 const statusOf = (severities: string[]) =>
   severities.includes("HIGH")
@@ -34,7 +35,8 @@ export async function InvoicePanel({
   batchId: string;
 }) {
   const analyst = await currentAnalyst();
-  const data = await getInvoiceReview(invoiceId, analyst, batchId);
+  const readOnly = (await currentDemoPersona()) !== "ANALYST";
+  const data = await getInvoiceReview(invoiceId, analyst, batchId, readOnly);
   if (!data) {
     return (
       <aside className="rounded-md border p-4 text-sm">
@@ -184,7 +186,7 @@ export async function InvoicePanel({
               Explanation unavailable, see the raw findings.
             </p>
           )}
-          {!data.withheld ? <RerunButton invoiceId={invoice.id} /> : null}
+          {!readOnly && !data.withheld ? <RerunButton invoiceId={invoice.id} /> : null}
         </section>
       ) : null}
 
@@ -210,12 +212,21 @@ export async function InvoicePanel({
             </a>
           </div>
         ) : null}
-        <ModeSwitch mode={analyst.mode} />
-        <DecisionForm
-          key={data.reviewVersion}
-          invoiceId={invoice.id}
-          reviewVersion={data.reviewVersion}
-        />
+        {readOnly ? (
+          <p className="bg-muted text-muted-foreground rounded-sm p-3 text-sm">
+            Read-only demo perspective. Only a fictional credit analyst can
+            exercise synthetic decisions; this view cannot approve funding.
+          </p>
+        ) : (
+          <>
+            <ModeSwitch mode={analyst.mode} />
+            <DecisionForm
+              key={data.reviewVersion}
+              invoiceId={invoice.id}
+              reviewVersion={data.reviewVersion}
+            />
+          </>
+        )}
         {latest ? (
           <p className="text-muted-foreground text-xs">
             A new decision is a revision. Every decision stays in the audit log.
