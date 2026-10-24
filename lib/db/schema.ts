@@ -499,6 +499,35 @@ export const ingestionCheckpoints = pgTable(
   (t) => [primaryKey({ columns: [t.sourceKind, t.connectionId, t.clientId] })],
 );
 
+// Durable, recoverable provider sync jobs (synthetic source runners only until
+// provider consent, identity and credential controls are approved).
+export const ingestionSyncJobs = pgTable(
+  "ingestion_sync_jobs",
+  {
+    id: text("id").primaryKey(),
+    sourceKind: text("source_kind").notNull(),
+    connectionId: text("connection_id").notNull(),
+    clientId: text("client_id").notNull().references(() => clients.id),
+    state: text("state").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: instant("next_attempt_at").notNull(),
+    leaseToken: text("lease_token"),
+    leaseUntil: instant("lease_until"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorAt: instant("last_error_at"),
+    updatedAt: instant("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ingestion_sync_source_uq").on(
+      t.sourceKind,
+      t.connectionId,
+      t.clientId,
+    ),
+    index("ingestion_sync_due_idx").on(t.state, t.nextAttemptAt),
+  ],
+);
+
 // Evaluation only
 
 export const labels = pgTable("labels", {
