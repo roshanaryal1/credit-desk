@@ -7,6 +7,7 @@ import path from "node:path";
 import ws from "ws";
 
 import * as schema from "./schema";
+import { chooseDatabaseBackend } from "./backend";
 
 export type Db = ReturnType<typeof drizzlePglite<typeof schema>>;
 
@@ -43,8 +44,9 @@ export function getDb(): Promise<Db> {
 }
 
 async function open(): Promise<Db> {
+  const selected = chooseDatabaseBackend(process.env);
   const url = process.env.DATABASE_URL;
-  if (url) {
+  if (selected === "NEON" && url) {
     neonConfig.webSocketConstructor = ws;
     // Both drivers expose the same Drizzle PgDatabase query API.
     const pool = new Pool({ connectionString: url });
