@@ -10,7 +10,13 @@ import { signSession, verifySession } from "@/lib/auth";
 
 describe("self-selected demo perspectives", () => {
   it("recognizes exactly five role identifiers", () => {
-    expect(DEMO_PERSONA_KEYS).toEqual(["EMPLOYER", "ANALYST", "CHECKER", "CLIENT", "AUDITOR"]);
+    expect(DEMO_PERSONA_KEYS).toEqual([
+      "EMPLOYER",
+      "ANALYST",
+      "CHECKER",
+      "CLIENT",
+      "AUDITOR",
+    ]);
     for (const persona of DEMO_PERSONA_KEYS) {
       expect(parseDemoPersona(persona)).toBe(persona);
     }
@@ -24,9 +30,16 @@ describe("self-selected demo perspectives", () => {
     expect(demoRouteAllowed("CLIENT", "/demo/client")).toBe(true);
     expect(demoRouteAllowed("CLIENT", "/about")).toBe(true);
     for (const path of [
-      "/clients", "/clients/cli_0001", "/clients/cli_0002",
-      "/queue", "/audit", "/trust", "/api/watch/run", "/demo/client/other",
-    ]) expect(demoRouteAllowed("CLIENT", path)).toBe(false);
+      "/clients",
+      "/clients/cli_0001",
+      "/clients/cli_0002",
+      "/queue",
+      "/audit",
+      "/trust",
+      "/api/watch/run",
+      "/demo/client/other",
+    ])
+      expect(demoRouteAllowed("CLIENT", path)).toBe(false);
   });
 
   it("limits checker and auditor perspectives to useful routes", () => {
@@ -42,7 +55,9 @@ describe("self-selected demo perspectives", () => {
 
   it("only enables synthetic write controls for the analyst", () => {
     expect(demoCanWrite("ANALYST")).toBe(true);
-    for (const persona of DEMO_PERSONA_KEYS.filter((key) => key !== "ANALYST")) {
+    for (const persona of DEMO_PERSONA_KEYS.filter(
+      (key) => key !== "ANALYST",
+    )) {
       expect(demoCanWrite(persona)).toBe(false);
     }
   });
@@ -55,10 +70,17 @@ describe("self-selected demo perspectives", () => {
     );
     expect((await verifySession(token, secret, 1000))?.persona).toBe("CLIENT");
     const [, signature] = token.split(".");
-    const forgedBody = btoa(JSON.stringify({
-      sid: "demo-session", name: "Reviewer", persona: "ANALYST", exp: 2000,
-    })).replace(/=+$/, "");
-    expect(await verifySession(forgedBody + "." + signature, secret, 1000)).toBeNull();
+    const forgedBody = btoa(
+      JSON.stringify({
+        sid: "demo-session",
+        name: "Reviewer",
+        persona: "ANALYST",
+        exp: 2000,
+      }),
+    ).replace(/=+$/, "");
+    expect(
+      await verifySession(forgedBody + "." + signature, secret, 1000),
+    ).toBeNull();
     expect(await verifySession(token, secret, 2000)).toBeNull();
   });
 });

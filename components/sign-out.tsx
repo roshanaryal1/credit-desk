@@ -16,7 +16,9 @@ export async function SignOut() {
       action={logoutAction}
       className="text-muted-foreground px-3 py-2 text-sm"
     >
-      <p className="truncate">Demo: {persona ? DEMO_PERSONAS[persona].label : "Unverified"}</p>
+      <p className="truncate">
+        Demo: {persona ? DEMO_PERSONAS[persona].label : "Unverified"}
+      </p>
       <p className="truncate text-xs">{analyst.displayName} · self-declared</p>
       <button className="text-primary underline underline-offset-4">
         Switch view / Sign out

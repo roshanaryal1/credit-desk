@@ -23,7 +23,7 @@ export default function ClientDemoPage() {
 
 async function BorrowerView() {
   await connection();
-  if (await currentDemoPersona() !== "CLIENT") notFound();
+  if ((await currentDemoPersona()) !== "CLIENT") notFound();
   const db = await getDb();
   const [dossier, ageing] = await Promise.all([
     getClientDossier(db, DEMO_CLIENT_ID, DEMO_TODAY),
@@ -32,8 +32,8 @@ async function BorrowerView() {
   if (!dossier || !ageing) {
     return (
       <p role="status" className="text-muted-foreground">
-        The fictional client has not been seeded in this environment.
-        The demo does not show a fabricated zero balance.
+        The fictional client has not been seeded in this environment. The demo
+        does not show a fabricated zero balance.
       </p>
     );
   }
@@ -41,15 +41,29 @@ async function BorrowerView() {
     <>
       <PageHeader
         title={dossier.client.name}
-        description={"Client perspective · fictional relationship as of " + businessDate(DEMO_TODAY)}
+        description={
+          "Client perspective · fictional relationship as of " +
+          businessDate(DEMO_TODAY)
+        }
       />
       <section className="border-border bg-card rounded-sm border p-6">
-        <h2 className="text-base font-semibold">Your synthetic facility snapshot</h2>
+        <h2 className="text-base font-semibold">
+          Your synthetic facility snapshot
+        </h2>
         <dl className="mt-5 grid gap-5 sm:grid-cols-3">
           {[
-            { label: "Facility commitment", value: money(dossier.client.facilityLimitCents) },
-            { label: "Current funded exposure", value: money(dossier.inUseCents) },
-            { label: "Undrawn commitment", value: money(dossier.commitmentHeadroomCents) },
+            {
+              label: "Facility commitment",
+              value: money(dossier.client.facilityLimitCents),
+            },
+            {
+              label: "Current funded exposure",
+              value: money(dossier.inUseCents),
+            },
+            {
+              label: "Undrawn commitment",
+              value: money(dossier.commitmentHeadroomCents),
+            },
           ].map((entry) => (
             <div key={entry.label}>
               <dt className="text-muted-foreground text-xs">{entry.label}</dt>
@@ -58,15 +72,18 @@ async function BorrowerView() {
           ))}
         </dl>
         <p className="text-muted-foreground mt-4 text-sm">
-          Undrawn commitment is not verified availability for drawing.
-          No application, disbursement or actual customer account is connected.
+          Undrawn commitment is not verified availability for drawing. No
+          application, disbursement or actual customer account is connected.
         </p>
       </section>
       <section className="border-border bg-card rounded-sm border p-6">
         <h2 className="text-base font-semibold">Receivables overview</h2>
         <dl className="mt-4 grid gap-5 sm:grid-cols-3">
           {[
-            { label: "Receivables outstanding", value: money(ageing.totalOutstandingCents) },
+            {
+              label: "Receivables outstanding",
+              value: money(ageing.totalOutstandingCents),
+            },
             { label: "Overdue receivables", value: money(ageing.overdueCents) },
             { label: "Not yet overdue", value: money(ageing.currentCents) },
           ].map((entry) => (
@@ -77,8 +94,8 @@ async function BorrowerView() {
           ))}
         </dl>
         <p className="text-muted-foreground mt-4 text-xs">
-          Based on synthetic ledger examples with estimated contract dates.
-          No confidential records, lending decisions, staff audit logs or other
+          Based on synthetic ledger examples with estimated contract dates. No
+          confidential records, lending decisions, staff audit logs or other
           client portfolios are shown in this role.
         </p>
       </section>

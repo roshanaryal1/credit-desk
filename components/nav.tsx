@@ -38,24 +38,41 @@ export function NavFallback() {
   return <NavList pathname={null} persona="ANALYST" />;
 }
 
-function NavList({ pathname, persona }: { pathname: string | null; persona: DemoPersona }) {
+function NavList({
+  pathname,
+  persona,
+}: {
+  pathname: string | null;
+  persona: DemoPersona;
+}) {
   const active = (href: string) =>
     pathname !== null &&
     (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
-  const groups = persona === "CLIENT"
-    ? [{ heading: "Borrower demo", items: [{ href: "/demo/client", label: "My fictional facility" }, { href: "/about", label: "About" }] }]
-    : GROUPS.map((group) => ({
-        heading: group.heading,
-        items: group.items.filter((item) => demoRouteAllowed(persona, item.href)),
-      })).filter((group) => group.items.length > 0);
+  const groups =
+    persona === "CLIENT"
+      ? [
+          {
+            heading: "Borrower demo",
+            items: [
+              { href: "/demo/client", label: "My fictional facility" },
+              { href: "/about", label: "About" },
+            ],
+          },
+        ]
+      : GROUPS.map((group) => ({
+          heading: group.heading,
+          items: group.items.filter((item) =>
+            demoRouteAllowed(persona, item.href),
+          ),
+        })).filter((group) => group.items.length > 0);
 
   return (
     <nav
       aria-label="Main"
       className="flex gap-3 overflow-x-auto md:flex-col md:gap-6 md:overflow-visible"
     >
-      {groups.map((group) => ( 
+      {groups.map((group) => (
         <div
           key={group.heading}
           className="flex gap-1 md:flex-col"

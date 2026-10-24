@@ -18,7 +18,10 @@ export function LoginForm({ next }: { next: string }) {
         <legend className="text-sm font-medium">Explore Credit Desk as</legend>
         <div className="grid gap-2">
           {DEMO_PERSONA_KEYS.map((key) => (
-            <label key={key} className="border-border bg-card hover:bg-accent/40 flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[:checked]:border-primary has-[:checked]:bg-accent/50">
+            <label
+              key={key}
+              className="border-border bg-card hover:bg-accent/40 has-[:checked]:border-primary has-[:checked]:bg-accent/50 flex cursor-pointer items-start gap-3 rounded-md border p-3"
+            >
               <input
                 type="radio"
                 name="persona"
@@ -28,8 +31,12 @@ export function LoginForm({ next }: { next: string }) {
                 className="accent-primary mt-1"
               />
               <span>
-                <span className="block text-sm font-semibold">{DEMO_PERSONAS[key].label}</span>
-                <span className="text-muted-foreground block text-xs">{DEMO_PERSONAS[key].description}</span>
+                <span className="block text-sm font-semibold">
+                  {DEMO_PERSONAS[key].label}
+                </span>
+                <span className="text-muted-foreground block text-xs">
+                  {DEMO_PERSONAS[key].description}
+                </span>
               </span>
             </label>
           ))}

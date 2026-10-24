@@ -12,7 +12,11 @@ import {
   signSession,
 } from "@/lib/auth";
 import { getDb } from "@/lib/db/client";
-import { DEMO_PERSONA_KEYS, DEMO_PERSONAS, demoRouteAllowed } from "@/lib/demo-personas";
+import {
+  DEMO_PERSONA_KEYS,
+  DEMO_PERSONAS,
+  demoRouteAllowed,
+} from "@/lib/demo-personas";
 import { MODE_COOKIE } from "@/lib/session";
 import { takeAll } from "@/lib/rate-limit";
 import { clientIp, safeNext } from "@/lib/request";
@@ -84,7 +88,11 @@ export async function loginAction(
   });
   const requested = safeNext(parsed.data.next);
   const path = new URL(requested, "https://demo.invalid").pathname;
-  redirect(demoRouteAllowed(parsed.data.persona, path) ? requested : DEMO_PERSONAS[parsed.data.persona].home);
+  redirect(
+    demoRouteAllowed(parsed.data.persona, path)
+      ? requested
+      : DEMO_PERSONAS[parsed.data.persona].home,
+  );
 }
 
 export async function logoutAction() {

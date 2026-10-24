@@ -31,7 +31,10 @@ export async function decideAction(
   form: FormData,
 ): Promise<DecideState> {
   if (!(await canPerformDemoWrite())) {
-    return { status: "error", message: "Only the credit analyst demo can record synthetic decisions." };
+    return {
+      status: "error",
+      message: "Only the credit analyst demo can record synthetic decisions.",
+    };
   }
   const parsed = DecisionInputSchema.safeParse({
     invoiceId: form.get("invoiceId"),

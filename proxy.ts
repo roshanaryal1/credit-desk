@@ -6,7 +6,11 @@ import {
   gateConfig,
   verifySession,
 } from "@/lib/auth";
-import { DEMO_PERSONAS, demoRouteAllowed, parseDemoPersona } from "@/lib/demo-personas";
+import {
+  DEMO_PERSONAS,
+  demoRouteAllowed,
+  parseDemoPersona,
+} from "@/lib/demo-personas";
 
 // Shared-password gate (SPEC 11). Every route except the login page, the cron
 // route and static assets needs a valid signed session cookie.

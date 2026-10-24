@@ -144,10 +144,19 @@ try {
   });
   const title = await clientPage.locator("h1").first().textContent();
   if (!title?.trim()) throw new Error("Client view missing a heading");
-  for (const forbidden of ["/queue", "/clients", "/audit", "/clients/cli_0002"]) {
-    await clientPage.goto(origin + forbidden, { waitUntil: "domcontentloaded" });
+  for (const forbidden of [
+    "/queue",
+    "/clients",
+    "/audit",
+    "/clients/cli_0002",
+  ]) {
+    await clientPage.goto(origin + forbidden, {
+      waitUntil: "domcontentloaded",
+    });
     if (new URL(clientPage.url()).pathname !== "/demo/client") {
-      throw new Error("Client perspective accessed forbidden route " + forbidden);
+      throw new Error(
+        "Client perspective accessed forbidden route " + forbidden,
+      );
     }
   }
   await clientPage.screenshot({
