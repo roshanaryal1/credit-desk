@@ -126,7 +126,6 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </section>
 
-
       <section aria-labelledby="ageing-heading">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -150,13 +149,21 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
         </div>
         <dl className="border-border bg-card mb-4 grid rounded-sm border sm:grid-cols-3">
           {[
-            { label: "Receivables outstanding", value: ageing.totalOutstandingCents },
+            {
+              label: "Receivables outstanding",
+              value: ageing.totalOutstandingCents,
+            },
             { label: "Past due", value: ageing.overdueCents },
             { label: "Not past due", value: ageing.currentCents },
           ].map((metric) => (
-            <div className="border-border border-b p-4 sm:border-r sm:border-b-0" key={metric.label}>
+            <div
+              className="border-border border-b p-4 sm:border-r sm:border-b-0"
+              key={metric.label}
+            >
               <dt className="text-muted-foreground text-xs">{metric.label}</dt>
-              <dd className="num mt-2 text-xl font-semibold">{money(metric.value)}</dd>
+              <dd className="num mt-2 text-xl font-semibold">
+                {money(metric.value)}
+              </dd>
             </div>
           ))}
         </dl>
@@ -167,13 +174,27 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
             </caption>
             <thead className="text-muted-foreground border-b text-xs">
               <tr>
-                <th scope="col" className="px-3 py-3 text-left font-medium">Debtor</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">Current</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">1–30</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">31–60</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">61–90</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">91+</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">Total</th>
+                <th scope="col" className="px-3 py-3 text-left font-medium">
+                  Debtor
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Current
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  1–30
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  31–60
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  61–90
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  91+
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Total
+                </th>
               </tr>
             </thead>
             <tbody className="divide-border divide-y">
@@ -187,8 +208,9 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
                       <ul className="text-muted-foreground mt-2 space-y-1 text-xs font-normal">
                         {d.invoices.map((invoice) => (
                           <li key={invoice.invoiceId}>
-                            {invoice.invoiceId}: {money(invoice.outstandingCents)} outstanding
-                            · {invoice.daysPastDue} days past due
+                            {invoice.invoiceId}:{" "}
+                            {money(invoice.outstandingCents)} outstanding ·{" "}
+                            {invoice.daysPastDue} days past due
                           </li>
                         ))}
                       </ul>
@@ -197,11 +219,21 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
                       Receipts, last 30 days: {money(d.paymentsLast30DaysCents)}
                     </p>
                   </th>
-                  <td className="num px-3 py-3 text-right">{money(d.buckets.CURRENT)}</td>
-                  <td className="num px-3 py-3 text-right">{money(d.buckets.DAYS_1_30)}</td>
-                  <td className="num px-3 py-3 text-right">{money(d.buckets.DAYS_31_60)}</td>
-                  <td className="num px-3 py-3 text-right">{money(d.buckets.DAYS_61_90)}</td>
-                  <td className="num px-3 py-3 text-right">{money(d.buckets.DAYS_90_PLUS)}</td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.CURRENT)}
+                  </td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.DAYS_1_30)}
+                  </td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.DAYS_31_60)}
+                  </td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.DAYS_61_90)}
+                  </td>
+                  <td className="num px-3 py-3 text-right">
+                    {money(d.buckets.DAYS_90_PLUS)}
+                  </td>
                   <td className="num px-3 py-3 text-right font-semibold">
                     {money(d.grossOutstandingCents)}
                   </td>
@@ -211,15 +243,15 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
           </table>
           {ageing.debtors.length === 0 && (
             <p className="text-muted-foreground p-6 text-sm">
-              No dated synthetic ledger receivables are recorded for this client.
-              This is not evidence of a zero real-world balance.
+              No dated synthetic ledger receivables are recorded for this
+              client. This is not evidence of a zero real-world balance.
             </p>
           )}
         </div>
         <p className="text-muted-foreground mt-2 text-xs">
-          Due dates are estimated from current demo payment terms. Ledger history
-          is not a live accounting sync. Figures are descriptive only, not an
-          approved borrowing-base availability calculation.
+          Due dates are estimated from current demo payment terms. Ledger
+          history is not a live accounting sync. Figures are descriptive only,
+          not an approved borrowing-base availability calculation.
         </p>
       </section>
 
