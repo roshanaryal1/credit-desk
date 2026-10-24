@@ -69,6 +69,21 @@ async function QueueData({
           </span>
         </p>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border p-4">
+        <div>
+          <p className="text-sm font-semibold">Assigned synthetic case examples</p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Persisted fictional owners, deadlines and checker-review states.
+            No genuine user approval or settlement authority.
+          </p>
+        </div>
+        <Link
+          href="/queue/cases"
+          className="text-primary focus-visible:ring-ring rounded-sm border px-4 py-2 text-sm font-semibold focus-visible:ring-2"
+        >
+          Open case workboard →
+        </Link>
+      </div>
       <nav aria-label="Queue filter" className="flex flex-wrap gap-2">
         {[
           { key: "all", label: "All work" },
