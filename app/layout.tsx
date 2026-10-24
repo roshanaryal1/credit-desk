@@ -43,7 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Prototype for discussion. All data is synthetic.
         </div>
         <div className="flex flex-1 flex-col md:flex-row">
-          <aside className="flex flex-col gap-4 border-b px-3 py-3 bg-card/60 md:w-60 md:shrink-0 md:border-r md:border-b-0 md:px-4 md:py-7">
+          <aside className="bg-card/60 flex flex-col gap-4 border-b px-3 py-3 md:w-60 md:shrink-0 md:border-r md:border-b-0 md:px-4 md:py-7">
             <div className="px-3">
               <p className="font-semibold tracking-tight">Credit Desk</p>
               <p className="text-muted-foreground text-xs">
