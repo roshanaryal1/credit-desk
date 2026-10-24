@@ -7,6 +7,7 @@ import { runWatchRange } from "@/lib/watch/runner";
 import { closeDb, getDb } from "@/lib/db/client";
 import { DEV_PARAMS, HOLDOUT_PARAMS, generate } from "@/lib/seed/generate";
 import { replaceDataset, summarise } from "@/lib/seed/write";
+import { seedSyntheticCaseWorkboard } from "@/lib/seed/synthetic-cases";
 
 // Usage: npm run seed -- --target=local [--seed=dev|holdout] [--force]
 // Wipes the schema's data and writes a deterministic dataset (SPEC 5).
@@ -47,8 +48,10 @@ async function main() {
     addDays(DEMO_TODAY, -HISTORY_DAYS),
     DEMO_TODAY,
   );
+  const syntheticCases = await seedSyntheticCaseWorkboard(db, ds);
   const summary = summarise(ds);
   console.log(`Seeded ${params.name} dataset into ${target}.`);
+  console.log(`Created ${syntheticCases} explicitly fictional case examples.`);
   console.table(summary.tables);
   console.log(
     `Labelled invoices: ${summary.labelledInvoices} of ${ds.invoices.length} (${(summary.labelledShare * 100).toFixed(1)}%)`,
