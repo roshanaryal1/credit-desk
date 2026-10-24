@@ -340,7 +340,8 @@ async function IncidentPanel({
         <IncidentActions incidentId={incident.id} status={status} />
       ) : (
         <p className="text-muted-foreground text-xs">
-          Observation only: this demo perspective cannot acknowledge or resolve incidents.
+          Observation only: this demo perspective cannot acknowledge or resolve
+          incidents.
         </p>
       )}
     </aside>

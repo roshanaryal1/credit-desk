@@ -186,7 +186,9 @@ export async function InvoicePanel({
               Explanation unavailable, see the raw findings.
             </p>
           )}
-          {!readOnly && !data.withheld ? <RerunButton invoiceId={invoice.id} /> : null}
+          {!readOnly && !data.withheld ? (
+            <RerunButton invoiceId={invoice.id} />
+          ) : null}
         </section>
       ) : null}
 
