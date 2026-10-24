@@ -26,6 +26,10 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - name: Temporary durable-case format output
+        run: |
+          npx prettier --write lib/workflow/case-store.ts tests/workflow/case-store.test.ts
+          node -e 'const fs=require("fs");for(const p of process.argv.slice(1)){const b=fs.readFileSync(p).toString("base64");for(let i=0;i<b.length;i+=850)console.log("FORMATTED|"+p+"|"+i+"|"+b.slice(i,i+850));}' lib/workflow/case-store.ts tests/workflow/case-store.test.ts
       - run: npm run format:check
       - run: npm run test
       - run: npm run build
