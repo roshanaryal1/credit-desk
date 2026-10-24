@@ -109,6 +109,14 @@ describe("synthetic client debtor ageing read model", () => {
       paymentsLast30DaysCents: 5_000,
     });
     expect(result?.debtors[0]?.buckets.DAYS_31_60).toBe(13_000);
+    expect(result?.collections[0]).toMatchObject({
+      debtorId: "d1",
+      receiptsLast30DaysCents: 5_000,
+      creditsLast30DaysCents: 2_000,
+      overdueMovement30DaysCents: -7_000,
+      meanDaysToCashSettlement: null,
+      dsoDays: null,
+    });
     expect(result?.debtors[0]?.invoices[0]).toMatchObject({
       invoiceId: "l1",
       countedReceiptCents: 5_000,
