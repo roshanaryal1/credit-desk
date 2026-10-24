@@ -5,6 +5,7 @@ import { and, eq, inArray, lte } from "drizzle-orm";
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import { debtorAgeing, type AgeingReceivable } from "@/lib/risk/debtor-ageing";
+import { collectionsInsights } from "@/lib/risk/collections-insights";
 
 function asOfDate(value: string): void {
   const millis = Date.parse(`${value}T00:00:00Z`);
@@ -66,6 +67,7 @@ export async function getClientReceivablesAgeing(
       overdueCents: 0,
       currentCents: 0,
       debtors: [],
+      collections: [],
     };
   }
 
@@ -132,6 +134,11 @@ export async function getClientReceivablesAgeing(
     debtorName: debtorsById.get(d.debtorId) ?? d.debtorId,
   }));
 
+  const collections = collectionsInsights(asOf, byInvoice).map((d) => ({
+    ...d,
+    debtorName: debtorsById.get(d.debtorId) ?? d.debtorId,
+  }));
+
   const totalOutstandingCents = grouped.reduce(
     (sum, d) => sum + d.grossOutstandingCents,
     0,
@@ -152,5 +159,6 @@ export async function getClientReceivablesAgeing(
     overdueCents,
     currentCents,
     debtors: grouped,
+    collections,
   };
 }
