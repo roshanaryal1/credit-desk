@@ -31,11 +31,20 @@ function validPolicy(p: RiskPolicy) {
     throw new Error("Policy requires id, client and reviewer");
   day(p.effectiveFrom);
   if (
-    !/^\d{4}-\d{2}-\d{2}T/.test(p.approvedAt) ||
-    !p.approvedAt.endsWith("Z") ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(
+      p.approvedAt,
+    ) ||
     !Number.isFinite(Date.parse(p.approvedAt))
   )
     throw new Error("Policy approval must have a UTC instant");
+  const normalized = p.approvedAt.includes(".")
+    ? p.approvedAt.replace(
+        /\.(\d{1,3})Z$/,
+        (_, digits: string) => `.${digits.padEnd(3, "0")}Z`,
+      )
+    : p.approvedAt.replace(/Z$/, ".000Z");
+  if (new Date(p.approvedAt).toISOString() !== normalized)
+    throw new Error("Policy approval must have a valid UTC instant");
   const t = p.thresholds;
   for (const value of [t.driftIncreaseDays, t.overdueDays])
     if (!Number.isSafeInteger(value) || value < 0 || value > 365)
@@ -51,7 +60,13 @@ function validPolicy(p: RiskPolicy) {
     highAfterDays < mediumAfterDays
   )
     throw new Error("Escalation windows must be ordered");
-  if (Date.parse(p.approvedAt) > Date.parse(`${p.effectiveFrom}T23:59:59Z`))
+  const approvedDay = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Pacific/Auckland",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(p.approvedAt));
+  if (day(approvedDay) > day(p.effectiveFrom))
     throw new Error("Unapproved policy cannot take historical effect");
 }
 
@@ -81,6 +96,8 @@ export function escalateIncident(
   policy: RiskPolicy,
 ): { level: Escalation; elapsedDays: number } {
   validPolicy(policy);
+  if (day(policy.effectiveFrom) > day(asOf))
+    throw new Error("Policy is not effective at the as-of date");
   const days = day(asOf) - day(firstDetectedDate);
   if (days < 0) throw new Error("Incident was detected after as-of date");
   if (status === "RESOLVED") return { level: "NONE", elapsedDays: days };

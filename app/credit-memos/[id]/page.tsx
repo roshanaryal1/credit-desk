@@ -104,7 +104,12 @@ async function MemoReview({ params }: { params: Promise<{ id: string }> }) {
           <h3 id="sources-heading" className="text-sm font-semibold">
             Evidence register
           </h3>
-          <div className="border-border mt-3 overflow-x-auto rounded-sm border">
+          <div
+            role="region"
+            aria-labelledby="sources-heading"
+            tabIndex={0}
+            className="border-border focus-visible:ring-ring mt-3 overflow-x-auto rounded-sm border focus-visible:ring-2 focus-visible:outline-none"
+          >
             <table className="w-full min-w-[420px] text-left text-xs">
               <caption className="sr-only">
                 Evidence IDs and data sources supporting draft financial

@@ -79,7 +79,7 @@ export class SandboxLedgerSource implements LedgerSource {
       date(version.issueDate);
       date(version.effectiveDate);
       providerMoneyNZD(version.amountNZD);
-      if (version.effectiveDate > asOf) continue;
+      if (version.effectiveDate > asOf || version.issueDate > asOf) continue;
       if (!["AUTHORISED", "PAID", "VOIDED"].includes(version.status))
         throw new Error("Unknown ledger status");
       if (
@@ -88,6 +88,22 @@ export class SandboxLedgerSource implements LedgerSource {
         !version.debtorExternalId.trim()
       )
         throw new Error("Missing invoice identity");
+      const prior = latest.get(version.externalId);
+      if (prior?.effectiveDate === version.effectiveDate) {
+        const content = (row: SandboxLedgerVersion) =>
+          JSON.stringify({
+            invoiceNumber: row.invoiceNumber,
+            debtorExternalId: row.debtorExternalId,
+            amountNZD: row.amountNZD,
+            issueDate: row.issueDate,
+            status: row.status,
+            creditNotes: [...row.creditNotes].sort((a, b) =>
+              a.externalId.localeCompare(b.externalId),
+            ),
+          });
+        if (content(prior) !== content(version))
+          throw new Error("Conflicting same-date ledger versions");
+      }
       latest.set(version.externalId, version);
     }
     return [...latest.values()]

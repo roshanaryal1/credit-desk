@@ -332,7 +332,7 @@ async function WorkbenchData() {
               : `Agent and analyst agreement: ${percent(liveAgreement.overall.rate)} across ${liveAgreement.overall.n} eligible shadow decisions.`}{" "}
             <Link
               href="/trust"
-              className="text-primary underline-offset-4 hover:underline"
+              className="text-primary underline underline-offset-4"
             >
               Review evaluation and replay →
             </Link>
@@ -380,8 +380,8 @@ function Metric({
             {value}
           </span>
         )}
+        <p className="text-muted-foreground mt-2 text-xs">{sublabel}</p>
       </dd>
-      <p className="text-muted-foreground mt-2 text-xs">{sublabel}</p>
     </div>
   );
 }

@@ -30,6 +30,49 @@ const b: RiskPolicy = {
 };
 
 describe("effective dated risk policy", () => {
+  it("rejects invalid approval dates that JavaScript would normalize", () => {
+    expect(() =>
+      selectRiskPolicy(
+        [
+          {
+            ...a,
+            effectiveFrom: "2026-03-02",
+            approvedAt: "2026-02-30T00:00:00Z",
+          },
+        ],
+        "c1",
+        "2026-03-02",
+      ),
+    ).toThrow(/UTC instant/);
+  });
+
+  it("rejects escalation using a policy from after the as-of date", () => {
+    expect(() =>
+      escalateIncident("2026-10-01", "2026-10-02", "OPEN", b),
+    ).toThrow(/not effective/);
+  });
+  it.each([
+    ["2026-10-24", "2026-10-24T10:59:59Z", "2026-10-24T11:00:00Z"],
+    ["2026-06-24", "2026-06-24T11:59:59Z", "2026-06-24T12:00:00Z"],
+  ])(
+    "uses NZ business-day boundaries on %s",
+    (effectiveFrom, before, after) => {
+      expect(
+        selectRiskPolicy(
+          [{ ...a, effectiveFrom, approvedAt: before }],
+          "c1",
+          effectiveFrom,
+        )?.id,
+      ).toBe("v1");
+      expect(() =>
+        selectRiskPolicy(
+          [{ ...a, effectiveFrom, approvedAt: after }],
+          "c1",
+          effectiveFrom,
+        ),
+      ).toThrow(/Unapproved/);
+    },
+  );
   it("selects the version in force without contaminating historical dates", () => {
     expect(selectRiskPolicy([b, a], "c1", "2026-10-10")?.id).toBe("v1");
     expect(selectRiskPolicy([a, b], "c1", "2026-10-24")?.id).toBe("v2");

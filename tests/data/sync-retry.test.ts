@@ -11,6 +11,7 @@ import {
   failSyncJob,
   getSyncJob,
   retryDelayMs,
+  persistClaimedSourceBatch,
 } from "@/lib/data/sync-retry";
 
 const connection = {
@@ -47,6 +48,44 @@ async function dbWithClients() {
 }
 
 describe("durable retry, lease fencing and dead letter", () => {
+  it("fences source writes and commits checkpoint plus completion atomically", async () => {
+    const db = await dbWithClients();
+    const id = await ensureSyncJob(db, connection, now, 3);
+    const first = (await claimSyncJob(db, id, now, 30))!;
+    const second = (await claimSyncJob(db, id, plus(1), 300))!;
+    const event = {
+      ...connection,
+      eventId: "e1",
+      entityId: "i1",
+      effectiveDate: "2026-10-24",
+      observedAt: now.toISOString(),
+      payload: { cents: 100 },
+    };
+    expect(
+      await persistClaimedSourceBatch(db, first, [event], plus(1), "old"),
+    ).toBeNull();
+    expect(await db.select().from(t.ingestionEvents)).toEqual([]);
+    // Invalid source data rolls back the completion update too.
+    await expect(
+      persistClaimedSourceBatch(
+        db,
+        second,
+        [{ ...event, clientId: "client-2" }],
+        plus(1),
+        "bad",
+      ),
+    ).rejects.toThrow(/mismatch/);
+    expect((await getSyncJob(db, id))?.state).toBe("LEASED");
+    expect(await db.select().from(t.ingestionCheckpoints)).toEqual([]);
+    expect(
+      await persistClaimedSourceBatch(db, second, [event], plus(1), "new"),
+    ).toEqual({ inserted: 1, duplicates: 0 });
+    expect((await getSyncJob(db, id))?.state).toBe("SUCCEEDED");
+    expect((await db.select().from(t.ingestionCheckpoints))[0]?.cursor).toBe(
+      "new",
+    );
+    expect(await db.select().from(t.ingestionEvents)).toHaveLength(1);
+  });
   it("enqueues idempotently without replacing active attempts", async () => {
     const db = await dbWithClients();
     const id = await ensureSyncJob(db, connection, now, 3);

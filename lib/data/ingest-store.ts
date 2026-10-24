@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { and, eq, lte } from "drizzle-orm";
+import { and, eq, lte, isNull, or, sql } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -64,7 +64,7 @@ function readEvent(
  * write is rejected after reading the winning row.
  */
 export async function recordSourceBatch(
-  db: Db,
+  db: Pick<Db, "transaction">,
   connection: SourceConnection,
   incoming: SourceObservation<unknown>[],
   syncedAt: Date,
@@ -138,8 +138,12 @@ export async function recordSourceBatch(
         set: {
           cursor,
           lastSuccessAt: syncedAt,
-          updatedAt: syncedAt,
+          updatedAt: sql`greatest(${t.ingestionCheckpoints.updatedAt}, ${syncedAt.toISOString()}::timestamptz)`,
         },
+        setWhere: or(
+          isNull(t.ingestionCheckpoints.lastSuccessAt),
+          lte(t.ingestionCheckpoints.lastSuccessAt, syncedAt),
+        ),
       });
     return { inserted, duplicates };
   });
@@ -168,8 +172,12 @@ export async function recordSourceFailure(
       ],
       set: {
         lastFailureAt: failedAt,
-        updatedAt: failedAt,
+        updatedAt: sql`greatest(${t.ingestionCheckpoints.updatedAt}, ${failedAt.toISOString()}::timestamptz)`,
       },
+      setWhere: or(
+        isNull(t.ingestionCheckpoints.lastFailureAt),
+        lte(t.ingestionCheckpoints.lastFailureAt, failedAt),
+      ),
     });
 }
 

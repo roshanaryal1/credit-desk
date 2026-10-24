@@ -47,6 +47,39 @@ async function dbWithClient() {
   return db;
 }
 describe("durable ingestion journal", () => {
+  it("does not rewind success or failure checkpoints when older syncs finish late", async () => {
+    const db = await dbWithClient();
+    await recordSourceBatch(
+      db,
+      connection,
+      [evt],
+      at("2026-10-03T12:00:00Z"),
+      "new",
+    );
+    await recordSourceBatch(
+      db,
+      connection,
+      [evt],
+      at("2026-10-03T10:00:00Z"),
+      "old",
+    );
+    await recordSourceFailure(db, connection, at("2026-10-03T14:00:00Z"));
+    await recordSourceFailure(db, connection, at("2026-10-03T13:00:00Z"));
+    const point = await getSourceCheckpoint(db, connection);
+    expect(point?.cursor).toBe("new");
+    expect(point?.lastSuccessAt).toEqual(at("2026-10-03T12:00:00Z"));
+    expect(point?.lastFailureAt).toEqual(at("2026-10-03T14:00:00Z"));
+    await recordSourceBatch(
+      db,
+      connection,
+      [evt],
+      at("2026-10-03T13:00:00Z"),
+      "later-success",
+    );
+    expect((await getSourceCheckpoint(db, connection))?.updatedAt).toEqual(
+      at("2026-10-03T14:00:00Z"),
+    );
+  });
   it("is idempotent across imports and keeps the checkpoint", async () => {
     const db = await dbWithClient();
     expect(

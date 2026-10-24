@@ -68,21 +68,21 @@ integration**. The exported library functions must only be invoked from a
 trusted server-side context. Job names/IDs are scoped references; do not add
 raw customer payloads, private data or provider bearer tokens.
 
-A future worker must acquire a lease, verify it is still valid before
-committing the source journal and checkpoint **within an appropriately fenced
-transaction**, and then complete the job. Merely calling
-`recordSourceBatch` followed by `completeSyncJob` without a shared
-transaction would not prevent an expired worker from committing data.
-This safety gap explicitly blocks use with real feeds until solved.
+Workers that persist source data must call `persistClaimedSourceBatch`.
+It fences the token, attempt, connection and expiry, then commits the source
+journal, checkpoint and completion in one transaction. A rejected import rolls
+back completion too. Do not split data writes and acknowledgement across calls.
+`completeSyncJob` is only an acknowledgement for jobs without source writes.
 
 ## Readiness criteria
 
-- [ ] Lease and retry DB tests pass on the exact migration stack.
-- [ ] Database migrations have a reviewed generated Drizzle schema snapshot.
-- [ ] Atomic, lease-fenced data-write/acknowledgement path is implemented.
+- [x] Lease and retry DB tests pass on the exact migration stack.
+- [x] Migration snapshots 0003 through 0005 are generated and match the schema.
+- [x] Atomic, lease-fenced data-write/acknowledgement path is implemented and tested.
 - [ ] Production OIDC authorization and tenant isolation enforced for scheduler.
 - [ ] Provider sandbox pagination, rate limits, OAuth rotation and consent reviewed.
 - [ ] Monitoring, backup/restore, recovery drill and end-to-end operator UAT passed.
 - [ ] Independent credit/security sign-off and release permission recorded.
 
-**No PR should be merged while the owner's current merge freeze is in place.**
+The owner authorized merging the corrected synthetic prototype on 2026-10-25.
+Real feeds still require the separate readiness checks above.

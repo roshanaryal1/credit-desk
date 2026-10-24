@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   index,
   integer,
@@ -496,7 +498,12 @@ export const ingestionCheckpoints = pgTable(
     lastFailureAt: instant("last_failure_at"),
     updatedAt: instant("updated_at").notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.sourceKind, t.connectionId, t.clientId] })],
+  (t) => [
+    primaryKey({
+      name: "ingestion_checkpoints_pk",
+      columns: [t.sourceKind, t.connectionId, t.clientId],
+    }),
+  ],
 );
 
 // Durable, recoverable provider sync jobs (synthetic source runners only until
@@ -527,6 +534,22 @@ export const ingestionSyncJobs = pgTable(
       t.clientId,
     ),
     index("ingestion_sync_due_idx").on(t.state, t.nextAttemptAt),
+    check(
+      "sync_attempts_valid",
+      sql`${t.attempts} >= 0 AND ${t.maxAttempts} > 0 AND ${t.attempts} <= ${t.maxAttempts}`,
+    ),
+    check(
+      "sync_state_valid",
+      sql`${t.state} IN ('PENDING', 'LEASED', 'SUCCEEDED', 'DEAD')`,
+    ),
+    check(
+      "sync_lease_pair",
+      sql`(${t.leaseToken} IS NULL) = (${t.leaseUntil} IS NULL)`,
+    ),
+    check(
+      "sync_leased_has_token",
+      sql`(${t.state} = 'LEASED') = (${t.leaseToken} IS NOT NULL)`,
+    ),
   ],
 );
 
@@ -555,6 +578,15 @@ export const creditCases = pgTable(
   (t) => [
     index("credit_cases_client_state_idx").on(t.clientId, t.state),
     index("credit_cases_tenant_client_idx").on(t.tenantId, t.clientId),
+    check("credit_case_version_valid", sql`${t.version} >= 0`),
+    check(
+      "credit_case_state_valid",
+      sql`${t.state} IN ('NEW','ASSIGNED','IN_REVIEW','CHECKER_REVIEW','RETURNED','APPROVED','HELD','REJECTED','CLOSED')`,
+    ),
+    check(
+      "credit_case_separation",
+      sql`${t.checkerId} IS NULL OR ${t.makerId} IS NULL OR ${t.checkerId} <> ${t.makerId}`,
+    ),
   ],
 );
 
@@ -576,6 +608,7 @@ export const creditCaseEvents = pgTable(
   (t) => [
     uniqueIndex("credit_case_event_version_uq").on(t.caseId, t.version),
     index("credit_case_event_history_idx").on(t.caseId, t.occurredAt),
+    check("credit_case_event_version_valid", sql`${t.version} >= 0`),
   ],
 );
 

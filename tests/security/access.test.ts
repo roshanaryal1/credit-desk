@@ -17,6 +17,30 @@ const good: IdentityContext = {
 };
 
 describe("least privilege policy", () => {
+  it.each([NaN, Infinity, -Infinity])(
+    "rejects non-finite expiry %s",
+    (expiry) => {
+      expect(
+        authorize(
+          { ...good, authenticatedUntilMs: expiry },
+          { tenantId: "firm-a", clientId: "client-1" },
+          "CLIENT_READ",
+          1000,
+        ),
+      ).toEqual({ allowed: false, reason: "EXPIRED" });
+    },
+  );
+
+  it("rejects an explicitly empty client scope", () => {
+    expect(
+      authorize(
+        good,
+        { tenantId: "firm-a", clientId: "" },
+        "CLIENT_READ",
+        1000,
+      ),
+    ).toEqual({ allowed: false, reason: "CLIENT_BOUNDARY" });
+  });
   it("allows scoped analyst reads and proposals, but never approval or transfers", () => {
     expect(
       authorize(

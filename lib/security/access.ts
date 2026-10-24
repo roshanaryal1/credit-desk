@@ -77,11 +77,18 @@ export function authorize(
     !actor.tenantId.trim()
   )
     return { allowed: false, reason: "NO_SESSION" };
-  if (!Number.isFinite(nowMs) || actor.authenticatedUntilMs <= nowMs)
+  if (
+    !Number.isFinite(nowMs) ||
+    !Number.isFinite(actor.authenticatedUntilMs) ||
+    actor.authenticatedUntilMs <= nowMs
+  )
     return { allowed: false, reason: "EXPIRED" };
   if (target.tenantId !== actor.tenantId || !target.tenantId.trim())
     return { allowed: false, reason: "TENANT_BOUNDARY" };
-  if (target.clientId && !actor.clientGrants.includes(target.clientId))
+  if (
+    target.clientId !== undefined &&
+    (!target.clientId.trim() || !actor.clientGrants.includes(target.clientId))
+  )
     return { allowed: false, reason: "CLIENT_BOUNDARY" };
   if (action === "FUNDING_EXECUTE")
     return { allowed: false, reason: "DISABLED" };

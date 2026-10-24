@@ -49,7 +49,7 @@ try {
         "workbench",
         "review-queue",
         "client-dossier",
-      "client-collateral",
+        "client-collateral",
         "credit-memo-draft",
       ]),
     ],

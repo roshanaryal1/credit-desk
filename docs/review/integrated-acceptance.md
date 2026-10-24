@@ -1,13 +1,14 @@
 # Credit Desk 2.0 — single-pass review candidate
 
-**Status:** DRAFT / synthetic-only / `main` merge freeze.
+**Status:** Synthetic prototype integration authorized by owner on 2026-10-25.
 **Tracked under:** #99 and #135. **Integrated draft PR:** #136.
 **Original change PRs:** #115–#134 and follow-up #137 (remain separately open).
 
 ## One-review operating model
 
 Review the **integrated branch** once, not 21 isolated changes. This branch
-assembles the proposed PR file snapshots without merging any PR into main.
+assembles the proposed snapshots and reconciles their histories for one verified
+synthetic integration into main.
 It is not a signed-off release. No banking credentials, customer financial data,
 automated payments or production deployment are enabled by this branch.
 
@@ -49,7 +50,11 @@ matches #120 byte-for-byte and is included **once**.
 Business dates are seeded/fixed; documentation must not call them real-time.
 NZD money amounts are integer cents in authoritative calculations.
 
-## Evidence needed before the owner does one final review
+See [2026-10-25 integration verification](2026-10-25-integration.md) for
+corrected behavior and current technical evidence. The checklist below also
+tracks deferred production and release acceptance.
+
+## Evidence and deferred release acceptance
 
 - [ ] Full CI **on integrated commit**, including exact `format:check`,
       TypeScript, lint, DB tests/migrations, build, evaluator and bundle-secret scan.
@@ -83,9 +88,9 @@ NZD money amounts are integer cents in authoritative calculations.
   transactional persistence and an immutable event history, but **no verified
   OIDC login, tenant-scoped privileged API, or interactive checker inbox**.
   The visible queue remains read-only; approved transfers are disabled.
-- The ingestion journal, retry queue and adapters are not an authorized
-  connected scheduled worker. #132's runbook explicitly notes the need to
-  fence ingest writes and job completion in a single transaction.
+- The ingestion journal, retry queue and adapters are not a connected
+  scheduled worker. `persistClaimedSourceBatch` now fences writes and job
+  completion in one transaction; real provider authorization remains deferred.
 - A client-linked *synthetic* waterfall now reconciles to the dossier and
   invoices (#138), but uses an explicitly hypothetical concentration cap,
   zero scenario reserve and unverified contract/source status. Facility terms
@@ -100,7 +105,8 @@ NZD money amounts are integer cents in authoritative calculations.
 
 ## Merge and release controls
 
-Do not merge PR #136 or any earlier PR into `main`; do not enable auto-merge.
+The owner authorized merging all corrected synthetic changes on 2026-10-25.
+Require exact-source CI and browser checks before integration.
 Do not run real source reads, publish the prototype as a live lender platform,
 charge hosting, provision secrets, or initiate payments without user approval.
 The next legitimate status is **synthetic review candidate verified in CI and

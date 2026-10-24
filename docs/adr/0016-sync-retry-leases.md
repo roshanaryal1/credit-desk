@@ -53,4 +53,4 @@ separate operator action and audit approval, not silent overwrite.
 PGlite/Postgres-compatible integration tests: idempotent enqueue, distinct
 client partitions, atomic claim, lease fencing, crash recovery, backoff,
 exhausted attempts, dead letter and invalid input. Check migrations in the
-ordered #118 → #127 → this PR stack. Do not merge during the owner freeze.
+ordered #118 → #127 → this PR stack. Synthetic integration was authorized on 2026-10-25.

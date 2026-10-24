@@ -17,7 +17,8 @@ import {
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 
-import type { SourceConnection } from "./ingest-store";
+import { recordSourceBatch, type SourceConnection } from "./ingest-store";
+import type { SourceObservation } from "./observations";
 
 export type SyncErrorCode =
   | "TIMEOUT"
@@ -265,6 +266,43 @@ export async function completeSyncJob(
     )
     .returning({ id: t.ingestionSyncJobs.id });
   return rows.length === 1;
+}
+
+/** Commit source records, checkpoint and lease completion in one transaction. */
+export async function persistClaimedSourceBatch(
+  db: Db,
+  claim: ClaimedSyncJob,
+  incoming: SourceObservation<unknown>[],
+  now: Date,
+  cursor: string | null,
+): Promise<{ inserted: number; duplicates: number } | null> {
+  validInstant(now);
+  return db.transaction(async (tx) => {
+    // Lock and fence before any source write. All changes roll back together.
+    const [owned] = await tx
+      .update(t.ingestionSyncJobs)
+      .set({
+        state: "SUCCEEDED",
+        leaseToken: null,
+        leaseUntil: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(t.ingestionSyncJobs.id, claim.id),
+          eq(t.ingestionSyncJobs.sourceKind, claim.connection.sourceKind),
+          eq(t.ingestionSyncJobs.connectionId, claim.connection.connectionId),
+          eq(t.ingestionSyncJobs.clientId, claim.connection.clientId),
+          eq(t.ingestionSyncJobs.state, "LEASED"),
+          eq(t.ingestionSyncJobs.leaseToken, claim.leaseToken),
+          eq(t.ingestionSyncJobs.attempts, claim.attempts),
+          gt(t.ingestionSyncJobs.leaseUntil, now),
+        ),
+      )
+      .returning({ id: t.ingestionSyncJobs.id });
+    if (!owned) return null;
+    return recordSourceBatch(tx, claim.connection, incoming, now, cursor);
+  });
 }
 
 /**

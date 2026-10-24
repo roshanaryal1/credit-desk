@@ -1,13 +1,8 @@
 import "server-only";
 
 import type { Db } from "@/lib/db/client";
-import {
-  borrowingBase,
-  type BorrowingBaseReport,
-  type Receivable,
-} from "@/lib/credit/borrowing-base";
-import { getClientDossier } from "@/lib/queries/client-360";
-import { getClientReceivablesAgeing } from "@/lib/queries/client-ageing";
+import type { BorrowingBaseReport } from "@/lib/credit/borrowing-base";
+import { clientBorrowingReview } from "./client-borrowing-review";
 
 export interface IndicativeBorrowingBase {
   status: "SCENARIO_ONLY" | "NO_SOURCE_RECORDS";
@@ -36,78 +31,15 @@ export async function indicativeClientBorrowingBase(
   clientId: string,
   asOfDate: string,
 ): Promise<IndicativeBorrowingBase | null> {
-  const [dossier, ageing] = await Promise.all([
-    getClientDossier(db, clientId, asOfDate),
-    getClientReceivablesAgeing(db, clientId, asOfDate),
-  ]);
-  if (!dossier || !ageing) return null;
-  if (dossier.client.id !== ageing.clientId || dossier.asOf !== ageing.asOf) {
-    throw new Error("Borrowing-base client/date mismatch");
-  }
-
-  const sourceRows = ageing.debtors.flatMap((debtor) =>
-    debtor.invoices.map((invoice): Receivable => {
-      const face =
-        invoice.outstandingCents +
-        invoice.countedReceiptCents +
-        invoice.countedCreditCents;
-      if (!Number.isSafeInteger(face) || face < 0) {
-        throw new Error("Unsafe source receivable amount");
-      }
-      return {
-        invoiceId: invoice.invoiceId,
-        debtorId: debtor.debtorId,
-        faceCents: face,
-        receivedCents: invoice.countedReceiptCents,
-        creditNoteCents: invoice.countedCreditCents,
-        ineligibleReasons: invoice.daysPastDue > 90 ? ["AGE_OVER_90_DAYS"] : [],
-      };
-    }),
-  );
-
-  // An empty / missing source is UNKNOWN, not zero eligible collateral.
-  if (sourceRows.length === 0) {
-    return {
-      status: "NO_SOURCE_RECORDS",
-      clientId,
-      asOfDate,
-      report: null,
-      assumptions,
-      sourceInvoiceIds: [],
-    };
-  }
-  const totalOutstanding = sourceRows.reduce(
-    (sum, row) => sum + row.faceCents - row.receivedCents - row.creditNoteCents,
-    0,
-  );
-  if (
-    !Number.isSafeInteger(totalOutstanding) ||
-    totalOutstanding !== ageing.totalOutstandingCents
-  ) {
-    throw new Error("Borrowing-base inputs do not reconcile to Client 360");
-  }
-
-  const report = borrowingBase(
-    asOfDate,
-    {
-      version: "ILLUSTRATIVE-NOT-APPROVED",
-      advanceRateBps: dossier.client.advanceRateBps,
-      maximumDebtorShareBps: 5000,
-      facilityLimitCents: dossier.client.facilityLimitCents,
-      drawnCents: dossier.inUseCents,
-      reservesCents: 0,
-    },
-    sourceRows,
-  );
-  if (report.netReceivablesCents !== ageing.totalOutstandingCents) {
-    throw new Error("Borrowing-base report reconciliation failure");
-  }
+  const review = await clientBorrowingReview(db, clientId, asOfDate);
+  if (!review) return null;
+  const sourceInvoiceIds = review.evidence.ledgerInvoiceIds;
   return {
-    status: "SCENARIO_ONLY",
+    status: sourceInvoiceIds.length ? "SCENARIO_ONLY" : "NO_SOURCE_RECORDS",
     clientId,
     asOfDate,
-    report,
+    report: sourceInvoiceIds.length ? review.report : null,
     assumptions,
-    sourceInvoiceIds: report.treatments.map((item) => item.invoiceId),
+    sourceInvoiceIds,
   };
 }

@@ -190,7 +190,12 @@ async function Worksheet({
           <h2 id="treatment-heading" className="mb-3 text-base font-semibold">
             Receivable treatment
           </h2>
-          <div className="border-border bg-card overflow-x-auto rounded-sm border">
+          <div
+            role="region"
+            aria-labelledby="treatment-heading"
+            tabIndex={0}
+            className="border-border bg-card focus-visible:ring-ring overflow-x-auto rounded-sm border focus-visible:ring-2 focus-visible:outline-none"
+          >
             <table className="w-full min-w-[650px] text-sm">
               <caption className="sr-only">
                 Illustrative invoice eligibility and advances, in NZD

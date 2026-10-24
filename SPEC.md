@@ -437,8 +437,9 @@ acceptance contract, **not** evidence that features exist on `main`, have been
 credit-policy approved, or are ready for actual customer data or money movement.
 The v1 scope, security disclosures, financial semantics and seeded synthetic
 demo remain authoritative until this amendment is reviewed and adopted.
-The owner's explicit instruction as of 2026-10-24 is a **merge freeze**: open
-reviewable draft PRs only; no PR is to be merged to `main`.
+On 2026-10-25 the owner authorized correcting and merging the synthetic v2
+prototype. This adopts the synthetic implementation scope only. Live providers,
+enterprise identity, lender policy sign-off and payments remain deferred.
 
 The full staged delivery charter is proposed in PR #115. Supporting issue
 register: #100–#114, with foundational contracts split from product UI to
@@ -578,6 +579,6 @@ review.
 - Issue closure requires full acceptance evidence; PRs delivering only a pure
   domain foundation stay open as **draft** and refer to the issue without
   claiming to close it.
-- `main` remains unchanged during the explicit owner-requested merge freeze.
-  Lifting the freeze and sequencing integration requires a fresh instruction.
+- The owner lifted the review merge freeze on 2026-10-25. Merge corrected,
+  verified synthetic scope through PRs; real-data and release gates remain.
 

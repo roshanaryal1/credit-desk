@@ -177,7 +177,12 @@ async function Scenario({ params }: { params: Promise<{ id: string }> }) {
             >
               Source-backed invoice treatment
             </h2>
-            <div className="border-border bg-card overflow-x-auto rounded-sm border">
+            <div
+              role="region"
+              aria-labelledby="receivable-sources"
+              tabIndex={0}
+              className="border-border bg-card focus-visible:ring-ring overflow-x-auto rounded-sm border focus-visible:ring-2 focus-visible:outline-none"
+            >
               <table className="w-full min-w-[680px] text-sm">
                 <caption className="sr-only">
                   Synthetic ledger invoice-level eligibility, deductions and

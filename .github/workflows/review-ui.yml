@@ -3,6 +3,9 @@ name: Review UI smoke (synthetic only)
 on:
   pull_request:
     paths:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
       - ".github/workflows/review-ui.yml"
       - "scripts/review-ui-smoke.mjs"
   workflow_dispatch:

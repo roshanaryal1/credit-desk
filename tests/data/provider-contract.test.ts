@@ -6,6 +6,53 @@ import {
 } from "@/lib/data/provider-contract";
 
 describe("offline provider contract fixtures", () => {
+  it("excludes future-issued invoices even when effective metadata is backdated", async () => {
+    const row = {
+      clientId: "c1",
+      externalId: "future",
+      invoiceNumber: "FUTURE",
+      debtorExternalId: "d1",
+      issueDate: "2026-11-01",
+      effectiveDate: "2026-10-01",
+      amountNZD: "100.00",
+      status: "AUTHORISED" as const,
+      creditNotes: [],
+    };
+    expect(
+      await new SandboxLedgerSource([row]).invoices("c1", "2026-10-20"),
+    ).toEqual([]);
+    expect(
+      await new SandboxLedgerSource([row]).invoices("c1", "2026-11-01"),
+    ).toHaveLength(1);
+  });
+
+  it("accepts identical replay and rejects conflicting same-date versions in either order", async () => {
+    const row = {
+      clientId: "c1",
+      externalId: "same",
+      invoiceNumber: "SAME",
+      debtorExternalId: "d1",
+      issueDate: "2026-10-01",
+      effectiveDate: "2026-10-01",
+      amountNZD: "100.00",
+      status: "AUTHORISED" as const,
+      creditNotes: [],
+    };
+    expect(
+      await new SandboxLedgerSource([row, { ...row }]).invoices(
+        "c1",
+        "2026-10-20",
+      ),
+    ).toHaveLength(1);
+    const changed = { ...row, amountNZD: "200.00" };
+    for (const rows of [
+      [row, changed],
+      [changed, row],
+    ])
+      await expect(
+        new SandboxLedgerSource(rows).invoices("c1", "2026-10-20"),
+      ).rejects.toThrow(/Conflicting/);
+  });
   it("parses NZD cents without float rounding or format ambiguity", () => {
     expect(providerMoneyNZD("12.34")).toBe(1234);
     expect(providerMoneyNZD("0.01")).toBe(1);

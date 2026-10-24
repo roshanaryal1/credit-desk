@@ -30,4 +30,4 @@ boundaries, cross-client source IDs, stale versions, maker-checker separation,
 event immutability and database transactional behavior. No funding transfer
 is ever invoked by these transitions.
 
-**No PR merges to main until the owner lifts the merge freeze.**
+Synthetic integration was authorized on 2026-10-25; live approval APIs remain deferred.

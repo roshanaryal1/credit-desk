@@ -92,7 +92,12 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
         <h2 id="debtors-heading" className="mb-3 text-base font-semibold">
           Debtor exposure
         </h2>
-        <div className="border-border bg-card overflow-x-auto rounded-sm border">
+        <div
+          role="region"
+          aria-labelledby="debtors-heading"
+          tabIndex={0}
+          className="border-border bg-card focus-visible:ring-ring overflow-x-auto rounded-sm border focus-visible:ring-2 focus-visible:outline-none"
+        >
           <table className="w-full min-w-[520px] text-sm">
             <caption className="sr-only">
               Client debtor exposure and submitted invoice face values
@@ -179,7 +184,12 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
             </div>
           ))}
         </dl>
-        <div className="border-border bg-card overflow-x-auto rounded-sm border">
+        <div
+          role="region"
+          aria-label="Debtor receivables ageing"
+          tabIndex={0}
+          className="border-border bg-card focus-visible:ring-ring overflow-x-auto rounded-sm border focus-visible:ring-2 focus-visible:outline-none"
+        >
           <table className="w-full min-w-[760px] text-sm">
             <caption className="sr-only">
               Synthetic debtor receivables ageing by days past due
