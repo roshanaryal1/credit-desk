@@ -1,21 +1,29 @@
-// Calendar-day arithmetic on YYYY-MM-DD business dates. Uses UTC date parts so
-// results never depend on the host timezone or daylight saving.
-
+// Calendar-day arithmetic on YYYY-MM-DD business dates (SPEC 4.1).
 const DAY_MS = 86_400_000;
 
-function toUtcMs(date: string): number {
-  const [y, m, d] = date.split("-").map(Number);
-  if (!y || !m || !d) throw new Error(`invalid business date: ${date}`);
-  return Date.UTC(y, m - 1, d);
+function utcDate(value: string): Date {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`Invalid business date: ${value}`);
+  }
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  if (date.toISOString().slice(0, 10) !== value) {
+    throw new Error(`Invalid business date: ${value}`);
+  }
+  return date;
+}
+
+// UTC parts count calendar days without Auckland daylight-saving transitions.
+export function daysBetween(a: string, b: string): number {
+  return (utcDate(b).getTime() - utcDate(a).getTime()) / DAY_MS;
 }
 
 export function addDays(date: string, days: number): string {
-  return new Date(toUtcMs(date) + days * DAY_MS).toISOString().slice(0, 10);
-}
-
-/** Whole days from `from` to `to` (positive when `to` is later). */
-export function daysBetween(from: string, to: string): number {
-  return Math.round((toUtcMs(to) - toUtcMs(from)) / DAY_MS);
+  if (!Number.isInteger(days)) throw new Error("Days must be an integer");
+  const result = utcDate(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result.toISOString().slice(0, 10);
 }
 
 export function minDate(a: string, b: string): string {

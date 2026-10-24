@@ -6,3 +6,4 @@ lib/db/migrations
 eval/report.json
 AGENTS.md
 *.md
+eval/agent-runs.json
