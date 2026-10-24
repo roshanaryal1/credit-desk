@@ -22,7 +22,11 @@ export default function ClientCollectionsPage({
   );
 }
 
-async function CollectionsView({ params }: { params: Promise<{ id: string }> }) {
+async function CollectionsView({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   await connection();
   const { id } = await params;
   const db = await getDb();
@@ -54,7 +58,9 @@ async function CollectionsView({ params }: { params: Promise<{ id: string }> }) 
         }
       />
       <div className="border-border bg-card rounded-sm border p-5">
-        <h2 className="text-sm font-semibold">Data confidence and interpretation</h2>
+        <h2 className="text-sm font-semibold">
+          Data confidence and interpretation
+        </h2>
         <p className="text-muted-foreground mt-2 text-sm">
           This view only describes dated synthetic receipts, credit notes and
           receivables from this client. DSO is not available: the prototype has
@@ -66,7 +72,10 @@ async function CollectionsView({ params }: { params: Promise<{ id: string }> }) 
       <section aria-labelledby="collections-table-title">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="collections-table-title" className="text-base font-semibold">
+            <h2
+              id="collections-table-title"
+              className="text-base font-semibold"
+            >
               Debtor-level collections
             </h2>
             <p className="text-muted-foreground mt-1 text-xs">
@@ -86,19 +95,35 @@ async function CollectionsView({ params }: { params: Promise<{ id: string }> }) 
         >
           <table className="w-full min-w-[900px] text-sm">
             <caption className="sr-only">
-              As-of collections, overdue movement, credits and settlement
-              timing by synthetic debtor
+              As-of collections, overdue movement, credits and settlement timing
+              by synthetic debtor
             </caption>
             <thead className="text-muted-foreground border-b text-xs">
               <tr>
-                <th scope="col" className="px-4 py-3 text-left font-medium">Debtor and evidence</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">Past due</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">30-day movement</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">Receipts (30d)</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">Previous 30d</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">Credits (30d)</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">Cash-settled days</th>
-                <th scope="col" className="px-3 py-3 text-right font-medium">DSO</th>
+                <th scope="col" className="px-4 py-3 text-left font-medium">
+                  Debtor and evidence
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Past due
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  30-day movement
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Receipts (30d)
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Previous 30d
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Credits (30d)
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  Cash-settled days
+                </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">
+                  DSO
+                </th>
               </tr>
             </thead>
             <tbody className="divide-border divide-y">
@@ -116,14 +141,22 @@ async function CollectionsView({ params }: { params: Promise<{ id: string }> }) 
                         </summary>
                         <ul className="mt-2 space-y-3">
                           {row.signals.map((signal) => (
-                            <li key={signal.code} className="text-muted-foreground">
-                              <strong className="text-foreground block">{signal.code.replaceAll("_", " ")}</strong>
+                            <li
+                              key={signal.code}
+                              className="text-muted-foreground"
+                            >
+                              <strong className="text-foreground block">
+                                {signal.code.replaceAll("_", " ")}
+                              </strong>
                               {signal.description}
                               <span className="mt-1 block break-all">
-                                Ledger invoices: {signal.invoiceIds.join(", ") || "none"}
+                                Ledger invoices:{" "}
+                                {signal.invoiceIds.join(", ") || "none"}
                               </span>
                               <span className="block break-all">
-                                Receipt / credit sources: {signal.sourceIds.join(", ") || "ledger balances"}
+                                Receipt / credit sources:{" "}
+                                {signal.sourceIds.join(", ") ||
+                                  "ledger balances"}
                               </span>
                             </li>
                           ))}
@@ -131,20 +164,33 @@ async function CollectionsView({ params }: { params: Promise<{ id: string }> }) 
                       </details>
                     )}
                   </th>
-                  <td className="num px-3 py-4 text-right align-top">{money(row.overdueNowCents)}</td>
+                  <td className="num px-3 py-4 text-right align-top">
+                    {money(row.overdueNowCents)}
+                  </td>
                   <td className="num px-3 py-4 text-right align-top">
                     {row.overdueMovement30DaysCents > 0 ? "+" : ""}
                     {money(row.overdueMovement30DaysCents)}
                   </td>
-                  <td className="num px-3 py-4 text-right align-top">{money(row.receiptsLast30DaysCents)}</td>
-                  <td className="num px-3 py-4 text-right align-top">{money(row.receiptsPrevious30DaysCents)}</td>
-                  <td className="num px-3 py-4 text-right align-top">{money(row.creditsLast30DaysCents)}</td>
+                  <td className="num px-3 py-4 text-right align-top">
+                    {money(row.receiptsLast30DaysCents)}
+                  </td>
+                  <td className="num px-3 py-4 text-right align-top">
+                    {money(row.receiptsPrevious30DaysCents)}
+                  </td>
+                  <td className="num px-3 py-4 text-right align-top">
+                    {money(row.creditsLast30DaysCents)}
+                  </td>
                   <td className="num px-3 py-4 text-right align-top">
                     {row.meanDaysToCashSettlement === null
                       ? "Insufficient sample"
-                      : row.meanDaysToCashSettlement.toFixed(1) + " days (" + row.cashSettledInvoiceCount + ")"}
+                      : row.meanDaysToCashSettlement.toFixed(1) +
+                        " days (" +
+                        row.cashSettledInvoiceCount +
+                        ")"}
                   </td>
-                  <td className="px-3 py-4 text-right align-top">Not verified</td>
+                  <td className="px-3 py-4 text-right align-top">
+                    Not verified
+                  </td>
                 </tr>
               ))}
             </tbody>
