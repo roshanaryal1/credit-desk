@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  incidentEventsAsOf,
-  nzBusinessDateAt,
-} from "@/lib/watch/as-of-events";
+import { incidentEventsAsOf, nzBusinessDateAt } from "@/lib/watch/as-of-events";
 
 const event = (id: string, iso: string) => ({
   id,
