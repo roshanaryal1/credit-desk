@@ -142,7 +142,19 @@ try {
         !text.includes("funding:cli_0001:")
       ) {
         throw new Error(
-          "Evidence-backed unsigned memo download was not validated",
+          "Memo export invalid: " +
+            JSON.stringify({
+              status: draft.status(),
+              type: draft.headers()["content-type"] ?? null,
+              attachment: Boolean(
+                draft.headers()["content-disposition"]?.includes("attachment"),
+              ),
+              draft: text.includes("DRAFT — ANALYST REVIEW REQUIRED"),
+              synthetic: text.includes("SYNTHETIC DATA ONLY"),
+              unsigned: text.includes("Signed off by: NONE"),
+              facilityRef: text.includes("facility:cli_0001:"),
+              fundingRef: text.includes("funding:cli_0001:"),
+            }),
         );
       }
       results.push({
