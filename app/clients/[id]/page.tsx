@@ -50,8 +50,8 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
           Examine synthetic borrowing-base scenario →
         </Link>
         <p className="text-muted-foreground mt-2 text-xs">
-          Scenario calculations use ledger receipts and are not approved drawable
-          funding.
+          Scenario calculations use ledger receipts and are not approved
+          drawable funding.
         </p>
       </div>
       <section aria-label="Facility position">
