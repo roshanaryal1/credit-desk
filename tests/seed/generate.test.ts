@@ -7,7 +7,7 @@ import * as t from "@/lib/db/schema";
 import { DEMO_TODAY, HISTORY_DAYS } from "@/lib/demo";
 import { DEV_PARAMS, HOLDOUT_PARAMS, generate } from "@/lib/seed/generate";
 import { gs1CheckDigit } from "@/lib/seed/names";
-import { summarise, writeDataset } from "@/lib/seed/write";
+import { replaceDataset, summarise, writeDataset } from "@/lib/seed/write";
 
 describe("synthetic data generator", () => {
   const dev = generate(DEV_PARAMS);
@@ -157,6 +157,21 @@ describe("synthetic data generator", () => {
       expect(daysBetween(batch.submittedDate, f.fundedDate)).toBe(1);
     }
   });
+
+  it("rolls back an entire reset when a later insert fails", async () => {
+    const db = await createMemoryDb();
+    await replaceDataset(db, dev);
+    const [before] = await db.select({ n: count() }).from(t.invoices);
+
+    // Duplicated client PK forces failure after TRUNCATE inside the transaction.
+    const invalid = { ...dev, clients: [...dev.clients, dev.clients[0]!] };
+    await expect(replaceDataset(db, invalid)).rejects.toThrow();
+
+    const [after] = await db.select({ n: count() }).from(t.invoices);
+    expect(after?.n).toBe(before?.n);
+    const [clients] = await db.select({ n: count() }).from(t.clients);
+    expect(clients?.n).toBe(dev.clients.length);
+  }, 60_000);
 
   it("writes to the database with matching row counts", async () => {
     const db = await createMemoryDb();
