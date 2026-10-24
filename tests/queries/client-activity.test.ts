@@ -24,13 +24,22 @@ const sample = (id: string, day: string): ClientActivity => ({
 
 describe("client-scoped synthetic activity history", () => {
   it("orders deterministically, paginates without duplication and validates limits", () => {
-    const events = [sample("b", "2026-01-02"), sample("a", "2026-01-02"),
-      sample("x", "2026-01-03")];
-    expect(paginateClientActivity(events, 1, 2).items.map((e) => e.id)).toEqual(["x", "a"]);
-    expect(paginateClientActivity(events, 2, 2).items.map((e) => e.id)).toEqual(["b"]);
+    const events = [
+      sample("b", "2026-01-02"),
+      sample("a", "2026-01-02"),
+      sample("x", "2026-01-03"),
+    ];
+    expect(paginateClientActivity(events, 1, 2).items.map((e) => e.id)).toEqual(
+      ["x", "a"],
+    );
+    expect(paginateClientActivity(events, 2, 2).items.map((e) => e.id)).toEqual(
+      ["b"],
+    );
     expect(events[0]?.id).toBe("b");
     for (const page of [0, -1, 0.1, Number.NaN, Infinity]) {
-      expect(() => paginateClientActivity(events, page, 2)).toThrow(/pagination/);
+      expect(() => paginateClientActivity(events, page, 2)).toThrow(
+        /pagination/,
+      );
     }
     expect(() => paginateClientActivity(events, 1, 51)).toThrow(/pagination/);
   });
@@ -61,10 +70,17 @@ describe("client-scoped synthetic activity history", () => {
     expect(first?.total).toBeGreaterThan(0);
     expect(first?.items.every((e) => e.businessDate <= DEMO_TODAY)).toBe(true);
     expect(second?.items.every((e) => e.businessDate <= DEMO_TODAY)).toBe(true);
-    const ownBatchIds = new Set(dataset.batches.filter((b) => b.clientId === one).map((b) => b.id));
-    expect(first?.items.filter((e) => e.kind === "BATCH").every((e) =>
-      ownBatchIds.has(e.sourceId))).toBe(true);
-    expect(await getClientActivity(db, "not-a-real-client", DEMO_TODAY)).toBeNull();
+    const ownBatchIds = new Set(
+      dataset.batches.filter((b) => b.clientId === one).map((b) => b.id),
+    );
+    expect(
+      first?.items
+        .filter((e) => e.kind === "BATCH")
+        .every((e) => ownBatchIds.has(e.sourceId)),
+    ).toBe(true);
+    expect(
+      await getClientActivity(db, "not-a-real-client", DEMO_TODAY),
+    ).toBeNull();
     await expect(getClientActivity(db, one, "2026-02-30")).rejects.toThrow();
   }, 90_000);
 });

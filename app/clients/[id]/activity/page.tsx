@@ -16,7 +16,9 @@ export default function ClientActivityPage({
   searchParams,
 }: PageProps<"/clients/[id]/activity">) {
   return (
-    <Suspense fallback={<Loading label="Loading synthetic client history..." />}>
+    <Suspense
+      fallback={<Loading label="Loading synthetic client history..." />}
+    >
       <Activity params={params} searchParams={searchParams} />
     </Suspense>
   );
@@ -29,13 +31,18 @@ async function Activity({
   await connection();
   const { id } = await params;
   const sp = await searchParams;
-  const pageNumber = typeof sp.page === "string" && /^[1-9]\d{0,3}$/.test(sp.page)
-    ? Number(sp.page) : 1;
-  const asOf = typeof sp.asOf === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.asOf) &&
+  const pageNumber =
+    typeof sp.page === "string" && /^[1-9]\d{0,3}$/.test(sp.page)
+      ? Number(sp.page)
+      : 1;
+  const asOf =
+    typeof sp.asOf === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(sp.asOf) &&
     sp.asOf <= DEMO_TODAY &&
     !Number.isNaN(Date.parse(sp.asOf + "T00:00:00Z")) &&
     new Date(sp.asOf + "T00:00:00Z").toISOString().slice(0, 10) === sp.asOf
-      ? sp.asOf : DEMO_TODAY;
+      ? sp.asOf
+      : DEMO_TODAY;
   const result = await getClientActivity(await getDb(), id, asOf, pageNumber);
   if (!result) notFound();
   const base = "/clients/" + encodeURIComponent(id);
@@ -52,7 +59,9 @@ async function Activity({
       </Link>
       <PageHeader
         title="Client activity"
-        description={"Synthetic provenance timeline · as of " + businessDate(asOf)}
+        description={
+          "Synthetic provenance timeline · as of " + businessDate(asOf)
+        }
       />
       <div className="border-border bg-card rounded-sm border p-5">
         <h2 className="text-sm font-semibold">Event history and limitations</h2>
@@ -63,9 +72,15 @@ async function Activity({
           events may reflect incomplete demo input, not real-world inactivity.
           This is not an immutable provider transaction log.
         </p>
-        <form className="mt-4 flex flex-wrap items-end gap-2" action={base + "/activity"}>
+        <form
+          className="mt-4 flex flex-wrap items-end gap-2"
+          action={base + "/activity"}
+        >
           <div>
-            <label htmlFor="activity-asof" className="text-muted-foreground block text-xs">
+            <label
+              htmlFor="activity-asof"
+              className="text-muted-foreground block text-xs"
+            >
               Business as of
             </label>
             <input
@@ -102,8 +117,10 @@ async function Activity({
                 </span>
                 <span>
                   <strong className="block text-sm">{item.title}</strong>
-                  <span className="text-muted-foreground block text-xs">{item.detail}</span>
-                  <span className="text-muted-foreground mt-1 block break-all text-xs">
+                  <span className="text-muted-foreground block text-xs">
+                    {item.detail}
+                  </span>
+                  <span className="text-muted-foreground mt-1 block text-xs break-all">
                     Source: {item.sourceId} · {item.kind.replaceAll("_", " ")}
                   </span>
                 </span>
@@ -112,19 +129,28 @@ async function Activity({
           ))}
           {result.items.length === 0 && (
             <li className="text-muted-foreground p-6 text-sm">
-              No matching events for this page and date. This is not evidence
-              of a verified zero-activity account.
+              No matching events for this page and date. This is not evidence of
+              a verified zero-activity account.
             </li>
           )}
         </ol>
-        <nav aria-label="Activity pages" className="mt-4 flex flex-wrap gap-3 text-sm">
+        <nav
+          aria-label="Activity pages"
+          className="mt-4 flex flex-wrap gap-3 text-sm"
+        >
           {result.page > 1 && (
-            <Link className="text-primary rounded-sm border px-4 py-2" href={href(result.page - 1)}>
+            <Link
+              className="text-primary rounded-sm border px-4 py-2"
+              href={href(result.page - 1)}
+            >
               ← Previous
             </Link>
           )}
           {result.page < result.totalPages && (
-            <Link className="text-primary rounded-sm border px-4 py-2" href={href(result.page + 1)}>
+            <Link
+              className="text-primary rounded-sm border px-4 py-2"
+              href={href(result.page + 1)}
+            >
               Next →
             </Link>
           )}
@@ -132,9 +158,9 @@ async function Activity({
       </section>
       <p className="text-muted-foreground border-t pt-4 text-xs">
         Dated records use business-day cutoffs, and UTC action timestamps are
-        converted to Pacific/Auckland calendar dates. Historical facility
-        terms and first-observed source knowledge are not versioned here, so
-        this should not be used as a bank-grade retrospective proof.
+        converted to Pacific/Auckland calendar dates. Historical facility terms
+        and first-observed source knowledge are not versioned here, so this
+        should not be used as a bank-grade retrospective proof.
       </p>
     </>
   );
