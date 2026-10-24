@@ -46,10 +46,17 @@ export function demoRouteAllowed(persona: DemoPersona, path: string): boolean {
   if (path === "/about") return true;
   if (persona === "CLIENT") return path === "/demo/client";
   if (path === "/demo/client") return false;
-  return path === "/" ||
-    ["/queue", "/batches", "/watch", "/clients", "/borrowing-base",
-      "/credit-memos", "/trust", "/audit"]
-      .some((prefix) => path === prefix || path.startsWith(prefix + "/"));
+  const allowed = {
+    EMPLOYER: ["/queue", "/batches", "/watch", "/clients",
+      "/borrowing-base", "/credit-memos", "/trust", "/audit"],
+    ANALYST: ["/queue", "/batches", "/watch", "/clients",
+      "/borrowing-base", "/credit-memos", "/trust", "/audit"],
+    CHECKER: ["/queue", "/batches", "/watch", "/clients",
+      "/borrowing-base", "/credit-memos", "/trust"],
+    AUDITOR: ["/trust", "/audit", "/clients", "/credit-memos", "/watch"],
+  } as const;
+  return path === "/" || allowed[persona]
+    .some((prefix) => path === prefix || path.startsWith(prefix + "/"));
 }
 
 export function demoCanWrite(persona: DemoPersona): boolean {
