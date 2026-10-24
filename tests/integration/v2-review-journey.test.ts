@@ -35,10 +35,7 @@ describe("integrated Credit Desk v2 seeded review journey", () => {
       ),
     );
     expect(ageing?.overdueCents).toBe(
-      ageing?.debtors.reduce(
-        (total, row) => total + row.overdueCents,
-        0,
-      ),
+      ageing?.debtors.reduce((total, row) => total + row.overdueCents, 0),
     );
 
     const memo = draftMemoFromSyntheticClient({
@@ -73,12 +70,20 @@ describe("integrated Credit Desk v2 seeded review journey", () => {
     const secondClientId = ds.clients[1]!.id!;
     const other = await getClientDossier(db, secondClientId, DEMO_TODAY);
     expect(other?.client.id).toBe(secondClientId);
-    expect(dossier?.debtors.every((d) =>
-      ds.debtors.some((source) => source.id === d.id && source.clientId === clientId),
-    )).toBe(true);
-    expect(other?.debtors.every((d) =>
-      ds.debtors.some((source) => source.id === d.id && source.clientId === secondClientId),
-    )).toBe(true);
+    expect(
+      dossier?.debtors.every((d) =>
+        ds.debtors.some(
+          (source) => source.id === d.id && source.clientId === clientId,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      other?.debtors.every((d) =>
+        ds.debtors.some(
+          (source) => source.id === d.id && source.clientId === secondClientId,
+        ),
+      ),
+    ).toBe(true);
   }, 90_000);
 
   it("keeps the illustrative borrowing base separate from actual client availability", () => {
