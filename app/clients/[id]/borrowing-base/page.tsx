@@ -46,7 +46,7 @@ async function Scenario({ params }: { params: Promise<{ id: string }> }) {
           Illustrative calculation only — NOT drawable credit
         </p>
         <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-          The amounts below are calculated from this client's synthetic ledger
+          The amounts below are calculated from this client’s synthetic ledger
           and allocated receipts, not from a verified borrowing-base certificate.
           Missing source freshness, disputed-debt assessment and signed facility
           policies prevent an authoritative availability decision.
