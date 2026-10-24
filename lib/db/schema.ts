@@ -530,6 +530,55 @@ export const ingestionSyncJobs = pgTable(
   ],
 );
 
+// Proposed durable synthetic case workflow. Privileged routes remain disabled until
+// verified OIDC sessions are enforced on every query and action.
+export const creditCases = pgTable(
+  "credit_cases",
+  {
+    id: text("id").primaryKey(),
+    tenantId: text("tenant_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    subjectType: subjectType("subject_type").notNull(),
+    subjectId: text("subject_id").notNull(),
+    priority: severity("priority").notNull(),
+    dueDate: businessDate("due_date"),
+    state: text("state").notNull(),
+    version: integer("version").notNull().default(0),
+    ownerId: text("owner_id"),
+    makerId: text("maker_id"),
+    checkerId: text("checker_id"),
+    decisionReason: text("decision_reason"),
+    updatedAt: instant("updated_at").notNull(),
+  },
+  (t) => [
+    index("credit_cases_client_state_idx").on(t.clientId, t.state),
+    index("credit_cases_tenant_client_idx").on(t.tenantId, t.clientId),
+  ],
+);
+
+export const creditCaseEvents = pgTable(
+  "credit_case_events",
+  {
+    id: text("id").primaryKey(),
+    caseId: text("case_id")
+      .notNull()
+      .references(() => creditCases.id),
+    fromState: text("from_state"),
+    toState: text("to_state").notNull(),
+    version: integer("version").notNull(),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    reason: text("reason"),
+    occurredAt: instant("occurred_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("credit_case_event_version_uq").on(t.caseId, t.version),
+    index("credit_case_event_history_idx").on(t.caseId, t.occurredAt),
+  ],
+);
+
 // Evaluation only
 
 export const labels = pgTable("labels", {
@@ -558,6 +607,7 @@ export const APPEND_ONLY_TABLES = [
   "audit_events",
   "incident_events",
   "ingestion_events",
+  "credit_case_events",
 ] as const;
 
 export type NewClient = typeof clients.$inferInsert;
