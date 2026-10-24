@@ -15,29 +15,47 @@ describe("synthetic client-specific borrowing-base scenarios", () => {
     const ds = generate(DEV_PARAMS);
     await writeDataset(db, ds);
     const clientId = ds.clients[0]!.id!;
-    const scenario = await indicativeClientBorrowingBase(db, clientId, DEMO_TODAY);
+    const scenario = await indicativeClientBorrowingBase(
+      db,
+      clientId,
+      DEMO_TODAY,
+    );
     const ageing = await getClientReceivablesAgeing(db, clientId, DEMO_TODAY);
     const dossier = await getClientDossier(db, clientId, DEMO_TODAY);
 
     expect(scenario?.status).toBe("SCENARIO_ONLY");
     expect(scenario?.report?.policyVersion).toBe("ILLUSTRATIVE-NOT-APPROVED");
-    expect(scenario?.report?.netReceivablesCents).toBe(ageing?.totalOutstandingCents);
+    expect(scenario?.report?.netReceivablesCents).toBe(
+      ageing?.totalOutstandingCents,
+    );
     expect(scenario?.report?.facilityHeadroomCents).toBe(
       Math.max(0, dossier!.client.facilityLimitCents - dossier!.inUseCents),
     );
     expect(scenario?.report?.grossAdvanceCents).toBe(
-      scenario?.report?.treatments.reduce((sum, row) => sum + row.advanceCents, 0),
+      scenario?.report?.treatments.reduce(
+        (sum, row) => sum + row.advanceCents,
+        0,
+      ),
     );
     expect(scenario?.report?.eligibleCollateralCents).toBe(
-      scenario?.report?.treatments.reduce((sum, row) => sum + row.eligibleCents, 0),
+      scenario?.report?.treatments.reduce(
+        (sum, row) => sum + row.eligibleCents,
+        0,
+      ),
     );
 
     const permittedInvoices = new Set(
-      ds.ledgerEntries.filter((row) => row.clientId === clientId).map((row) => row.id),
+      ds.ledgerEntries
+        .filter((row) => row.clientId === clientId)
+        .map((row) => row.id),
     );
     expect(scenario?.sourceInvoiceIds.length).toBeGreaterThan(0);
-    expect(scenario?.sourceInvoiceIds.every((id) => permittedInvoices.has(id))).toBe(true);
-    expect(scenario?.assumptions.join(" ")).toMatch(/NOT approved drawable funding/i);
+    expect(
+      scenario?.sourceInvoiceIds.every((id) => permittedInvoices.has(id)),
+    ).toBe(true);
+    expect(scenario?.assumptions.join(" ")).toMatch(
+      /NOT approved drawable funding/i,
+    );
   }, 90_000);
 
   it("does not manufacture availability when the accounting source is empty", async () => {
@@ -103,6 +121,8 @@ describe("synthetic client-specific borrowing-base scenarios", () => {
     expect(result?.report?.netReceivablesCents).toBe(50_000);
     expect(result?.report?.excludedCents).toBe(50_000);
     expect(result?.report?.availableCents).toBe(0);
-    expect(result?.report?.treatments[0]?.reasons).toContain("AGE_OVER_90_DAYS");
+    expect(result?.report?.treatments[0]?.reasons).toContain(
+      "AGE_OVER_90_DAYS",
+    );
   });
 });
