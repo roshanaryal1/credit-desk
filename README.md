@@ -9,6 +9,8 @@ decided without seeing it, and replays any decision exactly as it was made.
 
 > Prototype for discussion. All data is synthetic.
 
+**Project URL:** [creditdesk.roshanaryal.com](https://creditdesk.roshanaryal.com) (synthetic, access-controlled demo). This is the canonical production address; the legacy `credit-desk-inky.vercel.app` address redirects here.
+
 **Rules detect, the model explains, a validator checks the model, and a person
 decides.** The agent never approves, funds or changes anything.
 
