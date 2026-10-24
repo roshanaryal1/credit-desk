@@ -1,7 +1,11 @@
 import { sql } from "drizzle-orm";
 import { parseArgs } from "node:util";
 
-import { getDb } from "@/lib/db/client";
+import { runAllBatches } from "@/lib/checks/runner";
+import { addDays } from "@/lib/dates";
+import { DEMO_TODAY, HISTORY_DAYS } from "@/lib/demo";
+import { runWatchRange } from "@/lib/watch/runner";
+import { closeDb, getDb } from "@/lib/db/client";
 import { DEV_PARAMS, HOLDOUT_PARAMS, generate } from "@/lib/seed/generate";
 import { liveDecisionCount, summarise, writeDataset } from "@/lib/seed/write";
 
@@ -48,6 +52,13 @@ async function main() {
 
   const ds = generate(params);
   await writeDataset(db, ds);
+  const results = await runAllBatches(db);
+  const flagged = results.filter((r) => r.findings.length > 0).length;
+  const detections = await runWatchRange(
+    db,
+    addDays(DEMO_TODAY, -HISTORY_DAYS),
+    DEMO_TODAY,
+  );
   const summary = summarise(ds);
   console.log(`Seeded ${params.name} dataset into ${target}.`);
   console.table(summary.tables);
@@ -57,9 +68,16 @@ async function main() {
   console.table(summary.perProblem);
   console.log("Clean cases:", summary.cleanCases);
   console.table(summary.scriptedEvents);
+  console.log(
+    `Checks run: ${results.length} invoices, ${flagged} with findings.`,
+  );
+  console.log(`Watch run over ${HISTORY_DAYS} days: ${detections} detections.`);
 }
 
-main().catch((err: unknown) => {
-  console.error(err instanceof Error ? err.message : err);
-  process.exit(1);
-});
+main()
+  .then(() => closeDb())
+  .catch(async (err: unknown) => {
+    console.error(err instanceof Error ? err.message : err);
+    await closeDb();
+    process.exitCode = 1;
+  });

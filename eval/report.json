@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "demoToday": "2026-10-20",
+  "configVersion": "2026-10-23.1",
+  "limits": [
+    "Synthetic data: labels come from the generator, not from real losses.",
+    "Small sample: a few hundred invoices and a handful of positives per check.",
+    "Thresholds are defaults from the specification, not calibrated on real loss data.",
+    "Labels and checks both encode SPEC 6, so high scores show the code implements the specification; they do not show the rules catch real fraud."
+  ],
+  "checks": {
+    "dev": {
+      "seed": "dev",
+      "watch": {
+        "PAYMENT_DRIFT": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FUNDED_CREDIT_NOTE": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "OVERDUE_FUNDED": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "CONCENTRATION_CREEP": {
+          "tp": 11,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FACILITY_UTILISATION": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null
+        }
+      },
+      "incidents": 21,
+      "invoices": 251,
+      "labelledInvoices": 38,
+      "checks": {
+        "DUP": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "tn": 249,
+          "precision": 1,
+          "recall": 1
+        },
+        "LEDGER_MISSING": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "tn": 249,
+          "precision": 1,
+          "recall": 1
+        },
+        "LEDGER_MISMATCH": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "tn": 247,
+          "precision": 1,
+          "recall": 1
+        },
+        "VOIDED": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "tn": 248,
+          "precision": 1,
+          "recall": 1
+        },
+        "CREDIT_NOTE": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "tn": 248,
+          "precision": 1,
+          "recall": 1
+        },
+        "ALREADY_PAID": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "tn": 247,
+          "precision": 1,
+          "recall": 1
+        },
+        "NEW_DEBTOR": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "tn": 245,
+          "precision": 1,
+          "recall": 1
+        },
+        "SLOW_PAYER": {
+          "tp": 7,
+          "fp": 0,
+          "fn": 0,
+          "tn": 244,
+          "precision": 1,
+          "recall": 1
+        },
+        "OVER_AGE": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "tn": 248,
+          "precision": 1,
+          "recall": 1
+        },
+        "FUTURE_DATED": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "tn": 249,
+          "precision": 1,
+          "recall": 1
+        },
+        "CONCENTRATION": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "tn": 245,
+          "precision": 1,
+          "recall": 1
+        }
+      },
+      "misses": []
+    },
+    "holdout": {
+      "seed": "holdout",
+      "watch": {
+        "PAYMENT_DRIFT": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FUNDED_CREDIT_NOTE": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "OVERDUE_FUNDED": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "CONCENTRATION_CREEP": {
+          "tp": 14,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "FACILITY_UTILISATION": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null
+        }
+      },
+      "incidents": 22,
+      "invoices": 237,
+      "labelledInvoices": 42,
+      "checks": {
+        "DUP": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "tn": 234,
+          "precision": 1,
+          "recall": 1
+        },
+        "LEDGER_MISSING": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "tn": 234,
+          "precision": 1,
+          "recall": 1
+        },
+        "LEDGER_MISMATCH": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "tn": 233,
+          "precision": 1,
+          "recall": 1
+        },
+        "VOIDED": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "tn": 233,
+          "precision": 1,
+          "recall": 1
+        },
+        "CREDIT_NOTE": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "tn": 233,
+          "precision": 1,
+          "recall": 1
+        },
+        "ALREADY_PAID": {
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "tn": 232,
+          "precision": 1,
+          "recall": 1
+        },
+        "NEW_DEBTOR": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "tn": 233,
+          "precision": 1,
+          "recall": 1
+        },
+        "SLOW_PAYER": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "tn": 231,
+          "precision": 1,
+          "recall": 1
+        },
+        "OVER_AGE": {
+          "tp": 5,
+          "fp": 0,
+          "fn": 0,
+          "tn": 232,
+          "precision": 1,
+          "recall": 1
+        },
+        "FUTURE_DATED": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "tn": 234,
+          "precision": 1,
+          "recall": 1
+        },
+        "CONCENTRATION": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "tn": 231,
+          "precision": 1,
+          "recall": 1
+        }
+      },
+      "misses": []
+    }
+  },
+  "agent": {
+    "promptVersion": "2026-10-23.4",
+    "runs": 42,
+    "passRate": 0.9761904761904762,
+    "schemaPassRate": 1,
+    "citationValidity": 1,
+    "amountFaithfulness": 1,
+    "retryRate": 0.19047619047619047,
+    "errorRate": 0.023809523809523808,
+    "avgTokens": 7603,
+    "avgLatencyMs": 5324,
+    "byModel": {
+      "openai/gpt-oss-20b": {
+        "runs": 12,
+        "passRate": 0.9166666666666666,
+        "schemaPassRate": 1,
+        "citationValidity": 1,
+        "amountFaithfulness": 1,
+        "retryRate": 0.5,
+        "errorRate": 0.08333333333333333,
+        "avgTokens": 8167,
+        "avgLatencyMs": 9963
+      },
+      "openai/gpt-oss-120b": {
+        "runs": 30,
+        "passRate": 1,
+        "schemaPassRate": 1,
+        "citationValidity": 1,
+        "amountFaithfulness": 1,
+        "retryRate": 0.06666666666666667,
+        "errorRate": 0,
+        "avgTokens": 7377,
+        "avgLatencyMs": 3468
+      }
+    },
+    "allRuns": {
+      "runs": 68,
+      "passRate": 0.6029411764705882,
+      "schemaPassRate": 1,
+      "citationValidity": 0.9761904761904762,
+      "amountFaithfulness": 0.9761904761904762,
+      "retryRate": 0.19117647058823528,
+      "errorRate": 0.38235294117647056,
+      "avgTokens": 6030,
+      "avgLatencyMs": 4429
+    },
+    "note": "Headline figures use the latest run per item on the current prompt version. allRuns includes every attempt, including runs stopped by the provider's daily token cap and runs from earlier prompt versions."
+  },
+  "gate": {
+    "passed": true,
+    "failures": []
+  }
+}
