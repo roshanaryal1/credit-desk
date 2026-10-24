@@ -9,11 +9,18 @@ function safeMarkdown(value: string): string {
     .slice(0, 500);
 }
 
+function safeSourceId(value: string): string {
+  if (!/^[a-zA-Z0-9:._-]{1,160}$/.test(value)) {
+    throw new Error("Invalid provenance identifier");
+  }
+  return value;
+}
+
 export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
   if (memo.status !== "DRAFT_REVIEW_REQUIRED" || memo.signedOffBy !== null) {
     throw new Error("Only unsigned review-required drafts may be exported");
   }
-  const citations = new Set(memo.evidenceIndex.map((e) => e.id));
+  const citations = new Set(memo.evidenceIndex.map((e) => safeSourceId(e.id)));
   if (citations.size !== memo.evidenceIndex.length) {
     throw new Error("Duplicate evidence reference");
   }
@@ -41,7 +48,7 @@ export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
     "**SYNTHETIC DATA ONLY — NOT A CREDIT APPROVAL OR FUNDING AUTHORITY**",
     "",
     "Document: " + safeMarkdown(memo.title),
-    "Client reference: " + safeMarkdown(memo.clientId),
+    "Client reference: " + safeSourceId(memo.clientId),
     "Business date: " + memo.asOfDate,
     "Version: " + memo.version,
     "Signed off by: NONE",
@@ -55,7 +62,7 @@ export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
     for (const statement of section.statements) {
       const suffix = statement.evidenceIds.length
         ? " [Sources: " +
-          statement.evidenceIds.map(safeMarkdown).join(", ") +
+          statement.evidenceIds.map(safeSourceId).join(", ") +
           "]"
         : "";
       lines.push("- " + safeMarkdown(statement.text) + suffix);
@@ -65,13 +72,13 @@ export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
   for (const evidence of memo.evidenceIndex) {
     lines.push(
       "- " +
-        safeMarkdown(evidence.id) +
+        safeSourceId(evidence.id) +
         " | " +
-        safeMarkdown(evidence.fact) +
+        safeSourceId(evidence.fact) +
         " | " +
         safeMarkdown(evidence.sourceLabel) +
         " | Source " +
-        safeMarkdown(evidence.sourceId) +
+        safeSourceId(evidence.sourceId) +
         " | As of " +
         evidence.asOfDate +
         " | NZD cents " +
