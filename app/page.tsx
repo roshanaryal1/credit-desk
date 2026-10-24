@@ -123,9 +123,9 @@ async function WorkbenchData() {
           />
         </dl>
         <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
-          The facility headroom shown here is the difference between
-          commitments and amounts outstanding. It is not a borrowing-base
-          calculation and must not be used to authorise funding.
+          The facility headroom shown here is the difference between commitments
+          and amounts outstanding. It is not a borrowing-base calculation and
+          must not be used to authorise funding.
         </p>
       </section>
 
@@ -155,7 +155,8 @@ async function WorkbenchData() {
                           {batch.clientName}
                         </p>
                         <p className="text-muted-foreground mt-1 text-xs">
-                          {businessDate(batch.submittedDate)} · {batch.invoiceCount} invoices
+                          {businessDate(batch.submittedDate)} ·{" "}
+                          {batch.invoiceCount} invoices
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -223,8 +224,8 @@ async function WorkbenchData() {
                             {incident.clientName}
                           </p>
                           <p className="text-muted-foreground mt-1 text-xs">
-                            {incident.ruleId.replaceAll("_", " ").toLowerCase()} ·{" "}
-                            {businessDate(incident.firstDetectedDate)}
+                            {incident.ruleId.replaceAll("_", " ").toLowerCase()}{" "}
+                            · {businessDate(incident.firstDetectedDate)}
                           </p>
                         </div>
                         <Chip
