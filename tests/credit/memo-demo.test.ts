@@ -18,7 +18,9 @@ describe("synthetic credit memo preview", () => {
       "OUTSTANDING_ADVANCES",
     ]);
     expect(draft.sections[0]?.statements).toHaveLength(2);
-    expect(draft.sections[0]?.statements.every((s) => s.evidenceIds.length === 1)).toBe(true);
+    expect(
+      draft.sections[0]?.statements.every((s) => s.evidenceIds.length === 1),
+    ).toBe(true);
     expect(draft.missingItems).toEqual(
       expect.arrayContaining([
         expect.stringContaining("Requested facility"),
@@ -26,12 +28,16 @@ describe("synthetic credit memo preview", () => {
         expect.stringContaining("Independent credit decision"),
       ]),
     );
-    expect(draft.sections[2]?.statements[0]?.text).toMatch(/No funds may be disbursed/);
+    expect(draft.sections[2]?.statements[0]?.text).toMatch(
+      /No funds may be disbursed/,
+    );
   });
   it("fails closed on unsafe numbers and never generates an unsigned fake approval", () => {
-    expect(() => draftMemoFromSyntheticClient({
-      ...sample,
-      fundsInUseCents: Number.NaN,
-    })).toThrow(/Unsupported monetary/);
+    expect(() =>
+      draftMemoFromSyntheticClient({
+        ...sample,
+        fundsInUseCents: Number.NaN,
+      }),
+    ).toThrow(/Unsupported monetary/);
   });
 });
