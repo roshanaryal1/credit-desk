@@ -126,41 +126,46 @@ try {
       process.stdout.write(`OK ${label} ${item.route}: ${title}\n`);
     }
     if (label === "desktop") {
-      const draft = await context.request.get(
-        origin + "/credit-memos/cli_0001/export",
-        { maxRedirects: 0 },
-      );
-      const text = await draft.text();
+      // Browser fetch inherits the signed, HttpOnly session cookie from the
+      // same page that has just successfully viewed protected review routes.
+      const draft = await page.evaluate(async () => {
+        const response = await fetch("/credit-memos/cli_0001/export", {
+          credentials: "same-origin",
+          redirect: "manual",
+        });
+        return {
+          status: response.status,
+          type: response.headers.get("content-type"),
+          disposition: response.headers.get("content-disposition"),
+          content: await response.text(),
+        };
+      });
       if (
-        draft.status() !== 200 ||
-        !draft.headers()["content-type"]?.includes("text/markdown") ||
-        !draft.headers()["content-disposition"]?.includes("attachment") ||
-        !text.includes("DRAFT — ANALYST REVIEW REQUIRED") ||
-        !text.includes("SYNTHETIC DATA ONLY") ||
-        !text.includes("Signed off by: NONE") ||
-        !text.includes("facility:cli_0001:") ||
-        !text.includes("funding:cli_0001:")
+        draft.status !== 200 ||
+        !draft.type?.includes("text/markdown") ||
+        !draft.disposition?.includes("attachment") ||
+        !draft.content.includes("DRAFT — ANALYST REVIEW REQUIRED") ||
+        !draft.content.includes("SYNTHETIC DATA ONLY") ||
+        !draft.content.includes("Signed off by: NONE") ||
+        !draft.content.includes("facility:cli_0001:") ||
+        !draft.content.includes("funding:cli_0001:")
       ) {
         throw new Error(
-          "Memo export invalid: " +
+          "Signed-browser memo export check failed: " +
             JSON.stringify({
-              status: draft.status(),
-              type: draft.headers()["content-type"] ?? null,
-              attachment: Boolean(
-                draft.headers()["content-disposition"]?.includes("attachment"),
-              ),
-              draft: text.includes("DRAFT — ANALYST REVIEW REQUIRED"),
-              synthetic: text.includes("SYNTHETIC DATA ONLY"),
-              unsigned: text.includes("Signed off by: NONE"),
-              facilityRef: text.includes("facility:cli_0001:"),
-              fundingRef: text.includes("funding:cli_0001:"),
+              status: draft.status,
+              type: draft.type,
+              attachment: Boolean(draft.disposition?.includes("attachment")),
+              unsigned: draft.content.includes("Signed off by: NONE"),
+              facilityRef: draft.content.includes("facility:cli_0001:"),
+              fundingRef: draft.content.includes("funding:cli_0001:"),
             }),
         );
       }
       results.push({
         viewport: label,
         route: "/credit-memos/cli_0001/export",
-        status: draft.status(),
+        status: draft.status,
         heading: "Unsigned evidence-bound Markdown export",
         screenshot: null,
       });
