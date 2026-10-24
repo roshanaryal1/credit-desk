@@ -203,6 +203,17 @@ Cost-conscious development default: local PGlite + synthetic fixtures. Assess fr
 
 A weekly programme report should contain: delivered PRs and acceptance evidence; planned next work; blockers/dependencies; risks/decisions; budget/hosting impact; and clear distinction between **coded**, **tested**, **deployed**, **validated with users**, and **approved for real data**.
 
+## Review-only mode — explicit merge freeze
+
+**Owner instruction (2026-10-24): Do not merge any Credit Desk v2 pull requests yet.** The team should implement, test, document and open reviewable PRs without changing `main`. This supersedes generic delivery advice above that would otherwise imply merging after each passing CI run.
+
+- All new implementation PRs stay **draft and open** until they meet their *own* acceptance criteria. A passing CI run is necessary, not sufficient, for production or design sign-off.
+- Related work may advance on independent branches, but identify exact dependency PRs and base SHA; don't pretend an independent base-main PR can compile against unmerged dependencies.
+- Do not enable auto-merge, squash, rebase or direct-push on `main`; do not close child issues based on partial domain-only PRs.
+- Keep proposed ADRs distinct from approved lending policy; real credentials, integrations, money movement, spend and releases require explicit additional authorization.
+- When the product owner eventually lifts the freeze, conduct a combined integration review, order PRs by dependencies, re-run tests after each integration and close issues only after acceptance, deployed verification where relevant and documented sign-off.
+- Every weekly status must separate **open PR with partial code**, **CI passed**, **UAT approved**, **merged**, **deployed**, and **production-eligible**. Do not collapse these states.
+
 ## 10. Administration still required
 
 - GitHub milestones for the new programme must be created/assigned separately; the available connector does not expose milestone creation. Do not reuse old prototype milestone dates or meanings.
