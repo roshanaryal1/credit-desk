@@ -1,0 +1,20 @@
+name: Temporary deploy formatting report
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format edited code
+        run: |
+          npx prettier --write 'lib/deploy/demo-readiness.ts' 'scripts/demo-preflight.ts' 'tests/deploy/demo-readiness.test.ts'
+          node -e 'const fs=require("fs");for(const p of ["lib/deploy/demo-readiness.ts","scripts/demo-preflight.ts","tests/deploy/demo-readiness.test.ts"]){console.log("DEPLOY_FORMATTED "+JSON.stringify({path:p,content:fs.readFileSync(p,"utf8")}))}'
