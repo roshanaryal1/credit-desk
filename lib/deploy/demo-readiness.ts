@@ -1,9 +1,21 @@
 /** Pure, non-mutating synthetic demo readiness assessment. */
 export const REQUIRED_DEMO_TABLES = [
-  "clients", "debtors", "invoices", "batches", "ledger_entries",
-  "receipt_allocations", "credit_notes", "findings", "decisions",
-  "decision_snapshots", "incidents", "incident_events", "watch_detections",
-  "audit_events", "credit_cases", "credit_case_events",
+  "clients",
+  "debtors",
+  "invoices",
+  "batches",
+  "ledger_entries",
+  "receipt_allocations",
+  "credit_notes",
+  "findings",
+  "decisions",
+  "decision_snapshots",
+  "incidents",
+  "incident_events",
+  "watch_detections",
+  "audit_events",
+  "credit_cases",
+  "credit_case_events",
 ] as const;
 
 export interface DemoPreflightInput {
@@ -20,7 +32,9 @@ export function assessDemoReadiness(input: DemoPreflightInput) {
   const found = new Set(input.foundTables);
   const missing = REQUIRED_DEMO_TABLES.filter((name) => !found.has(name));
   const counts = [
-    input.clientCount, input.invoiceCount, input.batchCount,
+    input.clientCount,
+    input.invoiceCount,
+    input.batchCount,
     input.findingCount,
   ];
   if (counts.some((value) => !Number.isSafeInteger(value) || value < 0)) {
@@ -36,7 +50,9 @@ export function assessDemoReadiness(input: DemoPreflightInput) {
     fictionalClient: input.pinnedClientFound,
   };
   const failures = [
-    ...(missing.length ? ["Missing required tables: " + missing.join(", ")] : []),
+    ...(missing.length
+      ? ["Missing required tables: " + missing.join(", ")]
+      : []),
     ...(!checks.migrations ? ["Migration journal unavailable"] : []),
     ...(!checks.clients ? ["No client fixture rows"] : []),
     ...(!checks.invoices ? ["No invoice fixture rows"] : []),

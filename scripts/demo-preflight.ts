@@ -15,7 +15,9 @@ async function main() {
   const args = parseArgs({ options: { target: { type: "string" } } });
   const target = args.values.target;
   if (target !== "preview" && target !== "production") {
-    throw new Error("Choose an explicit --target=preview or --target=production.");
+    throw new Error(
+      "Choose an explicit --target=preview or --target=production.",
+    );
   }
   if (!process.env.DATABASE_URL) {
     throw new Error("A deliberately selected DATABASE_URL is required.");
@@ -40,8 +42,11 @@ async function main() {
       db.select({ n: count() }).from(t.invoices),
       db.select({ n: count() }).from(t.batches),
       db.select({ n: count() }).from(t.findings),
-      db.select({ id: t.clients.id }).from(t.clients)
-        .where(eq(t.clients.id, DEMO_BORROWER_ID)).limit(1),
+      db
+        .select({ id: t.clients.id })
+        .from(t.clients)
+        .where(eq(t.clients.id, DEMO_BORROWER_ID))
+        .limit(1),
     ]);
     clientCount = clients[0]?.n ?? 0;
     invoiceCount = invoices[0]?.n ?? 0;
@@ -50,22 +55,41 @@ async function main() {
     pinnedClientFound = pinned.length > 0;
   }
   const report = assessDemoReadiness({
-    foundTables, clientCount, invoiceCount, batchCount, findingCount,
-    pinnedClientFound, migrationJournalFound: tracked.rows[0]?.exists === true,
+    foundTables,
+    clientCount,
+    invoiceCount,
+    batchCount,
+    findingCount,
+    pinnedClientFound,
+    migrationJournalFound: tracked.rows[0]?.exists === true,
   });
-  console.log(JSON.stringify({
-    target,
-    status: report.readyForSyntheticSmoke ? "PRELIMINARY_READY" : "NOT_READY",
-    counts: { clients: clientCount, invoices: invoiceCount, batches: batchCount,
-      findings: findingCount },
-    ...report,
-  }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        target,
+        status: report.readyForSyntheticSmoke
+          ? "PRELIMINARY_READY"
+          : "NOT_READY",
+        counts: {
+          clients: clientCount,
+          invoices: invoiceCount,
+          batches: batchCount,
+          findings: findingCount,
+        },
+        ...report,
+      },
+      null,
+      2,
+    ),
+  );
   if (!report.readyForSyntheticSmoke) process.exitCode = 1;
 }
 
 main()
   .catch(() => {
-    console.error("Read-only demo preflight could not complete. Check the target and schema without printing credentials.");
+    console.error(
+      "Read-only demo preflight could not complete. Check the target and schema without printing credentials.",
+    );
     process.exitCode = 1;
   })
   .finally(() => closeDb());

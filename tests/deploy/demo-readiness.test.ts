@@ -49,7 +49,9 @@ describe("read-only synthetic demo preflight", () => {
   });
   it("rejects corrupt or unsafe counts", () => {
     for (const clientCount of [-1, NaN, Infinity, 0.5]) {
-      expect(() => assessDemoReadiness({ ...ready, clientCount })).toThrow(/count/);
+      expect(() => assessDemoReadiness({ ...ready, clientCount })).toThrow(
+        /count/,
+      );
     }
   });
 });
