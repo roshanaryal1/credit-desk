@@ -46,7 +46,7 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
         <div>
           <p className="text-sm font-semibold">Collateral and eligibility review</p>
           <p className="text-muted-foreground mt-1 text-xs">
-            Reconcile this client's dated ledger and debtor exclusions; no funding authorisation.
+            Reconcile this client&apos;s dated ledger and debtor exclusions; no funding authorisation.
           </p>
         </div>
         <Link
