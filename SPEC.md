@@ -582,3 +582,25 @@ review.
 - The owner lifted the review merge freeze on 2026-10-25. Merge corrected,
   verified synthetic scope through PRs; real-data and release gates remain.
 
+
+
+### 14.9 Synthetic role-perspective demonstration (#109; #110–#113)
+
+For a prototype shared with external reviewers, allow a visitor with the
+existing shared demo password to select a **fictional perspective**:
+Employer/lender, Analyst, Checker, Client/borrower or Auditor.
+Selection is expressly **not identity proof**; anyone with the demo password
+can choose any view, and the chosen role cannot be used for authenticated
+maker-checker control, tenant boundaries or credit approval.
+
+The client perspective is read-only and must show only a fixed synthetic
+borrower snapshot via a server-pinned client identifier; it must not expose
+internal batch decisions or other clients. Employer, checker and auditor
+perspectives are also read-only. The analyst may exercise existing synthetic
+decision, incident and agent tools, with no transfer of real funds. The
+server must check the demo perspective on write actions independently of
+display controls, with conservative route restrictions.
+
+This is a separate synthetic presentation slice and **does not** close #109.
+Actual tenant access and independent financial approvers still require
+OIDC, MFA, verified grants and server-side access enforcement before real data.
