@@ -42,3 +42,15 @@ export function retryPrompt(errors: string[]): string {
 ${errors.map((e) => `- ${e}`).join("\n")}
 Fix every problem. Cite only ids returned by the tools and copy amounts and dates exactly from the cited records. Call submit_explanation again with the corrected answer.`;
 }
+
+export function incidentUserPrompt(input: {
+  incidentId: string;
+  ruleId: string;
+  firstDetectedDate: string;
+  asOf: string;
+}): string {
+  return `This time the subject is not a new invoice but a portfolio incident on an invoice the lender has already funded.
+Portfolio incident ${input.incidentId} (${input.ruleId}) was first detected on ${input.firstDetectedDate}; the book is as of ${input.asOf}.
+
+Investigate with the tools (start with get_incident, then the funded invoice and its ledger entry), then call submit_explanation. The recommendation is what the analyst should do about the funded exposure: HOLD means keep watching, REQUEST_INFO means ask the client, REJECT means treat the funding as at risk.`;
+}

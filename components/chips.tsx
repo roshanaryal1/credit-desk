@@ -67,3 +67,23 @@ export function DecisionChip({ decision }: { decision: string }) {
   const s = DECISION[decision] ?? { tone: "neutral" as Tone, label: decision };
   return <Chip tone={s.tone}>{s.label}</Chip>;
 }
+
+const RECOMMENDATION: Record<string, { tone: Tone; label: string }> = {
+  APPROVE: { tone: "clear", label: "Approve" },
+  HOLD: { tone: "flagged", label: "Hold" },
+  REJECT: { tone: "high", label: "Reject" },
+  REQUEST_INFO: { tone: "info", label: "Request info" },
+};
+
+/** What the agent suggested (present tense), as opposed to what was decided. */
+export function RecommendationChip({
+  recommendation,
+}: {
+  recommendation: string;
+}) {
+  const s = RECOMMENDATION[recommendation] ?? {
+    tone: "neutral" as Tone,
+    label: recommendation,
+  };
+  return <Chip tone={s.tone}>{s.label}</Chip>;
+}
