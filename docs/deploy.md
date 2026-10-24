@@ -26,6 +26,25 @@ Each step below needs an account owner, so it is run by a person.
 Without `DEMO_PASSWORD` and `SESSION_SECRET` the production app returns 503
 rather than serving unprotected.
 
+## Read-only preflight before any migration or seed
+
+The connected Vercel and Neon projects may exist even when the chosen
+PostgreSQL database has **no tables**. A Vercel READY build alone does not
+establish that the application can sign in or replay a synthetic decision.
+Inspect only an explicitly selected disposable database:
+
+```bash
+# After securely selecting the correct target database:
+npm run demo:preflight -- --target=preview
+```
+
+The command uses `DATABASE_URL` already in your shell, inspects only
+schema and aggregate fixture counts, and fails closed on missing or unseeded
+data. It never migrates or seeds. See
+[demo readiness runbook](runbooks/demo-readiness.md). External hosted
+migrations, seed resets, domain promotion and production credential changes
+require separate owner approval and recovery planning.
+
 ## 3. Data
 
 From a local checkout, with production `DATABASE_URL` in the shell only (not
