@@ -126,7 +126,8 @@ export async function createCreditCase(
               ),
             )
             .limit(1);
-    if (!source) throw new Error("Source record missing or belongs to another client");
+    if (!source)
+      throw new Error("Source record missing or belongs to another client");
     const [created] = await tx
       .insert(t.creditCases)
       .values({
@@ -175,12 +176,13 @@ export async function applyCreditCaseAction(
       .limit(1);
     if (!current) throw new Error("Case not found");
 
-    const required =
-      ["APPROVE", "HOLD", "REJECT", "RETURN"].includes(action.kind)
-        ? "CASE_CHECK"
-        : ["ASSIGN", "CLOSE", "REOPEN"].includes(action.kind)
-          ? "POLICY_EDIT"
-          : "CASE_PROPOSE";
+    const required = ["APPROVE", "HOLD", "REJECT", "RETURN"].includes(
+      action.kind,
+    )
+      ? "CASE_CHECK"
+      : ["ASSIGN", "CLOSE", "REOPEN"].includes(action.kind)
+        ? "POLICY_EDIT"
+        : "CASE_PROPOSE";
 
     requireAccess(
       actor,
