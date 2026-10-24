@@ -1,9 +1,6 @@
 import { DEMO_TODAY } from "@/lib/demo";
 
-import {
-  assembleCreditMemo,
-  type CreditMemoDraft,
-} from "./memo";
+import { assembleCreditMemo, type CreditMemoDraft } from "./memo";
 
 export interface SyntheticMemoClient {
   id: string;
