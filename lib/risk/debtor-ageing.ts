@@ -4,7 +4,8 @@
  * No prediction, LLM or unverifiable debtor score is involved.
  */
 
-export type AgeBucket = "CURRENT" | "DAYS_1_30" | "DAYS_31_60" | "DAYS_61_90" | "DAYS_90_PLUS";
+export type AgeBucket =
+  "CURRENT" | "DAYS_1_30" | "DAYS_31_60" | "DAYS_61_90" | "DAYS_90_PLUS";
 
 export interface DatedAmount {
   sourceId: string;
@@ -56,7 +57,10 @@ function dateToDay(value: string): number {
     throw new Error("Expected YYYY-MM-DD business date");
   }
   const ms = Date.parse(`${value}T00:00:00Z`);
-  if (!Number.isFinite(ms) || new Date(ms).toISOString().slice(0, 10) !== value) {
+  if (
+    !Number.isFinite(ms) ||
+    new Date(ms).toISOString().slice(0, 10) !== value
+  ) {
     throw new Error("Invalid business date");
   }
   return Math.floor(ms / DAY_MS);
@@ -106,8 +110,12 @@ export function debtorAgeing(
     if (due < issued) throw new Error("Due date precedes issue date");
 
     const seenEvents = new Set<string>();
-    for (const event of [...invoice.receiptAllocations, ...invoice.creditNotes]) {
-      if (!event.sourceId.trim()) throw new Error("Allocation source ID required");
+    for (const event of [
+      ...invoice.receiptAllocations,
+      ...invoice.creditNotes,
+    ]) {
+      if (!event.sourceId.trim())
+        throw new Error("Allocation source ID required");
       dateToDay(event.effectiveDate);
       amount(event.cents, "allocation");
       if (seenEvents.has(event.sourceId)) {
@@ -137,16 +145,23 @@ export function debtorAgeing(
         debtorId: invoice.debtorId,
         grossOutstandingCents: 0,
         overdueCents: 0,
-        buckets: Object.fromEntries(BUCKETS.map((key) => [key, 0])) as Record<AgeBucket, number>,
+        buckets: Object.fromEntries(BUCKETS.map((key) => [key, 0])) as Record<
+          AgeBucket,
+          number
+        >,
         paymentsLast30DaysCents: 0,
         paymentsPrevious30DaysCents: 0,
         invoices: [],
       };
       byDebtor.set(invoice.debtorId, group);
     }
-    group.grossOutstandingCents = sum([group.grossOutstandingCents, outstandingCents]);
+    group.grossOutstandingCents = sum([
+      group.grossOutstandingCents,
+      outstandingCents,
+    ]);
     group.buckets[bucket] = sum([group.buckets[bucket], outstandingCents]);
-    if (daysPastDue > 0) group.overdueCents = sum([group.overdueCents, outstandingCents]);
+    if (daysPastDue > 0)
+      group.overdueCents = sum([group.overdueCents, outstandingCents]);
     for (const receipt of receipts) {
       const age = asOf - dateToDay(receipt.effectiveDate);
       if (age < 30) {
