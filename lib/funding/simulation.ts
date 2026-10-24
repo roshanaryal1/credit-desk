@@ -68,7 +68,11 @@ export function proposeSimulation(
   validCents(args.requestedCents);
   if (args.availability.simulationOnly !== true || !args.availability.sourceId.trim())
     throw new Error("Only sourced synthetic availability is supported");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(args.availability.asOfDate))
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(args.availability.asOfDate) ||
+    Number.isNaN(Date.parse(`${args.availability.asOfDate}T00:00:00Z`)) ||
+    new Date(`${args.availability.asOfDate}T00:00:00Z`).toISOString().slice(0,10) !== args.availability.asOfDate
+  )
     throw new Error("Business date required");
   if (!Number.isSafeInteger(args.availability.availableCents) ||
       args.availability.availableCents < args.requestedCents)
