@@ -76,9 +76,16 @@ describe("descriptive collections insights", () => {
     expect(() => collectionsInsights("2026-02-30", rows)).toThrow();
     expect(() =>
       collectionsInsights("2026-10-24", [
-        { ...rows[0]!, receiptAllocations: [
-          { sourceId: "too-much", effectiveDate: "2026-09-01", cents: 20_000 },
-        ] },
+        {
+          ...rows[0]!,
+          receiptAllocations: [
+            {
+              sourceId: "too-much",
+              effectiveDate: "2026-09-01",
+              cents: 20_000,
+            },
+          ],
+        },
       ]),
     ).toThrow(/exceed/);
   });
@@ -87,7 +94,9 @@ describe("descriptive collections insights", () => {
     expect(collectionsInsights("2026-10-24", [...rows].reverse())).toEqual(
       collectionsInsights("2026-10-24", rows),
     );
-    const empty = [{ ...rows[0]!, debtorId: "new", receiptAllocations: [], creditNotes: [] }];
+    const empty = [
+      { ...rows[0]!, debtorId: "new", receiptAllocations: [], creditNotes: [] },
+    ];
     expect(collectionsInsights("2026-10-24", empty)[0]).toMatchObject({
       cashSettledInvoiceCount: 0,
       meanDaysToCashSettlement: null,
