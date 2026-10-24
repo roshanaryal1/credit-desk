@@ -45,7 +45,10 @@ function instant(value: string): number {
   const millis = Date.parse(value);
   if (!Number.isFinite(millis)) throw new Error("Invalid observed instant");
   const normalised = value.includes(".")
-    ? value.replace(/\.(\d{1,3})Z$/, (_, digits: string) => `.${digits.padEnd(3, "0")}Z`)
+    ? value.replace(
+        /\.(\d{1,3})Z$/,
+        (_, digits: string) => `.${digits.padEnd(3, "0")}Z`,
+      )
     : value.replace(/Z$/, ".000Z");
   if (new Date(millis).toISOString() !== normalised) {
     throw new Error("Invalid observed instant");
@@ -57,10 +60,14 @@ function check<T>(r: SourceObservation<T>): void {
   if (!["ACCOUNTING", "BANK"].includes(r.sourceKind)) {
     throw new Error("Unsupported source kind");
   }
-  if (![r.connectionId, r.clientId, r.eventId, r.entityId].every(
-    (value) => typeof value === "string" && value.trim().length > 0,
-  )) {
-    throw new Error("Source, client, event and entity identifiers are required");
+  if (
+    ![r.connectionId, r.clientId, r.eventId, r.entityId].every(
+      (value) => typeof value === "string" && value.trim().length > 0,
+    )
+  ) {
+    throw new Error(
+      "Source, client, event and entity identifiers are required",
+    );
   }
   if (!businessDate(r.effectiveDate)) {
     throw new Error("Invalid effective business date");
@@ -84,12 +91,7 @@ function stable(value: unknown): string {
 }
 
 function key(r: SourceObservation<unknown>): string {
-  return JSON.stringify([
-    r.sourceKind,
-    r.connectionId,
-    r.clientId,
-    r.eventId,
-  ]);
+  return JSON.stringify([r.sourceKind, r.connectionId, r.clientId, r.eventId]);
 }
 
 function order<T>(a: SourceObservation<T>, b: SourceObservation<T>): number {
@@ -118,7 +120,9 @@ export function reconcileObservations<T>(
     const identity = key(observation);
     const prior = seen.get(identity);
     if (prior && stable(prior) !== stable(observation)) {
-      throw new Error(`Conflicting persisted source event ${observation.eventId}`);
+      throw new Error(
+        `Conflicting persisted source event ${observation.eventId}`,
+      );
     }
     seen.set(identity, observation);
   }
@@ -153,7 +157,8 @@ export function knownSnapshotAsOf<T>(
   knowledgeCutoff: string,
   clientId: string,
 ): SourceObservation<T>[] {
-  if (!businessDate(businessAsOf)) throw new Error("Invalid as-of business date");
+  if (!businessDate(businessAsOf))
+    throw new Error("Invalid as-of business date");
   const cutoff = instant(knowledgeCutoff);
   const latest = new Map<string, SourceObservation<T>>();
   for (const observation of [...observations].sort(order)) {
@@ -189,10 +194,15 @@ export function sourceHealth(
   if (lastSuccessUtc === null && lastFailureUtc === null) return "UNKNOWN";
   const success = lastSuccessUtc === null ? null : instant(lastSuccessUtc);
   const failure = lastFailureUtc === null ? null : instant(lastFailureUtc);
-  if ((success !== null && success > now) || (failure !== null && failure > now)) {
+  if (
+    (success !== null && success > now) ||
+    (failure !== null && failure > now)
+  ) {
     throw new Error("Source health cannot include future events");
   }
-  if (failure !== null && (success === null || failure >= success)) return "ERROR";
-  if (success === null || now - success > maxAgeMinutes * 60_000) return "STALE";
+  if (failure !== null && (success === null || failure >= success))
+    return "ERROR";
+  if (success === null || now - success > maxAgeMinutes * 60_000)
+    return "STALE";
   return "FRESH";
 }
