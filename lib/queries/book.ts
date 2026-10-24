@@ -142,6 +142,14 @@ export async function getBatch(batchId: string) {
     };
   });
 
+  // Analysts work the riskiest invoices first.
+  const rank = { HIGH_RISK: 0, FLAGGED: 1, CLEAR: 2 } as const;
+  rows.sort(
+    (a, b) =>
+      rank[a.status] - rank[b.status] ||
+      a.invoiceNumber.localeCompare(b.invoiceNumber),
+  );
+
   const faceCents = rows.reduce((s, r) => s + r.amountCents, 0);
   const flaggedCents = rows
     .filter((r) => r.status !== "CLEAR")

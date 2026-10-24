@@ -10,6 +10,7 @@ import { DeadlineExceeded, type LlmClient } from "./llm";
 import {
   PROMPT_VERSION,
   SYSTEM_PROMPT,
+  incidentUserPrompt,
   invoiceUserPrompt,
   retryPrompt,
 } from "./prompts";
@@ -44,16 +45,43 @@ export interface RunOptions {
 const defaultLog = (line: Record<string, unknown>) =>
   console.log(JSON.stringify(line));
 
+interface Subject {
+  type: "INVOICE" | "INCIDENT";
+  id: string;
+  clientId: string;
+  asOf: string;
+  userPrompt: string;
+}
+
+async function nextRunId(db: Db, type: Subject["type"], id: string) {
+  const [prior] = await db
+    .select({ n: count() })
+    .from(t.agentRuns)
+    .where(
+      and(eq(t.agentRuns.subjectType, type), eq(t.agentRuns.subjectId, id)),
+    );
+  // The count keeps ids readable; the random suffix keeps concurrent runs
+  // for the same subject from colliding.
+  return `run_${id}_${(prior?.n ?? 0) + 1}_${crypto.randomUUID().slice(0, 6)}`;
+}
+
+const skipped = (runId: string): RunOutcome => ({
+  runId,
+  status: "SKIPPED",
+  attempts: 0,
+  toolCalls: 0,
+  tokensIn: 0,
+  tokensOut: 0,
+  latencyMs: 0,
+  errors: [],
+});
+
 export async function runAgentForInvoice(
   db: Db,
   llm: LlmClient,
   invoiceId: string,
   opts: RunOptions,
 ): Promise<RunOutcome> {
-  const now = opts.now ?? Date.now;
-  const log = opts.log ?? defaultLog;
-  const started = now();
-
   const [subject] = await db
     .select({ invoice: t.invoices, submittedDate: t.batches.submittedDate })
     .from(t.invoices)
@@ -70,43 +98,18 @@ export async function runAgentForInvoice(
       ),
     )
     .orderBy(asc(t.findings.checkId));
-
-  const [prior] = await db
-    .select({ n: count() })
-    .from(t.agentRuns)
-    .where(
-      and(
-        eq(t.agentRuns.subjectType, "INVOICE"),
-        eq(t.agentRuns.subjectId, invoiceId),
-      ),
-    );
-  // The count keeps ids readable; the random suffix keeps concurrent runs
-  // for the same invoice from colliding.
-  const runId = `run_${invoiceId}_${(prior?.n ?? 0) + 1}_${crypto.randomUUID().slice(0, 6)}`;
-
-  if (findingRows.length === 0) {
-    // Clear invoices never go to the agent.
-    return {
-      runId,
-      status: "SKIPPED",
-      attempts: 0,
-      toolCalls: 0,
-      tokensIn: 0,
-      tokensOut: 0,
-      latencyMs: 0,
-      errors: [],
-    };
-  }
-
-  const tools = new ToolExecutor(db, {
-    clientId: subject.invoice.clientId,
-    asOf: subject.submittedDate,
-  });
-  const messages: ChatCompletionMessageParam[] = [
-    { role: "system", content: SYSTEM_PROMPT },
+  // Clear invoices never go to the agent.
+  if (findingRows.length === 0)
+    return skipped(await nextRunId(db, "INVOICE", invoiceId));
+  return runAgentLoop(
+    db,
+    llm,
     {
-      role: "user",
-      content: invoiceUserPrompt({
+      type: "INVOICE",
+      id: invoiceId,
+      clientId: subject.invoice.clientId,
+      asOf: subject.submittedDate,
+      userPrompt: invoiceUserPrompt({
         invoiceId,
         debtorId: subject.invoice.debtorId,
         submittedDate: subject.submittedDate,
@@ -117,6 +120,60 @@ export async function runAgentForInvoice(
         })),
       }),
     },
+    opts,
+  );
+}
+
+/** Explains a High-severity Portfolio Watch incident (SPEC 8). */
+export async function runAgentForIncident(
+  db: Db,
+  llm: LlmClient,
+  incidentId: string,
+  opts: RunOptions,
+): Promise<RunOutcome> {
+  const [incident] = await db
+    .select()
+    .from(t.incidents)
+    .where(eq(t.incidents.id, incidentId));
+  if (!incident) throw new Error(`incident ${incidentId} not found`);
+  if (incident.severity !== "HIGH")
+    return skipped(await nextRunId(db, "INCIDENT", incidentId));
+  return runAgentLoop(
+    db,
+    llm,
+    {
+      type: "INCIDENT",
+      id: incidentId,
+      clientId: incident.clientId,
+      asOf: incident.lastDetectedDate,
+      userPrompt: incidentUserPrompt({
+        incidentId,
+        ruleId: incident.ruleId,
+        firstDetectedDate: incident.firstDetectedDate,
+        asOf: incident.lastDetectedDate,
+      }),
+    },
+    opts,
+  );
+}
+
+async function runAgentLoop(
+  db: Db,
+  llm: LlmClient,
+  subject: Subject,
+  opts: RunOptions,
+): Promise<RunOutcome> {
+  const now = opts.now ?? Date.now;
+  const log = opts.log ?? defaultLog;
+  const started = now();
+  const runId = await nextRunId(db, subject.type, subject.id);
+  const tools = new ToolExecutor(db, {
+    clientId: subject.clientId,
+    asOf: subject.asOf,
+  });
+  const messages: ChatCompletionMessageParam[] = [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: subject.userPrompt },
   ];
 
   const deadline = started + AGENT_LIMITS.runBudgetMs;
@@ -211,12 +268,15 @@ export async function runAgentForInvoice(
         : (err as Error).message,
     ];
   }
-  // A provider-side tool validation failure (the model called a tool the
-  // request did not allow) counts as a failed attempt, retried once.
+  // A provider-side rejection of malformed model output (an undeclared tool,
+  // arguments that do not match the schema, or unparseable output) counts as
+  // a failed attempt and is retried once.
   if (
     status === "ERROR" &&
     attempts < 2 &&
-    /tool call validation failed/i.test(errors[0] ?? "")
+    /tool call validation failed|parsing failed|did not match schema/i.test(
+      errors[0] ?? "",
+    )
   ) {
     attempts++;
     messages.push({
@@ -253,8 +313,8 @@ export async function runAgentForInvoice(
   await db.transaction(async (tx) => {
     await tx.insert(t.agentRuns).values({
       id: runId,
-      subjectType: "INVOICE",
-      subjectId: invoiceId,
+      subjectType: subject.type,
+      subjectId: subject.id,
       provider: llm.provider,
       model: llm.model,
       promptVersion: PROMPT_VERSION,
@@ -265,6 +325,7 @@ export async function runAgentForInvoice(
       tokensIn,
       tokensOut,
       latencyMs,
+      asOfDate: subject.asOf,
     });
     const value = result?.value;
     if (value) {
@@ -289,7 +350,8 @@ export async function runAgentForInvoice(
   log({
     event: "agent_run",
     runId,
-    invoiceId,
+    subjectType: subject.type,
+    subjectId: subject.id,
     provider: llm.provider,
     model: llm.model,
     promptVersion: PROMPT_VERSION,

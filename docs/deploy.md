@@ -35,13 +35,19 @@ in `.env.local`):
 export DATABASE_URL="postgres://..."      # from the Neon dashboard
 npm run db:migrate
 npm run seed -- --target=production       # data, checks, 90 days of watch runs
-npm run precompute                        # about a minute per flagged invoice
+npm run precompute                        # about a minute per item; see the note below
 npm run simulate                          # simulated agreement history
 unset DATABASE_URL
 ```
 
 `seed` refuses to reset a database that holds live decisions unless `--force`
 is passed.
+
+Groq's free tier caps `openai/gpt-oss-120b` at 200,000 tokens a day, about 28
+explanations. If the precompute stops with rate-limit errors, either rerun it
+the next day (it resumes) or finish with `LLM_MODEL=openai/gpt-oss-20b npm run
+precompute`. Each run records the model it used. Keep the production key's
+daily budget free on demo day so the Re-run button works.
 
 ## 4. Deploy and smoke test
 

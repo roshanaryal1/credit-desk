@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, desc, eq, lte } from "drizzle-orm";
+import { and, asc, desc, eq, lte } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -52,10 +52,23 @@ export async function incidentDetail(incidentId: string, asOf: string) {
     .from(t.incidentEvents)
     .where(eq(t.incidentEvents.incidentId, incidentId))
     .orderBy(asc(t.incidentEvents.occurredAt));
+  const [explained] = await db
+    .select({ explanation: t.explanations, run: t.agentRuns })
+    .from(t.explanations)
+    .innerJoin(t.agentRuns, eq(t.explanations.agentRunId, t.agentRuns.id))
+    .where(
+      and(
+        eq(t.agentRuns.subjectType, "INCIDENT"),
+        eq(t.agentRuns.subjectId, incidentId),
+      ),
+    )
+    .orderBy(desc(t.agentRuns.createdAt))
+    .limit(1);
   return {
     incident,
     latestDetection: visible[0] ?? null,
     detectionCount: visible.length,
     events,
+    explained: explained ?? null,
   };
 }

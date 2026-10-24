@@ -78,22 +78,41 @@ async function main() {
     ? (() => {
         const data = JSON.parse(readFileSync(runsFile, "utf8")) as {
           promptVersion: string;
-          runs: StoredRun[];
+          runs: (StoredRun & {
+            subjectId: string;
+            promptVersion: string;
+            model: string;
+            createdAt: string;
+          })[];
           explanations: StoredExplanation[];
         };
+        // Final view: the latest run per item on the current prompt version.
+        const current = data.runs.filter(
+          (r) =>
+            r.promptVersion === data.promptVersion &&
+            (r as { configVersion?: string }).configVersion === CONFIG_VERSION,
+        );
+        const latest = new Map<string, (typeof current)[number]>();
+        for (const r of current) {
+          const prev = latest.get(r.subjectId);
+          if (!prev || r.createdAt > prev.createdAt) latest.set(r.subjectId, r);
+        }
+        const finalRuns = [...latest.values()];
+        const byModel = Object.fromEntries(
+          [...new Set(finalRuns.map((r) => r.model))].map((m) => [
+            m,
+            agentMetrics(
+              finalRuns.filter((r) => r.model === m),
+              data.explanations,
+            ),
+          ]),
+        );
         return {
           promptVersion: data.promptVersion,
-          // Only runs on the current prompt version measure the current prompt.
-          ...agentMetrics(
-            data.runs.filter(
-              (r) =>
-                (r as { promptVersion?: string }).promptVersion ===
-                  data.promptVersion &&
-                (r as { configVersion?: string }).configVersion ===
-                  CONFIG_VERSION,
-            ),
-            data.explanations,
-          ),
+          ...agentMetrics(finalRuns, data.explanations),
+          byModel,
+          allRuns: agentMetrics(data.runs, data.explanations),
+          note: "Headline figures use the latest run per item on the current prompt version. allRuns includes every attempt, including runs stopped by the provider's daily token cap and runs from earlier prompt versions.",
         };
       })()
     : null;
