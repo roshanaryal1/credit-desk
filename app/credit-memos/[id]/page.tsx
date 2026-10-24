@@ -36,6 +36,18 @@ async function MemoReview({ params }: { params: Promise<{ id: string }> }) {
           ← Credit assessment drafts
         </Link>
       </div>
+      <div className="flex flex-wrap gap-2 print:hidden">
+        <a
+          href={`/credit-memos/${encodeURIComponent(id)}/export`}
+          download
+          className="border-border bg-card hover:bg-accent/50 focus-visible:ring-ring inline-flex items-center rounded-sm border px-4 py-2 text-sm font-semibold focus-visible:ring-2"
+        >
+          Download evidence-bound draft (.md) →
+        </a>
+        <p className="text-muted-foreground self-center text-xs">
+          Synthetic, unsigned, with mandatory missing-evidence checklist.
+        </p>
+      </div>
       <PageHeader
         title="Credit assessment"
         description="Source-backed draft · Analyst verification required before any recommendation"
