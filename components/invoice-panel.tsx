@@ -1,6 +1,12 @@
-import { DecisionChip, SeverityChip, StatusChip } from "@/components/chips";
+import {
+  DecisionChip,
+  RecommendationChip,
+  SeverityChip,
+  StatusChip,
+} from "@/components/chips";
 import { DecisionForm } from "@/components/decision-form";
 import { ModeSwitch } from "@/components/mode-switch";
+import { RerunButton } from "@/components/rerun-button";
 import { checkLabel } from "@/lib/checks/labels";
 import { businessDate, instant, money } from "@/lib/format";
 import { getInvoiceReview } from "@/lib/queries/invoice";
@@ -149,7 +155,8 @@ export async function InvoicePanel({
                 </div>
               ) : null}
               <p className="text-sm">
-                Agent suggests <DecisionChip decision={exp.recommendation} />{" "}
+                Agent suggests{" "}
+                <RecommendationChip recommendation={exp.recommendation} />{" "}
                 <span className="text-muted-foreground">
                   (risk {exp.riskLevel.toLowerCase()})
                 </span>
@@ -177,6 +184,7 @@ export async function InvoicePanel({
               Explanation unavailable, see the raw findings.
             </p>
           )}
+          {!data.withheld ? <RerunButton invoiceId={invoice.id} /> : null}
         </section>
       ) : null}
 

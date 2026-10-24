@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
-import { Chip, DecisionChip, SeverityChip } from "@/components/chips";
+import {
+  Chip,
+  DecisionChip,
+  RecommendationChip,
+  SeverityChip,
+} from "@/components/chips";
 import { Loading, PageHeader, Section } from "@/components/page";
 import { TrustTabs } from "@/components/trust-tabs";
 import { checkLabel } from "@/lib/checks/labels";
@@ -153,8 +158,8 @@ async function Replay({
             </ul>
             <p>
               Suggested{" "}
-              <DecisionChip
-                decision={frozen.explanation.explanation.recommendation}
+              <RecommendationChip
+                recommendation={frozen.explanation.explanation.recommendation}
               />
               , {frozen.explanation.run.model}, prompt{" "}
               {frozen.explanation.run.promptVersion}.
