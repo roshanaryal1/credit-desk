@@ -40,9 +40,7 @@ describe("NZ-local historic incident status", () => {
   });
 
   it("fails closed for malformed dates or timestamps", () => {
-    expect(() => incidentEventsAsOf([], "2026-02-30")).toThrow(
-      /business date/,
-    );
+    expect(() => incidentEventsAsOf([], "2026-02-30")).toThrow(/business date/);
     expect(() => nzBusinessDateAt(new Date("not an instant"))).toThrow(
       /instant/,
     );
