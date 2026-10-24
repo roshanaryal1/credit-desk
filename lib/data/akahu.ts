@@ -17,7 +17,11 @@ import {
 export class AkahuBankFeed implements BankFeedSource {
   readonly name = "akahu";
 
-  async receipts(): Promise<BankReceipt[]> {
+  async receipts(
+    _clientId: string,
+    _from: string,
+    _to: string,
+  ): Promise<BankReceipt[]> {
     throw new SourceNotConfiguredError("Akahu");
   }
 }
