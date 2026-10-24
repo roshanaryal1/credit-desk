@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 
+import { DEMO_PERSONA_KEYS, DEMO_PERSONAS } from "@/lib/demo-personas";
+
 import { loginAction, type LoginState } from "./actions";
 
 export function LoginForm({ next }: { next: string }) {
@@ -12,6 +14,38 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next} />
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">Explore Credit Desk as</legend>
+        <div className="grid gap-2">
+          {DEMO_PERSONA_KEYS.map((key) => (
+            <label
+              key={key}
+              className="border-border bg-card hover:bg-accent/40 has-[:checked]:border-primary has-[:checked]:bg-accent/50 flex cursor-pointer items-start gap-3 rounded-md border p-3"
+            >
+              <input
+                type="radio"
+                name="persona"
+                value={key}
+                defaultChecked={key === "ANALYST"}
+                required
+                className="accent-primary mt-1"
+              />
+              <span>
+                <span className="block text-sm font-semibold">
+                  {DEMO_PERSONAS[key].label}
+                </span>
+                <span className="text-muted-foreground block text-xs">
+                  {DEMO_PERSONAS[key].description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Personas are self-selected demonstrations, not verified identities.
+          Only fictional data is permitted.
+        </p>
+      </fieldset>
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className="text-sm font-medium">
           Your name

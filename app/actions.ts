@@ -15,6 +15,7 @@ import { takeAll } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
 import * as t from "@/lib/db/schema";
 import { MODE_COOKIE, currentAnalyst } from "@/lib/session";
+import { canPerformDemoWrite } from "@/lib/demo-session";
 import { DecisionInputSchema, saveDecision } from "@/lib/trust/decide";
 
 export interface DecideState {
@@ -29,6 +30,12 @@ export async function decideAction(
   _prev: DecideState,
   form: FormData,
 ): Promise<DecideState> {
+  if (!(await canPerformDemoWrite())) {
+    return {
+      status: "error",
+      message: "Only the credit analyst demo can record synthetic decisions.",
+    };
+  }
   const parsed = DecisionInputSchema.safeParse({
     invoiceId: form.get("invoiceId"),
     decision: form.get("decision"),
@@ -59,6 +66,7 @@ export async function decideAction(
 }
 
 export async function setModeAction(mode: "SHADOW" | "ASSIST") {
+  if (!(await canPerformDemoWrite())) return;
   const jar = await cookies();
   jar.set(MODE_COOKIE, mode === "ASSIST" ? "ASSIST" : "SHADOW", {
     httpOnly: true,
@@ -85,6 +93,9 @@ export async function incidentAction(
   _prev: IncidentState,
   form: FormData,
 ): Promise<IncidentState> {
+  if (!(await canPerformDemoWrite())) {
+    return { status: "error", message: "This demo perspective is read-only." };
+  }
   const parsed = IncidentActionSchema.safeParse({
     incidentId: form.get("incidentId"),
     action: form.get("action"),
@@ -167,6 +178,9 @@ const HOUR = 60 * 60 * 1000;
 export async function rerunAgentAction(
   invoiceId: string,
 ): Promise<{ ok: boolean; message: string }> {
+  if (!(await canPerformDemoWrite())) {
+    return { ok: false, message: "This demo perspective cannot run agents." };
+  }
   if (
     typeof invoiceId !== "string" ||
     !/^inv_[a-z0-9_]{1,40}$/i.test(invoiceId)

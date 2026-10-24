@@ -3,7 +3,8 @@ import { Public_Sans } from "next/font/google";
 
 import { Suspense } from "react";
 
-import { Nav, NavFallback } from "@/components/nav";
+import { NavFallback } from "@/components/nav";
+import { PersonaNav } from "@/components/persona-nav";
 import { SignOut } from "@/components/sign-out";
 import { THEME_SCRIPT, ThemeToggle } from "@/components/theme-toggle";
 
@@ -51,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </p>
             </div>
             <Suspense fallback={<NavFallback />}>
-              <Nav />
+              <PersonaNav />
             </Suspense>
             <div className="flex flex-wrap items-center md:hidden">
               <ThemeToggle />

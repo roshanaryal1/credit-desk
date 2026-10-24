@@ -12,6 +12,11 @@ import {
   signSession,
 } from "@/lib/auth";
 import { getDb } from "@/lib/db/client";
+import {
+  DEMO_PERSONA_KEYS,
+  DEMO_PERSONAS,
+  demoRouteAllowed,
+} from "@/lib/demo-personas";
 import { MODE_COOKIE } from "@/lib/session";
 import { takeAll } from "@/lib/rate-limit";
 import { clientIp, safeNext } from "@/lib/request";
@@ -20,6 +25,7 @@ const LoginSchema = z.object({
   password: z.string().min(1).max(200),
   name: z.string().trim().min(2, "Enter a name for the audit log.").max(60),
   next: z.string().max(500).optional(),
+  persona: z.enum(DEMO_PERSONA_KEYS),
 });
 
 export interface LoginState {
@@ -37,6 +43,7 @@ export async function loginAction(
     password: form.get("password"),
     name: form.get("name"),
     next: form.get("next") ?? undefined,
+    persona: form.get("persona"),
   });
   if (!parsed.success)
     return { message: parsed.error.issues[0]?.message ?? "Check the form." };
@@ -64,6 +71,7 @@ export async function loginAction(
     {
       sid: crypto.randomUUID(),
       name: parsed.data.name,
+      persona: parsed.data.persona,
       exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
     },
     gate.secret,
@@ -78,7 +86,13 @@ export async function loginAction(
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
   });
-  redirect(safeNext(parsed.data.next));
+  const requested = safeNext(parsed.data.next);
+  const path = new URL(requested, "https://demo.invalid").pathname;
+  redirect(
+    demoRouteAllowed(parsed.data.persona, path)
+      ? requested
+      : DEMO_PERSONAS[parsed.data.persona].home,
+  );
 }
 
 export async function logoutAction() {
