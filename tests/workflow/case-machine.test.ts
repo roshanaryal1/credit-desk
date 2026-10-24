@@ -148,13 +148,7 @@ describe("maker-checker case machine", () => {
   it("requires substantive checker reasons and allows controlled return", () => {
     const s = submitted();
     expect(() =>
-      transitionCase(
-        s.next,
-        { kind: "HOLD", reason: "okay" },
-        checker,
-        3,
-        now,
-      ),
+      transitionCase(s.next, { kind: "HOLD", reason: "okay" }, checker, 3, now),
     ).toThrow(/reason/);
     const returned = transitionCase(
       s.next,
