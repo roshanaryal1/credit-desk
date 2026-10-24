@@ -7,7 +7,8 @@ import * as t from "@/lib/db/schema";
 import { daysBetween } from "@/lib/dates";
 import { DEMO_TODAY } from "@/lib/demo";
 
-export const CASE_DEMO_TENANT = "creditdesk-synthetic";
+export { CASE_DEMO_TENANT } from "@/lib/queue/demo-case-tenant";
+import { CASE_DEMO_TENANT } from "@/lib/queue/demo-case-tenant";
 export type CaseViewFilter = "all" | "unassigned" | "checker" | "overdue";
 export const CASE_FILTERS: CaseViewFilter[] = [
   "all", "unassigned", "checker", "overdue",
