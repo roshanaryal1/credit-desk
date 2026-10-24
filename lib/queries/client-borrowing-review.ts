@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, inArray, lte } from "drizzle-orm";
+import { and, inArray, lte } from "drizzle-orm";
 
 import {
   borrowingBase,
