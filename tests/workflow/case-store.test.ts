@@ -158,9 +158,13 @@ describe("persisted case and independent checker controls", () => {
       actorId: "checker-b",
     });
     await expect(
-      db.delete(t.creditCaseEvents).where(eq(t.creditCaseEvents.caseId, "case-one")),
+      db
+        .delete(t.creditCaseEvents)
+        .where(eq(t.creditCaseEvents.caseId, "case-one")),
     ).rejects.toThrow();
-    expect(await creditCaseHistory(db, "case-one", manager, now)).toHaveLength(5);
+    expect(await creditCaseHistory(db, "case-one", manager, now)).toHaveLength(
+      5,
+    );
   }, 60_000);
 
   it("rejects stale transitions and records no duplicate decision events", async () => {
@@ -234,12 +238,7 @@ describe("persisted case and independent checker controls", () => {
       ),
     ).rejects.toThrow(/TENANT_BOUNDARY/);
     await expect(
-      readCreditCase(
-        db,
-        "case-one",
-        { ...trusted, clientGrants: [] },
-        now,
-      ),
+      readCreditCase(db, "case-one", { ...trusted, clientGrants: [] }, now),
     ).rejects.toThrow(/CLIENT_BOUNDARY/);
     await expect(
       readCreditCase(
