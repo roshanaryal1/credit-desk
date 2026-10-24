@@ -12,7 +12,9 @@ export default function CreditMemoDetail({
   params,
 }: PageProps<"/credit-memos/[id]">) {
   return (
-    <Suspense fallback={<Loading label="Preparing evidence-bounded draft..." />}>
+    <Suspense
+      fallback={<Loading label="Preparing evidence-bounded draft..." />}
+    >
       <MemoReview params={params} />
     </Suspense>
   );
@@ -105,13 +107,20 @@ async function MemoReview({ params }: { params: Promise<{ id: string }> }) {
           <div className="border-border mt-3 overflow-x-auto rounded-sm border">
             <table className="w-full min-w-[420px] text-left text-xs">
               <caption className="sr-only">
-                Evidence IDs and data sources supporting draft financial statements
+                Evidence IDs and data sources supporting draft financial
+                statements
               </caption>
               <thead className="bg-muted/40 text-muted-foreground border-b">
                 <tr>
-                  <th scope="col" className="px-3 py-3 font-medium">Reference</th>
-                  <th scope="col" className="px-3 py-3 font-medium">Source</th>
-                  <th scope="col" className="px-3 py-3 font-medium">As of</th>
+                  <th scope="col" className="px-3 py-3 font-medium">
+                    Reference
+                  </th>
+                  <th scope="col" className="px-3 py-3 font-medium">
+                    Source
+                  </th>
+                  <th scope="col" className="px-3 py-3 font-medium">
+                    As of
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-border divide-y">
@@ -131,10 +140,9 @@ async function MemoReview({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </section>
         <footer className="border-border text-muted-foreground mt-8 border-t pt-5 text-xs leading-relaxed">
-          Synthetic-data demonstration, version {memo.version}. No verified
-          bank feed, external credit approval, legal commitment, lender
-          sign-off, or permission to release funds is implied. Signed off by:
-          none.
+          Synthetic-data demonstration, version {memo.version}. No verified bank
+          feed, external credit approval, legal commitment, lender sign-off, or
+          permission to release funds is implied. Signed off by: none.
         </footer>
       </article>
     </div>
