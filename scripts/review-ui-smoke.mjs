@@ -141,7 +141,9 @@ try {
         !text.includes("facility:cli_0001:") ||
         !text.includes("funding:cli_0001:")
       ) {
-        throw new Error("Evidence-backed unsigned memo download was not validated");
+        throw new Error(
+          "Evidence-backed unsigned memo download was not validated",
+        );
       }
       results.push({
         viewport: label,
