@@ -450,7 +450,6 @@ export const rateLimitEvents = pgTable(
   (t) => [index("rate_limit_key_idx").on(t.key, t.createdAt)],
 );
 
-
 // Provider ingestion journal. Records are immutable once accepted.
 export const ingestionEvents = pgTable(
   "ingestion_events",
@@ -458,7 +457,9 @@ export const ingestionEvents = pgTable(
     id: text("id").primaryKey(),
     sourceKind: text("source_kind").notNull(),
     connectionId: text("connection_id").notNull(),
-    clientId: text("client_id").notNull().references(() => clients.id),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
     eventId: text("event_id").notNull(),
     entityId: text("entity_id").notNull(),
     effectiveDate: businessDate("effective_date").notNull(),
@@ -468,9 +469,16 @@ export const ingestionEvents = pgTable(
   },
   (t) => [
     uniqueIndex("ingestion_event_identity_uq").on(
-      t.sourceKind, t.connectionId, t.clientId, t.eventId,
+      t.sourceKind,
+      t.connectionId,
+      t.clientId,
+      t.eventId,
     ),
-    index("ingestion_client_asof_idx").on(t.clientId, t.effectiveDate, t.observedAt),
+    index("ingestion_client_asof_idx").on(
+      t.clientId,
+      t.effectiveDate,
+      t.observedAt,
+    ),
   ],
 );
 
@@ -480,15 +488,15 @@ export const ingestionCheckpoints = pgTable(
   {
     sourceKind: text("source_kind").notNull(),
     connectionId: text("connection_id").notNull(),
-    clientId: text("client_id").notNull().references(() => clients.id),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
     cursor: text("cursor"),
     lastSuccessAt: instant("last_success_at"),
     lastFailureAt: instant("last_failure_at"),
     updatedAt: instant("updated_at").notNull().defaultNow(),
   },
-  (t) => [
-    primaryKey({columns:[t.sourceKind,t.connectionId,t.clientId]}),
-  ],
+  (t) => [primaryKey({ columns: [t.sourceKind, t.connectionId, t.clientId] })],
 );
 
 // Evaluation only
