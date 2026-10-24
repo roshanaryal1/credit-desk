@@ -15,7 +15,9 @@ export default function CreditMemosPage() {
         title="Credit assessment drafts"
         description="Review verifiable synthetic facility facts before preparing a formal credit recommendation."
       />
-      <Suspense fallback={<Loading label="Loading synthetic relationships..." />}>
+      <Suspense
+        fallback={<Loading label="Loading synthetic relationships..." />}
+      >
         <DraftDirectory />
       </Suspense>
     </>
@@ -32,9 +34,10 @@ async function DraftDirectory() {
           Draft preparation / Assurance
         </p>
         <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-          These records are demonstration-only. Drafts contain only source-linked
-          amounts. Missing underwriting facts are left incomplete instead of
-          generated, and no memo is approved or sent from this screen.
+          These records are demonstration-only. Drafts contain only
+          source-linked amounts. Missing underwriting facts are left incomplete
+          instead of generated, and no memo is approved or sent from this
+          screen.
         </p>
       </div>
       <section aria-label="Synthetic clients with draft memo previews">
