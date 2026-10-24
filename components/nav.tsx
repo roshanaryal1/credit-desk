@@ -12,6 +12,7 @@ const GROUPS = [
       { href: "/", label: "Overview" },
       { href: "/batches", label: "Invoice Check" },
       { href: "/watch", label: "Portfolio Watch" },
+      { href: "/clients", label: "Clients" },
     ],
   },
   {
