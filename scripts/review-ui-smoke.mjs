@@ -125,6 +125,32 @@ try {
       });
       process.stdout.write(`OK ${label} ${item.route}: ${title}\n`);
     }
+    if (label === "desktop") {
+      const draft = await context.request.get(
+        origin + "/credit-memos/cli_0001/export",
+        { maxRedirects: 0 },
+      );
+      const text = await draft.text();
+      if (
+        draft.status() !== 200 ||
+        !draft.headers()["content-type"]?.includes("text/markdown") ||
+        !draft.headers()["content-disposition"]?.includes("attachment") ||
+        !text.includes("DRAFT — ANALYST REVIEW REQUIRED") ||
+        !text.includes("SYNTHETIC DATA ONLY") ||
+        !text.includes("Signed off by: NONE") ||
+        !text.includes("facility:cli_0001:") ||
+        !text.includes("funding:cli_0001:")
+      ) {
+        throw new Error("Evidence-backed unsigned memo download was not validated");
+      }
+      results.push({
+        viewport: label,
+        route: "/credit-memos/cli_0001/export",
+        status: draft.status(),
+        heading: "Unsigned evidence-bound Markdown export",
+        screenshot: null,
+      });
+    }
     await context.close();
   }
 
@@ -153,6 +179,7 @@ try {
     "/clients",
     "/audit",
     "/clients/cli_0002",
+    "/credit-memos/cli_0001/export",
   ]) {
     await clientPage.goto(origin + forbidden, {
       waitUntil: "domcontentloaded",
