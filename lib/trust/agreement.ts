@@ -22,12 +22,14 @@ export interface DecisionRecord {
 }
 
 export type ExclusionReason =
+  | "NOT_FLAGGED"
   | "ASSIST_MODE"
   | "EXPOSED_BEFORE_DECISION"
   | "REVISION"
   | "NO_VALID_EXPLANATION";
 
 export const EXCLUSION_LABELS: Record<ExclusionReason, string> = {
+  NOT_FLAGGED: "on clear invoices, where the agent does not run",
   ASSIST_MODE: "made in assist mode",
   EXPOSED_BEFORE_DECISION: "agent output seen before deciding",
   REVISION: "revision of an earlier decision",
@@ -39,6 +41,7 @@ export const asDecision = (r: Recommendation): Decision =>
   r === "REQUEST_INFO" ? "HOLD" : r;
 
 export function exclusionReason(d: DecisionRecord): ExclusionReason | null {
+  if (d.checks.length === 0) return "NOT_FLAGGED";
   if (d.mode !== "SHADOW") return "ASSIST_MODE";
   if (d.exposed) return "EXPOSED_BEFORE_DECISION";
   if (d.priorDecisions > 0) return "REVISION";
@@ -121,6 +124,7 @@ export interface AgreementReport {
 
 export function agreementReport(records: DecisionRecord[]): AgreementReport {
   const excluded: Record<ExclusionReason, number> = {
+    NOT_FLAGGED: 0,
     ASSIST_MODE: 0,
     EXPOSED_BEFORE_DECISION: 0,
     REVISION: 0,

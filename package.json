@@ -17,7 +17,9 @@
     "seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
     "precompute": "tsx --env-file-if-exists=.env.local scripts/precompute.ts",
     "simulate": "tsx --env-file-if-exists=.env.local scripts/simulate-decisions.ts",
-    "watch": "tsx --env-file-if-exists=.env.local scripts/watch.ts"
+    "watch": "tsx --env-file-if-exists=.env.local scripts/watch.ts",
+    "check:bundle": "node scripts/check-client-bundle.mjs",
+    "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

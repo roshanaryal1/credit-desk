@@ -1,12 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { cookies } from "next/headers";
 
 import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
+import { providerFromEnv } from "@/lib/agent/config";
+import { OpenAiCompatibleClient } from "@/lib/agent/llm";
+import { runAgentForInvoice } from "@/lib/agent/runner";
 import { getDb } from "@/lib/db/client";
+import { takeAll } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/request";
 import * as t from "@/lib/db/schema";
 import { MODE_COOKIE, currentAnalyst } from "@/lib/session";
 import { DecisionInputSchema, saveDecision } from "@/lib/trust/decide";
@@ -149,5 +155,61 @@ export async function incidentAction(
   return {
     status: "saved",
     message: parsed.data.action === "RESOLVED" ? "Resolved." : "Acknowledged.",
+  };
+}
+
+const HOUR = 60 * 60 * 1000;
+
+/**
+ * Re-runs the agent for one invoice (SPEC 11): 10 per hour per session, 10
+ * per hour per IP, and 200 per day across the app, counted in Postgres.
+ */
+export async function rerunAgentAction(
+  invoiceId: string,
+): Promise<{ ok: boolean; message: string }> {
+  if (
+    typeof invoiceId !== "string" ||
+    !/^inv_[a-z0-9_]{1,40}$/i.test(invoiceId)
+  ) {
+    return { ok: false, message: "That invoice id is not valid." };
+  }
+  const analyst = await currentAnalyst();
+  const ip = clientIp(await headers());
+  const db = await getDb();
+  const allowed = await takeAll(db, [
+    { key: `rerun:session:${analyst.sessionId}`, max: 10, windowMs: HOUR },
+    { key: `rerun:ip:${ip}`, max: 10, windowMs: HOUR },
+    { key: "rerun:global", max: 200, windowMs: 24 * HOUR },
+  ]);
+  if (!allowed)
+    return {
+      ok: false,
+      message:
+        "Re-run limit reached. The stored explanation is still shown; try again later.",
+    };
+  let llm: OpenAiCompatibleClient;
+  try {
+    llm = new OpenAiCompatibleClient(providerFromEnv());
+  } catch {
+    return {
+      ok: false,
+      message: "The agent is not configured on this deployment.",
+    };
+  }
+  const out = await runAgentForInvoice(db, llm, invoiceId, {
+    codeSha: CODE_SHA,
+  });
+  revalidatePath("/", "layout");
+  const messages: Record<string, string> = {
+    PASSED: "New explanation passed validation.",
+    FAILED:
+      "The new explanation failed validation twice and is not shown. The raw findings are unchanged.",
+    ERROR:
+      "The agent could not finish within its time budget. Try again shortly.",
+    SKIPPED: "This invoice has no findings, so the agent does not run on it.",
+  };
+  return {
+    ok: out.status === "PASSED",
+    message: messages[out.status] ?? out.status,
   };
 }

@@ -36,6 +36,7 @@ describe("eligibility", () => {
     expect(exclusionReason(rec({ explanationPassed: false }))).toBe(
       "NO_VALID_EXPLANATION",
     );
+    expect(exclusionReason(rec({ checks: [] }))).toBe("NOT_FLAGGED");
     expect(exclusionReason(rec({}))).toBeNull();
   });
 });
