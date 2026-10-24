@@ -8,9 +8,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const { chromium } = require(
-  process.env.PLAYWRIGHT_PACKAGE || "playwright",
-);
+const { chromium } = require(process.env.PLAYWRIGHT_PACKAGE || "playwright");
 
 const origin = process.env.REVIEW_URL || "http://127.0.0.1:3100";
 const password = process.env.DEMO_PASSWORD;
@@ -38,8 +36,21 @@ const results = [];
 const errors = [];
 try {
   for (const [label, viewport, capture] of [
-    ["desktop", { width: 1440, height: 900 }, new Set(routes.map((r) => r.name))],
-    ["mobile", { width: 390, height: 844 }, new Set(["workbench", "review-queue", "client-dossier", "credit-memo-draft"])],
+    [
+      "desktop",
+      { width: 1440, height: 900 },
+      new Set(routes.map((r) => r.name)),
+    ],
+    [
+      "mobile",
+      { width: 390, height: 844 },
+      new Set([
+        "workbench",
+        "review-queue",
+        "client-dossier",
+        "credit-memo-draft",
+      ]),
+    ],
   ]) {
     const context = await browser.newContext({
       viewport,
@@ -74,12 +85,21 @@ try {
       const heading = page.locator("h1").first();
       await heading.waitFor({ timeout: 15_000 });
       const title = (await heading.textContent())?.trim() ?? "";
-      if (!title || /application error|not found|internal server error/i.test(title)) {
+      if (
+        !title ||
+        /application error|not found|internal server error/i.test(title)
+      ) {
         throw new Error(`${label}: ${item.route} unexpected heading: ${title}`);
       }
       const html = await page.locator("body").innerText();
-      if (/Application error: a (client|server)-side exception has occurred/i.test(html)) {
-        throw new Error(`${label}: ${item.route} rendered an application exception`);
+      if (
+        /Application error: a (client|server)-side exception has occurred/i.test(
+          html,
+        )
+      ) {
+        throw new Error(
+          `${label}: ${item.route} rendered an application exception`,
+        );
       }
       let screenshot = null;
       if (capture.has(item.name)) {
@@ -90,7 +110,13 @@ try {
           animations: "disabled",
         });
       }
-      results.push({ viewport: label, route: item.route, status, heading: title, screenshot });
+      results.push({
+        viewport: label,
+        route: item.route,
+        status,
+        heading: title,
+        screenshot,
+      });
       process.stdout.write(`OK ${label} ${item.route}: ${title}\n`);
     }
     await context.close();
@@ -99,8 +125,15 @@ try {
   await browser.close();
   await fs.writeFile(
     path.join(screenshots, "results.json"),
-    JSON.stringify({ generatedAt: new Date().toISOString(), results, errors }, null, 2),
+    JSON.stringify(
+      { generatedAt: new Date().toISOString(), results, errors },
+      null,
+      2,
+    ),
   );
 }
-if (errors.length) throw new Error(`Browser runtime failures: ${errors.join("; ")}`);
-console.log(`Verified ${results.length} seeded application routes across desktop/mobile.`);
+if (errors.length)
+  throw new Error(`Browser runtime failures: ${errors.join("; ")}`);
+console.log(
+  `Verified ${results.length} seeded application routes across desktop/mobile.`,
+);
