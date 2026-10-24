@@ -1,0 +1,20 @@
+name: Temporary watch formatting report
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Format test for review
+        run: |
+          npx prettier --write tests/watch/as-of-events.test.ts
+          node -e 'const fs=require("fs");const p="tests/watch/as-of-events.test.ts";console.log("WATCH_FORMATTED "+JSON.stringify({path:p,content:fs.readFileSync(p,"utf8")}))'
