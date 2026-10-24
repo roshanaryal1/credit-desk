@@ -92,7 +92,10 @@ export function transitionCase(
   if (!actor.subjectId || !actor.clientIds.includes(current.clientId)) {
     throw new Error("Actor is not authorized for this client");
   }
-  if (!Number.isSafeInteger(expectedVersion) || expectedVersion !== current.version) {
+  if (
+    !Number.isSafeInteger(expectedVersion) ||
+    expectedVersion !== current.version
+  ) {
     throw new Error("Stale case version; reload before deciding");
   }
   if (
@@ -130,7 +133,10 @@ export function transitionCase(
 
     case "SUBMIT_FOR_CHECK":
       requireRole(actor, "ANALYST");
-      if (current.state !== "IN_REVIEW" || current.ownerId !== actor.subjectId) {
+      if (
+        current.state !== "IN_REVIEW" ||
+        current.ownerId !== actor.subjectId
+      ) {
         throw new Error("Only the current maker may submit an active case");
       }
       next.state = "CHECKER_REVIEW";
@@ -147,7 +153,9 @@ export function transitionCase(
         throw new Error("Case is not awaiting checker review");
       }
       if (!current.makerId || current.makerId === actor.subjectId) {
-        throw new Error("Maker and checker must be different verified identities");
+        throw new Error(
+          "Maker and checker must be different verified identities",
+        );
       }
       reason = reasoned(action.reason);
       next.checkerId = actor.subjectId;
