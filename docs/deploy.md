@@ -3,6 +3,17 @@
 Vercel hosts the app; Neon (through the Vercel Marketplace) holds the data.
 Each step below needs an account owner, so it is run by a person.
 
+## Fail-closed database requirement
+
+Hosted production requires `DATABASE_URL` for durable PostgreSQL.
+When absent, the application refuses database-backed reads rather than
+silently starting a separate ephemeral local PGlite database. Only the
+GitHub Actions disposable, `CI=true` local production-mode browser smoke
+enables an explicit `CREDIT_DESK_CI_PGLITE=1` exception. It is **not**
+permitted inside Vercel and must not be set for a hosted deployment.
+A Vercel build marked READY does not prove database migrations or seed
+completion; see the database preflight in draft #146.
+
 ## 1. Project and database
 
 1. On vercel.com, import the `credit-desk` repository. Framework: Next.js.
