@@ -38,8 +38,10 @@ matches #120 byte-for-byte and is included **once**.
 4. `/clients` → client — facility utilization, debtor mix, ageing and history.
    The receivables balance is different from the already-funded principal.
 5. `/watch` — portfolio incidents, original action/replay behavior.
-6. `/borrowing-base` — **illustrative four-invoice sample** and scenario.
-   It does **not** calculate drawable credit against the selected client.
+6. `/clients/cli_0001/borrowing-base` — **client-linked illustrative scenario**,
+   computed from the client's dated synthetic ledger and funded position.
+   It reconciles to Client 360 but is **not** signed-off drawable credit.
+   `/borrowing-base` remains a separate four-invoice worked example.
 7. `/credit-memos` → client memo — attributed seeded facility and funded
    balance facts, explicit missing underwriting evidence and no sign-off.
 8. `/trust`, `/audit` — prior shadow evaluation and audit trail.
@@ -57,8 +59,12 @@ NZD money amounts are integer cents in authoritative calculations.
       client; ensure any stale/missing data blocks "drawable" claims.
 - [ ] Verify security boundary, user identity and all authorizations. Current
       shared-password demo must **not** be marketed as real MFA/RBAC.
-- [ ] Screenshots at 1440px and 390px from a **running build**, plus keyboard,
-      focus, screen-reader and color-contrast checks.
+- [x] Authenticated local seeded UI smoke and real 1440px/390px screenshots
+      captured by the optional review Actions workflow (#139); its short-lived
+      artifact includes the route manifest. Browser execution is not a full
+      accessibility or security sign-off.
+- [ ] Manual review of the captured screens, keyboard focus, screen-reader
+      output and color-contrast checks.
 - [ ] Complete a five-case lender calculation/decision review; record owner,
       formula, expected result and actual outcome without self-signoff.
 - [ ] Decide product scope: real Xero/Akahu connectivity, payments, and
@@ -80,9 +86,11 @@ NZD money amounts are integer cents in authoritative calculations.
 - The ingestion journal, retry queue and adapters are not an authorized
   connected scheduled worker. #132's runbook explicitly notes the need to
   fence ingest writes and job completion in a single transaction.
-- Finance waterfall uses separate demonstration receivables, not a linked
-  borrower facility calculation. Facility terms are synthetic/current, not
-  date-versioned approved contracts.
+- A client-linked *synthetic* waterfall now reconciles to the dossier and
+  invoices (#138), but uses an explicitly hypothetical concentration cap,
+  zero scenario reserve and unverified contract/source status. Facility terms
+  are current rather than historically versioned; the output is **not**
+  authorised drawable credit.
 - The memo is not a signed, editable, versioned legal/credit document. Missing
   source facts are intentionally marked absent.
 - Product-level visual UAT, provider integration and independent credit/security
