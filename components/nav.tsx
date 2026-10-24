@@ -14,12 +14,14 @@ const GROUPS = [
       { href: "/batches", label: "Invoice Check" },
       { href: "/watch", label: "Portfolio Watch" },
       { href: "/clients", label: "Clients" },
+      { href: "/borrowing-base", label: "Borrowing base" },
     ],
   },
   {
     heading: "Assurance",
     items: [
       { href: "/trust", label: "Trust Panel" },
+      { href: "/credit-memos", label: "Credit memos" },
       { href: "/audit", label: "Audit log" },
       { href: "/about", label: "About" },
     ],
