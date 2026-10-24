@@ -24,6 +24,7 @@ jobs:
     env:
       DATABASE_URL: ""
       REVIEW_URL: http://127.0.0.1:3100
+      CREDIT_DESK_CI_PGLITE: "1"
       PLAYWRIGHT_PACKAGE: /tmp/credit-desk-review-browser/node_modules/playwright
     steps:
       - uses: actions/checkout@v7
