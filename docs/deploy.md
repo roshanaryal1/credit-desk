@@ -51,6 +51,14 @@ daily budget free on demo day so the Re-run button works.
 
 ## 4. Deploy and smoke test
 
+Canonical production URL: **https://creditdesk.roshanaryal.com**.
+The hostname is attached to the `credit-desk` Vercel project and configured via
+an external CNAME. The legacy `credit-desk-inky.vercel.app` hostname redirects
+permanently (HTTP 308) to the canonical domain using a host-scoped, project-level
+CDN routing rule. Preserve that rule if recreating or transferring the project.
+This is independent of preview deployment URLs, and it does not make the
+synthetic prototype a production lending application.
+
 1. Deploy from the Vercel dashboard (or push to `main`).
 2. In a private window on a laptop and on a phone: sign in, open a pending
    batch, decide on a flagged invoice in shadow mode, then open its replay and
