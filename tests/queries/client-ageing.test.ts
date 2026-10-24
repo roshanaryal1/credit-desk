@@ -98,11 +98,7 @@ async function example() {
 describe("synthetic client debtor ageing read model", () => {
   it("reconciles dated receipts and credits, with invoice traceability", async () => {
     const db = await example();
-    const result = await getClientReceivablesAgeing(
-      db,
-      "c1",
-      "2026-10-24",
-    );
+    const result = await getClientReceivablesAgeing(db, "c1", "2026-10-24");
     expect(result?.totalOutstandingCents).toBe(13_000);
     expect(result?.overdueCents).toBe(13_000);
     expect(result?.currentCents).toBe(0);
@@ -122,11 +118,7 @@ describe("synthetic client debtor ageing read model", () => {
 
   it("moves the same receivable to its later age and applies future receipts", async () => {
     const db = await example();
-    const later = await getClientReceivablesAgeing(
-      db,
-      "c1",
-      "2026-11-05",
-    );
+    const later = await getClientReceivablesAgeing(db, "c1", "2026-11-05");
     expect(later?.totalOutstandingCents).toBe(10_000);
     expect(later?.debtors[0]?.buckets.DAYS_61_90).toBe(10_000);
     expect(later?.debtors[0]?.paymentsLast30DaysCents).toBe(8_000);
@@ -134,14 +126,8 @@ describe("synthetic client debtor ageing read model", () => {
 
   it("prevents cross-client leakage and refuses bad as-of dates", async () => {
     const db = await example();
-    const other = await getClientReceivablesAgeing(
-      db,
-      "c2",
-      "2026-10-24",
-    );
-    expect(other?.debtors.map((d) => d.debtorName)).toEqual([
-      "Other Debtor",
-    ]);
+    const other = await getClientReceivablesAgeing(db, "c2", "2026-10-24");
+    expect(other?.debtors.map((d) => d.debtorName)).toEqual(["Other Debtor"]);
     expect(other?.totalOutstandingCents).toBe(90_000);
     expect(
       await getClientReceivablesAgeing(db, "not-real", "2026-10-24"),
