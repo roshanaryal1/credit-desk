@@ -63,6 +63,7 @@ describe("schema", () => {
         "decision_snapshots",
         "explanations",
         "incident_events",
+        "ingestion_events",
       ].sort(),
     );
   });
