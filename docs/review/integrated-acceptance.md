@@ -2,11 +2,11 @@
 
 **Status:** DRAFT / synthetic-only / `main` merge freeze.
 **Tracked under:** #99 and #135. **Integrated draft PR:** #136.
-**Original change PRs:** #115–#134 (remain separately open).
+**Original change PRs:** #115–#134 and follow-up #137 (remain separately open).
 
 ## One-review operating model
 
-Review the **integrated branch** once, not 20 isolated changes. This branch
+Review the **integrated branch** once, not 21 isolated changes. This branch
 assembles the proposed PR file snapshots without merging any PR into main.
 It is not a signed-off release. No banking credentials, customer financial data,
 automated payments or production deployment are enabled by this branch.
@@ -19,13 +19,13 @@ automated payments or production deployment are enabled by this branch.
 | Source history and recoverability | #118, #127, #132 | Provider-neutral events, append-only observation journal, migrations 0003/0004, bounded lease retry |
 | Risk and finance | #116, #120, #123, #128, #129 | Borrowing base, debtor ageing, effective risk policy, illustrative funding waterfall and principal-only products |
 | Client experience | #122, #125, #133 | Client dossier, receivables ageing and review queue in one navigation |
-| Controlled workflow and security foundations | #119, #124, #131 | Pure case roles/transitions, access matrix and **offline-only** drawdown simulation |
+| Controlled workflow and security foundations | #119, #124, #131, #137 | Pure role/identity policy, durable offline credit cases and immutable decision history (migration 0005), and **offline-only** drawdown simulation |
 | Credit narrative | #126, #134 | Source-limited memo assembler and draft review pages |
 | Provider sandbox contracts | #130 | Synthetic accounting/bank adapter fixture tests |
 
 The dependent file conflict resolutions are deliberate: nav from #125 with
 added links to the borrowing-base and memo pages; client detail from #133;
-schema and migration journal from #132. #133's `lib/risk/debtor-ageing.ts`
+schema and migration journal from #132, extended with #137's migration 0005. #133's `lib/risk/debtor-ageing.ts`
 matches #120 byte-for-byte and is included **once**.
 
 ## Quick review route map (all synthetic)
@@ -73,9 +73,10 @@ NZD money amounts are integer cents in authoritative calculations.
 
 **The current integrated branch is not production-ready.**
 
-- Case assignment/transition code is not persisted behind a verified OIDC
-  identity, MFA, tenant-scoped API and transactional audit. The case queue is
-  triage-only; approved transfers are disabled.
+- Offline credit-case assignments and maker/checker transitions now have
+  transactional persistence and an immutable event history, but **no verified
+  OIDC login, tenant-scoped privileged API, or interactive checker inbox**.
+  The visible queue remains read-only; approved transfers are disabled.
 - The ingestion journal, retry queue and adapters are not an authorized
   connected scheduled worker. #132's runbook explicitly notes the need to
   fence ingest writes and job completion in a single transaction.
