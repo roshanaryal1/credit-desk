@@ -36,8 +36,11 @@ export interface CreditMemoDraft {
 }
 
 const REQUIREMENTS: FinancialFact[] = [
-  "REQUESTED_LIMIT", "COMMITTED_LIMIT", "OUTSTANDING_ADVANCES",
-  "ELIGIBLE_RECEIVABLES", "SECURED_ADVANCE_VALUE",
+  "REQUESTED_LIMIT",
+  "COMMITTED_LIMIT",
+  "OUTSTANDING_ADVANCES",
+  "ELIGIBLE_RECEIVABLES",
+  "SECURED_ADVANCE_VALUE",
 ];
 
 const LABELS: Record<FinancialFact, string> = {
@@ -49,13 +52,16 @@ const LABELS: Record<FinancialFact, string> = {
 };
 
 function safeText(v: string): string {
-  return v.replace(/[\r\n\t<>*\u0060\[\]{}]/g, " ").trim().slice(0, 160);
+  return v
+    .replace(/[\r\n\t<>*\u0060\[\]{}]/g, " ")
+    .trim()
+    .slice(0, 160);
 }
 
 function businessDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const t = Date.parse(`${value}T00:00:00Z`);
-  return Number.isFinite(t) && new Date(t).toISOString().slice(0,10) === value;
+  return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === value;
 }
 
 /** Assemble only sourced numbers. No LLM is involved in finance calculations. */
@@ -70,7 +76,8 @@ export function assembleCreditMemo(
   const known = new Map<FinancialFact, CreditEvidence>();
   const ids = new Set<string>();
   for (const fact of evidence) {
-    if (fact.clientId !== clientId) throw new Error("Cross-client evidence is not allowed");
+    if (fact.clientId !== clientId)
+      throw new Error("Cross-client evidence is not allowed");
     if (!fact.id.trim() || !fact.sourceId.trim() || !fact.sourceLabel.trim())
       throw new Error("Evidence provenance is missing");
     if (!businessDate(fact.asOfDate) || fact.asOfDate > asOfDate)
@@ -78,7 +85,9 @@ export function assembleCreditMemo(
     if (!Number.isSafeInteger(fact.cents) || fact.cents < 0)
       throw new Error("Unsupported monetary value");
     if (ids.has(fact.id) || known.has(fact.fact))
-      throw new Error("Duplicate evidence identity or unsupported fact version");
+      throw new Error(
+        "Duplicate evidence identity or unsupported fact version",
+      );
     if (!(fact.fact in LABELS)) throw new Error("Unrecognized financial fact");
     ids.add(fact.id);
     known.set(fact.fact, fact);
@@ -111,20 +120,24 @@ export function assembleCreditMemo(
       { title: "Requested facility and financial position", statements },
       {
         title: "Risk assessment",
-        statements: [{
-          text: "No automated approval. Review each exception, data gap, debtor exposure and source freshness before a recommendation.",
-          evidenceIds: [],
-        }],
+        statements: [
+          {
+            text: "No automated approval. Review each exception, data gap, debtor exposure and source freshness before a recommendation.",
+            evidenceIds: [],
+          },
+        ],
       },
       {
         title: "Decision",
-        statements: [{
-          text: "Pending independent analyst assessment and authorized checker review. No funds may be disbursed from this draft.",
-          evidenceIds: [],
-        }],
+        statements: [
+          {
+            text: "Pending independent analyst assessment and authorized checker review. No funds may be disbursed from this draft.",
+            evidenceIds: [],
+          },
+        ],
       },
     ],
-    evidenceIndex: REQUIREMENTS.flatMap(key => {
+    evidenceIndex: REQUIREMENTS.flatMap((key) => {
       const datum = known.get(key);
       return datum ? [datum] : [];
     }),
