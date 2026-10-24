@@ -1,0 +1,20 @@
+name: Temporary Client Activity Formatter
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format touched files in isolated runner
+        run: |
+          npx prettier --write 'app/clients/[id]/activity/page.tsx' 'lib/queries/client-activity.ts' 'tests/queries/client-activity.test.ts'
+          node -e 'const fs=require("fs");for(const p of ["app/clients/[id]/activity/page.tsx","lib/queries/client-activity.ts","tests/queries/client-activity.test.ts"]){console.log("ACTIVITY_FORMATTED "+JSON.stringify({path:p,content:fs.readFileSync(p,"utf8")}))}'
