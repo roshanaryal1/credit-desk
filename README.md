@@ -14,11 +14,10 @@ decides.** The agent never approves, funds or changes anything.
 
 ## Credit Desk 2.0 — combined synthetic review candidate
 
-> **Status: draft, unmerged and not a production lending application.**
-> The v2 code is currently assembled on `review/credit-desk-v2-integrated`
-> (draft PR #136). The original implementation PRs remain open for review.
-> No real financial accounts, bank payments or authenticated enterprise tenant
-> have been connected.
+> **Status: integrated synthetic prototype, not a production lending application.**
+> Credit Desk v2 was integrated into `main` through PR #136 on 25 October 2026.
+> Live banking, enterprise tenant authentication, payments and policy sign-off
+> remain out of scope and require a separate controlled release.
 
 The review branch expands the original invoice-finance prototype:
 
@@ -38,6 +37,16 @@ transactional case history with maker-checker separation. **These foundations
 are not automatically active production workflows:** an external verified
 identity provider, server-side role enforcement, real provider consent and
 operator-run production monitoring are still required.
+
+### Choose a demo perspective
+
+The shared-password demonstration now supports five **self-selected, fictional**
+perspectives: **Employer / lender**, **Credit analyst**, **Credit checker**,
+**Client / borrower**, and **Auditor**. These are not verified identities or
+production RBAC. The client view shows one fixed synthetic borrower's summary;
+only the analyst demo can record existing synthetic decisions. Signing out
+allows selecting a different perspective. For controls, limitations and review
+steps see [docs/review/demo-personas.md](docs/review/demo-personas.md).
 
 ### How to review without deploying
 
