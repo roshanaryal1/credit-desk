@@ -95,7 +95,9 @@ export async function recordSourceBatch(
       const [prior] = await tx.select().from(t.ingestionEvents)
         .where(eq(t.ingestionEvents.id, id)).limit(1);
       if (!prior) throw new Error("Conflicting source identity is unavailable");
-      reconcileObservations([readEvent(prior)], [event]);
+      reconcileObservations([readEvent(prior)], [
+        { ...event, observedAt: new Date(event.observedAt).toISOString() },
+      ]);
       duplicates++;
     }
     await tx.insert(t.ingestionCheckpoints).values({
