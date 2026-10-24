@@ -1,0 +1,20 @@
+name: Temporary Synthetic Case Formatter
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format changed files
+        run: |
+          npx prettier --write 'app/queue/cases/page.tsx' 'app/queue/page.tsx' 'lib/queries/demo-cases.ts' 'lib/seed/synthetic-cases.ts' 'tests/queries/demo-cases.test.ts'
+          node -e 'const fs=require("fs");for(const p of ["app/queue/cases/page.tsx","app/queue/page.tsx","lib/queries/demo-cases.ts","lib/seed/synthetic-cases.ts","tests/queries/demo-cases.test.ts"]){console.log("CASE_FORMATTED "+JSON.stringify({path:p,content:fs.readFileSync(p,"utf8")}))}'
