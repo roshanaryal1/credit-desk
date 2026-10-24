@@ -29,6 +29,7 @@ jobs:
       - run: npm run format:check
       - run: npm run test
       - run: npm run build
+      - run: npm run check:bundle
       - name: eval
         if: hashFiles('scripts/eval.ts') != ''
         run: npm run eval
