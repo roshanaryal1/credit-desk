@@ -37,7 +37,18 @@ export async function storedExplanationUsable(
   if (explanation.validationStatus !== "PASSED" || run.status !== "PASSED")
     return false;
   const captured = await verifyCapturedRunEvidence(db, stored);
-  if (captured !== "LEGACY") return captured === "PASSED";
+  if (captured !== "LEGACY") {
+    // A cryptographically valid original transcript must still not leak an
+    // explanation to a historical screen before its review business date.
+    if (captured !== "PASSED") return false;
+    if (visibleAsOf !== undefined) {
+      if (!validDay(visibleAsOf) || !run.asOfDate || !validDay(run.asOfDate)) {
+        return false;
+      }
+      if (run.asOfDate > visibleAsOf) return false;
+    }
+    return true;
+  }
   try {
     const [invoice] =
       run.subjectType === "INVOICE"
