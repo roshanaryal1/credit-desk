@@ -54,6 +54,7 @@ export function demoRouteAllowed(persona: DemoPersona, path: string): boolean {
       "/clients",
       "/borrowing-base",
       "/credit-memos",
+      "/portfolio",
       "/trust",
       "/audit",
     ],
@@ -64,6 +65,7 @@ export function demoRouteAllowed(persona: DemoPersona, path: string): boolean {
       "/clients",
       "/borrowing-base",
       "/credit-memos",
+      "/portfolio",
       "/trust",
       "/audit",
     ],
@@ -74,9 +76,10 @@ export function demoRouteAllowed(persona: DemoPersona, path: string): boolean {
       "/clients",
       "/borrowing-base",
       "/credit-memos",
+      "/portfolio",
       "/trust",
     ],
-    AUDITOR: ["/trust", "/audit", "/clients", "/credit-memos", "/watch"],
+    AUDITOR: ["/trust", "/audit", "/clients", "/credit-memos", "/watch", "/portfolio"],
   } as const;
   return (
     path === "/" ||
