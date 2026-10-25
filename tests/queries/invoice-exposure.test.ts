@@ -165,8 +165,8 @@ async function decision() {
   return result.decisionId;
 }
 
-describe("shadow-mode explanation delivery and revision exposure (#166)", () => {
-  it("records validated output before revisions, not blind reviews or public deliveries", async () => {
+describe("SHADOW revision exposure (#166)", () => {
+  it("records revisions but not blind or public exposure", async () => {
     await seed();
 
     const initial = await getInvoiceReview(invoiceId, analyst, batchId);
@@ -231,9 +231,10 @@ describe("shadow-mode explanation delivery and revision exposure (#166)", () => 
       .select()
       .from(t.decisionSnapshots)
       .where(eq(t.decisionSnapshots.decisionId, revised));
-    expect(
-      JSON.parse(snapshot.canonicalJson).decision.aiContentExposedBeforeDecision,
-    ).toBe(true);
+    const frozen = JSON.parse(snapshot.canonicalJson) as {
+      decision: { aiContentExposedBeforeDecision: boolean };
+    };
+    expect(frozen.decision.aiContentExposedBeforeDecision).toBe(true);
     expect(await verifySnapshot(db, revised)).toEqual({
       checksumMatches: true,
       chainMatches: true,
