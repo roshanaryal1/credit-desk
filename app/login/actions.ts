@@ -151,9 +151,6 @@ export async function logoutAction(formData?: FormData) {
   const jar = await cookies();
   jar.delete(AUTH_COOKIE);
   jar.delete(MODE_COOKIE);
-  redirect(
-    formData?.get("intent") === "switch"
-      ? "/login#quick-demo-title"
-      : "/login",
-  );
+  if (formData?.get("intent") === "switch") redirect("/login#quick-demo-title");
+  redirect("/login");
 }
