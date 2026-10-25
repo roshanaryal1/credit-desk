@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { collectionsInsights } from "@/lib/risk/collections-insights";
+import {
+  collectionsInsights,
+  type CollectionsReceivable,
+} from "@/lib/risk/collections-insights";
 import type { AgeingReceivable } from "@/lib/risk/debtor-ageing";
 
 const rows: AgeingReceivable[] = [
@@ -42,6 +45,44 @@ const rows: AgeingReceivable[] = [
 ];
 
 describe("descriptive collections insights", () => {
+  it("does not insert a newly learned backdated invoice into the prior-month balance", () => {
+    const known: CollectionsReceivable = {
+      ...rows[0]!,
+      invoiceId: "known",
+      recordedDate: "2026-08-01",
+      receiptAllocations: [],
+      creditNotes: [],
+    };
+    const late = {
+      ...known,
+      invoiceId: "late",
+      recordedDate: "2026-10-20",
+      faceCents: 9_000,
+    };
+    const future = {
+      ...known,
+      invoiceId: "future",
+      recordedDate: "2026-10-25",
+      faceCents: 6_000,
+    };
+    const inputs = [known, late, future];
+    expect(collectionsInsights("2026-10-24", inputs)[0]).toMatchObject({
+      overdueNowCents: 19_000,
+      overdue30DaysAgoCents: 10_000,
+      overdueMovement30DaysCents: 9_000,
+    });
+    expect(collectionsInsights("2026-10-19", inputs)[0]?.overdueNowCents).toBe(
+      10_000,
+    );
+    expect(collectionsInsights("2026-10-25", inputs)[0]?.overdueNowCents).toBe(
+      25_000,
+    );
+    expect(() =>
+      collectionsInsights("2026-10-24", [
+        { ...known, recordedDate: "2026-02-30" },
+      ]),
+    ).toThrow(/business date/);
+  });
   it("replays the two 30-day windows without future leakage", () => {
     const [a] = collectionsInsights("2026-10-24", rows);
     expect(a).toMatchObject({

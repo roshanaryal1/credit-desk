@@ -1,7 +1,9 @@
 # Deploying Credit Desk
 
-Vercel hosts the app; Neon (through the Vercel Marketplace) holds the data.
-Each step below needs an account owner, so it is run by a person.
+Vercel hosts the app; a dedicated Neon PostgreSQL database holds the synthetic
+demonstration data. Deployment and database changes require the owner's
+authorization. The current project uses Node 24 and Sydney compute for both
+services. No domain purchase is needed for the existing owned subdomain.
 
 ## Fail-closed database requirement
 
@@ -15,9 +17,9 @@ A READY Vercel build is not evidence of migrated tables or functioning login.
 
 1. On vercel.com, import the `credit-desk` repository. Framework: Next.js.
    Node version: 24.
-2. In the project, open Storage and add Neon Postgres. It sets
-   `DATABASE_URL` for production. Give previews their own database branch so
-   they never touch production data (SPEC 11).
+2. Connect the dedicated Neon database with an encrypted production
+   `DATABASE_URL`. A Marketplace integration is optional. Give previews their
+   own database branch so they never touch production data (SPEC 11).
 
 ## 2. Environment variables (Production)
 
@@ -52,26 +54,29 @@ Never run seed/reset against customer records or a production dataset.
 
 ## 3. Data
 
-From a local checkout, with production `DATABASE_URL` in the shell only (not
-in `.env.local`):
+The existing hosted synthetic dataset was imported with its stored explanations
+and decision history, then checked for row equality. Do not reseed it during a
+routine deployment. Run `npm run demo:preflight -- --target=production` with the
+explicit target connection provided through the approved secret mechanism.
+
+The commands below are for a **new, empty, fictional-only database** after
+explicit migration and seed authorization. `seed` replaces data. Keep the
+target connection out of `.env.local` and command history:
 
 ```bash
-export DATABASE_URL="postgres://..."      # from the Neon dashboard
 npm run db:migrate
 npm run seed -- --target=production       # data, checks, 90 days of watch runs
-npm run precompute                        # about a minute per item; see the note below
+npm run precompute                        # stored explanations; see rate-limit note
 npm run simulate                          # simulated agreement history
-unset DATABASE_URL
 ```
 
 `seed` refuses to reset a database that holds live decisions unless `--force`
 is passed.
 
-Groq's free tier caps `openai/gpt-oss-120b` at 200,000 tokens a day, about 28
-explanations. If the precompute stops with rate-limit errors, either rerun it
-the next day (it resumes) or finish with `LLM_MODEL=openai/gpt-oss-20b npm run
-precompute`. Each run records the model it used. Keep the production key's
-daily budget free on demo day so the Re-run button works.
+Provider rate limits depend on the account. Precompute resumes stored work;
+check the provider's actual response and account limits before retrying. Each
+run records its model. Deploying existing explanations does not require new
+LLM calls. Public one-click sessions cannot invoke the agent.
 
 ## 4. Deploy and smoke test
 

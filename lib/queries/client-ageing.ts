@@ -4,8 +4,11 @@ import { and, eq, inArray, lte } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
-import { debtorAgeing, type AgeingReceivable } from "@/lib/risk/debtor-ageing";
-import { collectionsInsights } from "@/lib/risk/collections-insights";
+import { debtorAgeing } from "@/lib/risk/debtor-ageing";
+import {
+  collectionsInsights,
+  type CollectionsReceivable,
+} from "@/lib/risk/collections-insights";
 
 function asOfDate(value: string): void {
   const millis = Date.parse(`${value}T00:00:00Z`);
@@ -96,7 +99,7 @@ export async function getClientReceivablesAgeing(
     : [];
   const byBank = new Map(banks.map((b) => [b.id, b]));
   const debtorsById = new Map(debtors.map((d) => [d.id, d.name]));
-  const byInvoice: AgeingReceivable[] = ledgers.map((row) => {
+  const byInvoice: CollectionsReceivable[] = ledgers.map((row) => {
     if (!debtorsById.has(row.debtorId)) {
       throw new Error("Ledger entry references debtor outside this client");
     }
@@ -104,6 +107,7 @@ export async function getClientReceivablesAgeing(
       invoiceId: row.id,
       debtorId: row.debtorId,
       issuedDate: row.issueDate,
+      recordedDate: row.recordedDate,
       dueDate: dueDate(row.issueDate, client.paymentTermsDays),
       faceCents: row.amountCents,
       receiptAllocations: receiptRows

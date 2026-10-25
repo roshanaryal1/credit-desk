@@ -39,6 +39,56 @@ const routes = [
 const browser = await chromium.launch({ headless: true });
 const results = [];
 const errors = [];
+
+function observeBrowser(page, label) {
+  page.on("pageerror", (error) => errors.push(`${label}: ${error.message}`));
+  const requiredAsset = (request) =>
+    ["stylesheet", "script", "font"].includes(request.resourceType());
+  page.on("response", (response) => {
+    if (requiredAsset(response.request()) && response.status() >= 400) {
+      errors.push(
+        `${label}: asset HTTP ${response.status()} ${new URL(response.url()).pathname}`,
+      );
+    }
+  });
+  page.on("requestfailed", (request) => {
+    if (requiredAsset(request)) {
+      errors.push(`${label}: asset failed ${new URL(request.url()).pathname}`);
+    }
+  });
+}
+
+async function waitForRenderedContent(page) {
+  await page.waitForLoadState("networkidle", { timeout: 30_000 });
+  await page.waitForFunction(
+    () => {
+      const styled = getComputedStyle(document.documentElement)
+        .getPropertyValue("--background")
+        .trim();
+      const loading = [
+        ...document.querySelectorAll('main [role="status"]'),
+      ].some((element) =>
+        /loading|building|reconciling/i.test(element.textContent ?? ""),
+      );
+      return Boolean(styled) && !loading;
+    },
+    undefined,
+    { timeout: 30_000 },
+  );
+  // Root variables alone can exist when the Tailwind utility transform
+  // is missing. Require the workspace shell utilities to be applied too.
+  const utilities = await page.evaluate(() => {
+    const body = getComputedStyle(document.body);
+    return body.display === "flex" && body.flexDirection === "column";
+  });
+  if (!utilities)
+    throw new Error("Required Tailwind shell styles are not applied");
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  if (errors.length) {
+    throw new Error(`Browser runtime or asset failures: ${errors.join("; ")}`);
+  }
+}
+
 try {
   for (const [label, viewport, capture] of [
     [
@@ -65,12 +115,25 @@ try {
       hasTouch: label === "mobile",
     });
     const page = await context.newPage();
-    page.on("pageerror", (error) => errors.push(`${label}: ${error.message}`));
+    observeBrowser(page, label);
     const signIn = await page.goto(`${origin}/login?next=%2F`, {
       waitUntil: "domcontentloaded",
       timeout: 30_000,
     });
     if (!signIn?.ok()) throw new Error(`Login page HTTP ${signIn?.status()}`);
+    await waitForRenderedContent(page);
+    await page.screenshot({
+      path: path.join(screenshots, `login-${label}.png`),
+      fullPage: true,
+      animations: "disabled",
+    });
+    results.push({
+      viewport: label,
+      route: "/login",
+      status: signIn.status(),
+      heading: (await page.locator("h1").first().textContent())?.trim(),
+      screenshot: `login-${label}.png`,
+    });
     await page.getByLabel("Your name").fill("Synthetic CI reviewer");
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Sign in" }).click();
@@ -88,6 +151,7 @@ try {
       if (status >= 400 || status === 0) {
         throw new Error(`${label}: ${item.route} responded HTTP ${status}`);
       }
+      await waitForRenderedContent(page);
       const heading = page.locator("h1").first();
       await heading.waitFor({ timeout: 15_000 });
       const title = (await heading.textContent())?.trim() ?? "";
@@ -179,11 +243,13 @@ try {
     viewport: { width: 390, height: 844 },
   });
   const clientPage = await clientContext.newPage();
+  observeBrowser(clientPage, "client");
   const clientLogin = await clientPage.goto(origin + "/login", {
     waitUntil: "domcontentloaded",
     timeout: 30_000,
   });
   if (!clientLogin?.ok()) throw new Error("Client demo sign-in unavailable");
+  await waitForRenderedContent(clientPage);
   await clientPage.getByLabel("Explore Credit Desk as").selectOption("CLIENT");
   await clientPage.getByLabel("Your name").fill("Fictional client reviewer");
   await clientPage.getByLabel("Password").fill(password);
@@ -191,6 +257,7 @@ try {
   await clientPage.waitForURL((url) => url.pathname === "/demo/client", {
     timeout: 30_000,
   });
+  await waitForRenderedContent(clientPage);
   const title = await clientPage.locator("h1").first().textContent();
   if (!title?.trim()) throw new Error("Client view missing a heading");
   for (const forbidden of [
@@ -208,6 +275,7 @@ try {
         "Client perspective accessed forbidden route " + forbidden,
       );
     }
+    await waitForRenderedContent(clientPage);
   }
   await clientPage.screenshot({
     path: path.join(screenshots, "fictional-client-mobile.png"),
@@ -238,19 +306,19 @@ try {
         viewport: { width: 1440, height: 900 },
       });
       const demoPage = await demoContext.newPage();
-      demoPage.on("pageerror", (error) =>
-        errors.push("quick " + role.name + ": " + error.message),
-      );
+      observeBrowser(demoPage, "quick " + role.name);
       await demoPage.goto(origin + "/login", { waitUntil: "domcontentloaded" });
+      await waitForRenderedContent(demoPage);
       await demoPage
         .getByRole("button", {
-          name: "Continue as " + role.name + " demo",
+          name: role.name,
         })
         .click();
       await demoPage.waitForURL(
         (url) => url.origin === origin && url.pathname === role.home,
         { timeout: 30000 },
       );
+      await waitForRenderedContent(demoPage);
       const loginCookies = await demoContext.cookies();
       const session = loginCookies.find((c) => c.name === "cd_auth");
       if (!session?.httpOnly)
@@ -274,15 +342,117 @@ try {
         if (new URL(demoPage.url()).pathname !== "/demo/client") {
           throw new Error("Public client reached restricted lender queue");
         }
+        await waitForRenderedContent(demoPage);
       }
       if (role.name === "Credit analyst") {
         await demoPage.goto(origin + "/batches", {
           waitUntil: "domcontentloaded",
         });
+        await waitForRenderedContent(demoPage);
+        const batchPath = await demoPage
+          .locator('a[href^="/batches/"]')
+          .first()
+          .getAttribute("href");
+        if (!batchPath)
+          throw new Error("Public analyst has no seeded batch to inspect");
+        await demoPage.goto(origin + batchPath, {
+          waitUntil: "domcontentloaded",
+        });
+        await waitForRenderedContent(demoPage);
+        const invoicePath = await demoPage
+          .locator('a[href*="?invoice="]')
+          .first()
+          .getAttribute("href");
+        if (!invoicePath)
+          throw new Error("Seeded batch contains no invoice evidence");
+        await demoPage.goto(origin + invoicePath, {
+          waitUntil: "domcontentloaded",
+        });
+        await waitForRenderedContent(demoPage);
         if (
           await demoPage.getByRole("button", { name: /Re-run agent/i }).count()
         ) {
           throw new Error("Public analyst has a writable agent control");
+        }
+        // Exercise actual server actions with the signed public session.
+        // The write guards must deny before parsing mutation input or calling a model.
+        const manifest = JSON.parse(
+          await fs.readFile(
+            path.join(
+              process.cwd(),
+              ".next/server/server-reference-manifest.json",
+            ),
+            "utf8",
+          ),
+        );
+        for (const [name, actionPath, args, denial] of [
+          [
+            "decideAction",
+            invoicePath,
+            [null, {}],
+            "Only the credit analyst demo",
+          ],
+          [
+            "incidentAction",
+            "/watch",
+            [null, {}],
+            "This demo perspective is read-only",
+          ],
+          [
+            "rerunAgentAction",
+            invoicePath,
+            ["inv_0001"],
+            "This demo perspective cannot run agents",
+          ],
+        ]) {
+          const action = Object.entries(manifest.node).find(
+            ([, entry]) => entry.exportedName === name,
+          );
+          if (!action) throw new Error(`Missing server action ${name}`);
+          const response = await demoPage.evaluate(
+            async ({ id, actionPath, args }) => {
+              const result = await fetch(actionPath, {
+                method: "POST",
+                headers: {
+                  "Next-Action": id,
+                  "Content-Type": "text/plain;charset=UTF-8",
+                },
+                body: JSON.stringify(args),
+              });
+              return { status: result.status, text: await result.text() };
+            },
+            { id: action[0], actionPath, args },
+          );
+          if (response.status !== 200 || !response.text.includes(denial)) {
+            throw new Error(`Public analyst write guard failed: ${name}`);
+          }
+        }
+        const modeAction = Object.entries(manifest.node).find(
+          ([, entry]) => entry.exportedName === "setModeAction",
+        );
+        if (!modeAction) throw new Error("Missing mode action");
+        const modeStatus = await demoPage.evaluate(
+          async ({ id, actionPath }) => {
+            const response = await fetch(actionPath, {
+              method: "POST",
+              headers: {
+                "Next-Action": id,
+                "Content-Type": "text/plain;charset=UTF-8",
+              },
+              body: JSON.stringify(["ASSIST"]),
+            });
+            return response.status;
+          },
+          { id: modeAction[0], actionPath: invoicePath },
+        );
+        if (modeStatus !== 200)
+          throw new Error("Mode write guard was not reached");
+        if (
+          (await demoContext.cookies()).some(
+            (cookie) => cookie.name === "cd_mode",
+          )
+        ) {
+          throw new Error("Public analyst changed review mode");
         }
       }
       results.push({

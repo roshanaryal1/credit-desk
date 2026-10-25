@@ -96,6 +96,26 @@ async function example() {
 }
 
 describe("synthetic client debtor ageing read model", () => {
+  it("preserves the prior balance when an old invoice is first recorded this month", async () => {
+    const db = await example();
+    await db.insert(t.ledgerEntries).values({
+      id: "late-ledger",
+      clientId: "c1",
+      invoiceNumber: "LATE-001",
+      debtorId: "d1",
+      amountCents: 9_000,
+      issueDate: "2026-08-01",
+      recordedDate: "2026-10-20",
+    });
+    const result = await getClientReceivablesAgeing(db, "c1", "2026-10-24");
+    expect(result?.collections[0]).toMatchObject({
+      overdueNowCents: 22_000,
+      overdue30DaysAgoCents: 20_000,
+      overdueMovement30DaysCents: 2_000,
+    });
+    const earlier = await getClientReceivablesAgeing(db, "c1", "2026-10-19");
+    expect(earlier?.totalOutstandingCents).toBe(20_000);
+  });
   it("reconciles dated receipts and credits, with invoice traceability", async () => {
     const db = await example();
     const result = await getClientReceivablesAgeing(db, "c1", "2026-10-24");

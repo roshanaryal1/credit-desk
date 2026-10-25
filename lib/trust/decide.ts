@@ -38,7 +38,7 @@ export interface Analyst {
 
 export type DecideResult =
   | { ok: true; decisionId: string; duplicate: boolean }
-  | { ok: false; reason: "STALE" | "NOT_FOUND"; message: string };
+  | { ok: false; reason: "STALE" | "NOT_FOUND" | "CONFLICT"; message: string };
 
 // Serialises snapshot-chain appends across sessions.
 const CHAIN_LOCK = 4_242_001;
@@ -53,10 +53,31 @@ export async function saveDecision(
     await tx.execute(sql`select pg_advisory_xact_lock(${CHAIN_LOCK})`);
 
     const [existing] = await tx
-      .select({ id: t.decisions.id })
+      .select()
       .from(t.decisions)
       .where(eq(t.decisions.idempotencyKey, input.idempotencyKey));
-    if (existing) return { ok: true, decisionId: existing.id, duplicate: true };
+    if (existing) {
+      const identical =
+        existing.invoiceId === input.invoiceId &&
+        existing.decision === input.decision &&
+        existing.reason === input.reason &&
+        existing.reviewVersion === input.reviewVersion &&
+        existing.analystSessionId === analyst.sessionId &&
+        existing.analystDisplayName === analyst.displayName &&
+        existing.mode === analyst.mode &&
+        existing.simulated === (opts.simulated ?? false) &&
+        (opts.decidedAt === undefined ||
+          existing.decidedAt.getTime() === opts.decidedAt.getTime());
+      if (!identical) {
+        return {
+          ok: false,
+          reason: "CONFLICT",
+          message:
+            "This submission key was already used for a different decision. Reload before submitting again.",
+        };
+      }
+      return { ok: true, decisionId: existing.id, duplicate: true };
+    }
 
     const [invoice] = await tx
       .select({ id: t.invoices.id })

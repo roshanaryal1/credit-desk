@@ -115,7 +115,7 @@ export function LoginForm({
       </form>
 
       <section aria-labelledby="quick-demo-title" className="space-y-3">
-        <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
+        <div className="flex items-center gap-3 text-xs font-medium text-slate-600">
           <span className="h-px flex-1 bg-slate-200" />
           <span>OR EXPLORE INSTANTLY</span>
           <span className="h-px flex-1 bg-slate-200" />
@@ -147,9 +147,6 @@ export function LoginForm({
                     name="persona"
                     value={key}
                     disabled={demoPending}
-                    aria-label={
-                      "Continue as " + DEMO_PERSONAS[key].label + " demo"
-                    }
                     className="group flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left transition-all hover:border-blue-400 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">

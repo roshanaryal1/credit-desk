@@ -48,11 +48,40 @@ describe("unsigned synthetic memo export", () => {
   });
   it("escapes Markdown/HTML injection and remains unsigned", () => {
     const memo = sample();
-    memo.sections[0]!.statements[0]!.text =
-      "<script>alert(1)</script>\n# Approved";
+    memo.title = "<script>alert(1)</script>\n# Export title";
     const output = renderSyntheticMemoMarkdown(memo);
     expect(output).not.toContain("<script>");
-    expect(output).not.toContain("\n# Approved");
+    expect(output).not.toContain("\n# Export title");
     expect(output).toContain("Signed off by: NONE");
+  });
+
+  it("rejects fabricated amounts even when they cite a real evidence ID", () => {
+    const memo = sample();
+    memo.sections[0]!.statements[0]!.text =
+      "Existing commitment: $9,999,999.00";
+    expect(() => renderSyntheticMemoMarkdown(memo)).toThrow(
+      /Unverified export statements/,
+    );
+    const alteredEvidence = sample();
+    alteredEvidence.evidenceIndex[0]!.cents += 1;
+    expect(() => renderSyntheticMemoMarkdown(alteredEvidence)).toThrow(
+      /Unverified export statements/,
+    );
+  });
+
+  it("rejects uncited added narrative and removed mandatory gaps", () => {
+    const narrative = sample();
+    narrative.sections[1]!.statements.push({
+      text: "Approved for unrestricted lending",
+      evidenceIds: [],
+    });
+    expect(() => renderSyntheticMemoMarkdown(narrative)).toThrow(
+      /Unverified export statements/,
+    );
+    const missing = sample();
+    missing.missingItems.pop();
+    expect(() => renderSyntheticMemoMarkdown(missing)).toThrow(
+      /Unverified export statements/,
+    );
   });
 });

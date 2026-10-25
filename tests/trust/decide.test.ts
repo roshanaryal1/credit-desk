@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { eq, sql } from "drizzle-orm";
+import { and, eq, lte, sql } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { runAllBatches } from "@/lib/checks/runner";
@@ -140,8 +140,8 @@ describe("saving a decision", () => {
 
   it("saves a double submit once", async () => {
     const key = randomUUID();
-    const first = await decide(flagged[3]!, shadow, { key });
     const version = (await reviewState(db, flagged[3]!)).version;
+    const first = await decide(flagged[3]!, shadow, { key, version });
     const second = await decide(flagged[3]!, shadow, { key, version });
     expect(first.ok && second.ok && second.duplicate).toBe(true);
     const rows = await db
@@ -149,6 +149,54 @@ describe("saving a decision", () => {
       .from(t.decisions)
       .where(eq(t.decisions.invoiceId, flagged[3]!));
     expect(rows).toHaveLength(1);
+  });
+
+  it("rejects conflicting key reuse without returning another decision or writing history", async () => {
+    const invoiceId = flagged[13]!;
+    const input = {
+      invoiceId,
+      decision: "HOLD" as const,
+      reason: "Waiting for the ledger export",
+      reviewVersion: (await reviewState(db, invoiceId)).version,
+      idempotencyKey: randomUUID(),
+    };
+    const opts = { codeSha: "test" };
+    const saved = await saveDecision(db, input, shadow, opts);
+    expect(saved.ok).toBe(true);
+    for (const [request, actor, options] of [
+      [{ ...input, invoiceId: flagged[14]! }, shadow, opts],
+      [{ ...input, decision: "REJECT" as const }, shadow, opts],
+      [{ ...input, reason: "Different reviewer rationale" }, shadow, opts],
+      [{ ...input, reviewVersion: "0".repeat(64) }, shadow, opts],
+      [input, { ...shadow, sessionId: "another-session" }, opts],
+      [input, { ...shadow, displayName: "Another analyst" }, opts],
+      [input, { ...shadow, mode: "ASSIST" as const }, opts],
+      [input, shadow, { ...opts, simulated: true }],
+      [input, shadow, { ...opts, decidedAt: new Date("2000-01-01T00:00:00Z") }],
+    ] as const) {
+      const result = await saveDecision(db, request, actor, options);
+      expect(result).toMatchObject({ ok: false, reason: "CONFLICT" });
+      expect("decisionId" in result).toBe(false);
+    }
+    expect(
+      await db
+        .select()
+        .from(t.decisions)
+        .where(eq(t.decisions.idempotencyKey, input.idempotencyKey)),
+    ).toHaveLength(1);
+    if (!saved.ok) throw new Error("expected saved decision");
+    expect(
+      await db
+        .select()
+        .from(t.decisionSnapshots)
+        .where(eq(t.decisionSnapshots.decisionId, saved.decisionId)),
+    ).toHaveLength(1);
+    expect(
+      await db
+        .select()
+        .from(t.auditEvents)
+        .where(eq(t.auditEvents.id, `aud_${saved.decisionId}`)),
+    ).toHaveLength(1);
   });
 
   it("rejects a decision made against an out-of-date view", async () => {
@@ -213,7 +261,21 @@ describe("saving a decision", () => {
 
   it("freezes every record the explanation cites, allocated or not", async () => {
     const invoiceId = flagged[12]!;
-    const [bank] = await db.select().from(t.bankTransactions).limit(1);
+    const [subject] = await db
+      .select({ clientId: t.invoices.clientId, asOf: t.batches.submittedDate })
+      .from(t.invoices)
+      .innerJoin(t.batches, eq(t.invoices.batchId, t.batches.id))
+      .where(eq(t.invoices.id, invoiceId));
+    const [bank] = await db
+      .select()
+      .from(t.bankTransactions)
+      .where(
+        and(
+          eq(t.bankTransactions.clientId, subject!.clientId),
+          lte(t.bankTransactions.date, subject!.asOf),
+        ),
+      )
+      .limit(1);
     const { CONFIG_VERSION } = await import("@/lib/checks/config");
     await db.insert(t.agentRuns).values({
       id: "run_test_cited",

@@ -9,19 +9,21 @@ decided without seeing it, and replays any decision exactly as it was made.
 
 > Prototype for discussion. All data is synthetic.
 
-**Canonical demo URL:** https://creditdesk.roshanaryal.com — an access-controlled synthetic preview, not a live lending platform. The legacy Vercel host has a configured redirect; its external HTTP behavior must still be smoke-tested.
+**Canonical demo URL:** https://creditdesk.roshanaryal.com. This is a synthetic
+demonstration with signed demo sessions, not a live lending platform. The legacy
+Vercel host redirects to this address (HTTP 308 verified on 25 October 2026).
 
 **Rules detect, the model explains, a validator checks the model, and a person
 decides.** The agent never approves, funds or changes anything.
 
-## Credit Desk 2.0 — combined synthetic review candidate
+## Credit Desk 2.0
 
 > **Status: integrated synthetic prototype, not a production lending application.**
 > Credit Desk v2 was integrated into `main` through PR #136 on 25 October 2026.
 > Live banking, enterprise tenant authentication, payments and policy sign-off
 > remain out of scope and require a separate controlled release.
 
-The review branch expands the original invoice-finance prototype:
+The synthetic application expands the original invoice-finance prototype:
 
 | User journey | Review route | Scope and verification limit |
 | --- | --- | --- |
@@ -46,8 +48,9 @@ The shared-password demonstration now supports five **self-selected, fictional**
 perspectives: **Employer / lender**, **Credit analyst**, **Credit checker**,
 **Client / borrower**, and **Auditor**. These are not verified identities or
 production RBAC. The client view shows one fixed synthetic borrower's summary;
-only the analyst demo can record existing synthetic decisions. Signing out
-allows selecting a different perspective. For controls, limitations and review
+only the password-authenticated analyst demo can record synthetic decisions.
+The optional public one-click accounts are read-only for all five perspectives.
+Signing out allows selecting a different perspective. For controls, limitations and review
 steps see [docs/review/demo-personas.md](docs/review/demo-personas.md).
 
 ### How to review without deploying
@@ -62,7 +65,8 @@ credit-policy approval, a full accessibility audit, or bank-grade security.
 For implementation provenance, dependency order, known gaps and the
 one-pass review checklist, see
 [`docs/review/integrated-acceptance.md`](docs/review/integrated-acceptance.md)
-and GitHub issues #99 and #135. The original v1 screenshots below remain
+and [the latest release verification](docs/review/2026-10-25-release.md),
+plus GitHub issues #99 and #135. The original v1 screenshots below remain
 historic examples and are not the full v2 visual acceptance evidence.
 
 ## Contents

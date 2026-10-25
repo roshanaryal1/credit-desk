@@ -1,6 +1,12 @@
 import { debtorAgeing, type AgeingReceivable } from "./debtor-ageing";
+import { daysBetween } from "@/lib/dates";
 
 const DAY_MS = 86_400_000;
+
+/** Invoice knowledge date, when available from the source ledger. */
+export interface CollectionsReceivable extends AgeingReceivable {
+  recordedDate?: string;
+}
 
 export interface CollectionsSignal {
   code: "ARREARS_INCREASE" | "PAYMENTS_SLOWED" | "RECENT_CREDIT";
@@ -45,18 +51,34 @@ function checkedSum(values: number[]): number {
  */
 export function collectionsInsights(
   asOf: string,
-  receivables: AgeingReceivable[],
+  receivables: CollectionsReceivable[],
 ): DebtorCollectionsInsight[] {
-  const current = debtorAgeing(asOf, receivables);
+  daysBetween(asOf, asOf);
+  for (const row of receivables) {
+    if (row.recordedDate !== undefined)
+      daysBetween(row.recordedDate, row.recordedDate);
+  }
+  const knownAt = (date: string) =>
+    receivables.filter(
+      (row) =>
+        // Older callers supply an already reconciled snapshot without knowledge
+        // metadata. The ageing engine still enforces their effective issue date.
+        row.recordedDate === undefined || row.recordedDate <= date,
+    );
+  const visible = knownAt(asOf);
+  const current = debtorAgeing(asOf, visible);
   const cutoff = day(asOf);
   const previousDate = new Date((cutoff - 30) * DAY_MS)
     .toISOString()
     .slice(0, 10);
   const previous = new Map(
-    debtorAgeing(previousDate, receivables).map((d) => [d.debtorId, d]),
+    debtorAgeing(previousDate, knownAt(previousDate)).map((d) => [
+      d.debtorId,
+      d,
+    ]),
   );
-  const rowsByDebtor = new Map<string, AgeingReceivable[]>();
-  for (const row of receivables) {
+  const rowsByDebtor = new Map<string, CollectionsReceivable[]>();
+  for (const row of visible) {
     if (day(row.issuedDate) > cutoff) continue;
     const rows = rowsByDebtor.get(row.debtorId) ?? [];
     rows.push(row);

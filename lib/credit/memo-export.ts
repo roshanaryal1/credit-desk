@@ -1,4 +1,4 @@
-import type { CreditMemoDraft } from "./memo";
+import { assembleCreditMemo, type CreditMemoDraft } from "./memo";
 
 /** This export is an evidence register for a synthetic draft, not approval. */
 function safeMarkdown(value: string): string {
@@ -40,6 +40,46 @@ export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
         throw new Error("Unverified export citation");
       }
     }
+  }
+
+  // This export supports the deterministic draft format only. A matching
+  // citation ID does not substantiate arbitrary text or a changed amount.
+  // Regenerate the permitted statements from evidence rather than trusting
+  // caller-supplied narrative. Human edits need a separate revision workflow.
+  const verified = assembleCreditMemo(
+    memo.clientId,
+    "Synthetic export verification",
+    memo.asOfDate,
+    memo.evidenceIndex,
+  );
+  if (
+    memo.version !== verified.version ||
+    memo.sections.length !== verified.sections.length ||
+    memo.sections.some((section, index) => {
+      const expected = verified.sections[index]!;
+      return (
+        section.title !== expected.title ||
+        section.statements.length !== expected.statements.length ||
+        section.statements.some((statement, statementIndex) => {
+          const source = expected.statements[statementIndex]!;
+          return (
+            statement.text !== source.text ||
+            statement.evidenceIds.length !== source.evidenceIds.length ||
+            statement.evidenceIds.some(
+              (id, citationIndex) => id !== source.evidenceIds[citationIndex],
+            )
+          );
+        })
+      );
+    }) ||
+    memo.missingItems.length !== verified.missingItems.length ||
+    memo.missingItems.some(
+      (item, index) => item !== verified.missingItems[index],
+    )
+  ) {
+    throw new Error(
+      "Unverified export statements; regenerate the draft from evidence",
+    );
   }
 
   const lines = [

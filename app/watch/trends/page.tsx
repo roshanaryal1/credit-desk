@@ -140,11 +140,11 @@ async function TrendView() {
                 {trends.meanDaysToResolution === null
                   ? "Insufficient observations"
                   : trends.meanDaysToResolution.toFixed(1) + " days"}
+                <span className="text-muted-foreground mt-1 block text-xs font-normal">
+                  {trends.meanResolutionSample} qualifying resolved incidents.
+                  Reopened incidents are not considered finally resolved.
+                </span>
               </dd>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {trends.meanResolutionSample} qualifying resolved incidents.
-                Reopened incidents are not considered finally resolved.
-              </p>
             </div>
           </dl>
           <Link

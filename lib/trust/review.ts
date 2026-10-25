@@ -3,6 +3,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { CONFIG_VERSION } from "@/lib/checks/config";
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
+import { storedExplanationUsable } from "@/lib/agent/stored-validation";
 
 import { canonicalJson, sha256 } from "./canonical";
 
@@ -29,7 +30,7 @@ export async function latestExplanation(
     )
     .orderBy(desc(t.agentRuns.createdAt), desc(t.agentRuns.id))
     .limit(1);
-  return row ?? null;
+  return row && (await storedExplanationUsable(db, row)) ? row : null;
 }
 
 export async function reviewState(db: Pick<Db, "select">, invoiceId: string) {
