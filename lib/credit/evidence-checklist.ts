@@ -6,16 +6,9 @@ import { daysBetween } from "@/lib/dates";
 import { listDemoCases, type CaseWorkRow } from "@/lib/queries/demo-cases";
 
 export type RequirementState =
-  | "MISSING"
-  | "RECEIVED"
-  | "EXPIRED"
-  | "NOT_REQUIRED";
+  "MISSING" | "RECEIVED" | "EXPIRED" | "NOT_REQUIRED";
 export type DueState =
-  | "OVERDUE"
-  | "DUE_TODAY"
-  | "UPCOMING"
-  | "SATISFIED"
-  | "NO_DUE_DATE";
+  "OVERDUE" | "DUE_TODAY" | "UPCOMING" | "SATISFIED" | "NO_DUE_DATE";
 
 export interface EvidenceRequirement {
   id: string;
@@ -37,7 +30,8 @@ export function dueState(
   asOf: string,
 ): DueState {
   daysBetween(asOf, asOf);
-  if (dueDate === null) return state === "MISSING" ? "NO_DUE_DATE" : "SATISFIED";
+  if (dueDate === null)
+    return state === "MISSING" ? "NO_DUE_DATE" : "SATISFIED";
   daysBetween(dueDate, dueDate);
   if (state === "RECEIVED" || state === "NOT_REQUIRED") return "SATISFIED";
   if (state === "EXPIRED") return "OVERDUE";
@@ -92,9 +86,12 @@ export function evidenceRequirementsForCases(
         kind: "DEBTOR_CONSENT",
         label: "Fictional debtor consent review",
         // An intentionally expired metadata example; NOT a real document.
-        state: row.id === "case_synthetic_01"
-          ? "EXPIRED"
-          : row.state === "CHECKER_REVIEW" ? "MISSING" : "NOT_REQUIRED",
+        state:
+          row.id === "case_synthetic_01"
+            ? "EXPIRED"
+            : row.state === "CHECKER_REVIEW"
+              ? "MISSING"
+              : "NOT_REQUIRED",
         sourceId: null,
         sourceHref: null,
         provenance: "SYNTHETIC_FIXTURE",
