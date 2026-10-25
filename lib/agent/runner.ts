@@ -189,7 +189,11 @@ async function runAgentLoop(
   let status: "PASSED" | "FAILED" | "ERROR" = "ERROR";
   let errors: string[] = [];
   const capturedToolResponses: CapturedToolResponse[] = [];
-  const knownToolNames = new Set(TOOL_DEFINITIONS.map((tool) => tool.function.name));
+  const knownToolNames = new Set(
+    TOOL_DEFINITIONS.filter((tool) => tool.type === "function").map(
+      (tool) => tool.function.name,
+    ),
+  );
 
   try {
     for (;;) {
