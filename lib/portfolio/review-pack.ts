@@ -56,12 +56,15 @@ function cents(value: number): string {
 
 function total(values: number[]): number {
   const amount = values.reduce((sum, value) => sum + value, 0);
-  if (!Number.isSafeInteger(amount)) throw new Error("Portfolio total overflow");
+  if (!Number.isSafeInteger(amount))
+    throw new Error("Portfolio total overflow");
   return amount;
 }
 
 function amountOrUnknown(value: number | null): string {
-  return value === null ? "Unknown — incomplete synthetic source" : cents(value);
+  return value === null
+    ? "Unknown — incomplete synthetic source"
+    : cents(value);
 }
 
 function clientLink(clientId: string): string {
@@ -73,13 +76,15 @@ export function renderPortfolioReviewPack(input: PortfolioReviewPack) {
   const clients = [...input.clients].sort((a, b) => a.id.localeCompare(b.id));
   const funded = total(clients.map((c) => c.fundedPrincipalCents));
   const headroom = total(clients.map((c) => c.commitmentHeadroomCents));
-  const fullAgeing = clients.every((c) => c.receivableOutstandingCents !== null);
+  const fullAgeing = clients.every(
+    (c) => c.receivableOutstandingCents !== null,
+  );
   const receivables = fullAgeing
     ? total(clients.map((c) => c.receivableOutstandingCents ?? 0))
     : null;
-  const high = clients.flatMap((c) => c.unresolvedIncidents).filter(
-    (incident) => incident.severity === "HIGH",
-  ).length;
+  const high = clients
+    .flatMap((c) => c.unresolvedIncidents)
+    .filter((incident) => incident.severity === "HIGH").length;
   const incidentCount = clients.reduce(
     (sum, c) => sum + c.unresolvedIncidents.length,
     0,
@@ -146,9 +151,12 @@ export function renderPortfolioReviewPack(input: PortfolioReviewPack) {
       }
     }
     lines.push("", "### Source evidence", "");
-    if (!c.invoiceIds.length) lines.push("No dated ledger invoice IDs available.");
+    if (!c.invoiceIds.length)
+      lines.push("No dated ledger invoice IDs available.");
     for (const id of [...new Set(c.invoiceIds)].sort()) {
-      lines.push(`- Ledger invoice: ${text(id)}; [client collections](${clientLink(c.id)}/collections)`);
+      lines.push(
+        `- Ledger invoice: ${text(id)}; [client collections](${clientLink(c.id)}/collections)`,
+      );
     }
     lines.push("", "### Source exceptions", "");
     for (const exception of c.sourceExceptions) {
