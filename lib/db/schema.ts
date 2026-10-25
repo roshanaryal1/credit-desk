@@ -360,7 +360,8 @@ export const decisionSnapshots = pgTable("decision_snapshots", {
   createdAt: instant("created_at").notNull().defaultNow(),
 });
 
-// Analyst exposure to agent output, recorded before any decision (SPEC 9.1).
+// First delivery of validated agent output to a writable reviewer per
+// session/invoice, including before revisions (SPEC 9.1).
 export const exposures = pgTable(
   "exposures",
   {
