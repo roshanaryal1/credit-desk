@@ -29,7 +29,11 @@ async function MemoReview({ params }: { params: Promise<{ id: string }> }) {
   const client = (await listClients()).find((c) => c.id === id);
   if (!client) notFound();
   const memo = draftMemoFromSyntheticClient(client);
-  const checklist = await clientEvidenceRequirements(await getDb(), id, DEMO_TODAY);
+  const checklist = await clientEvidenceRequirements(
+    await getDb(),
+    id,
+    DEMO_TODAY,
+  );
   return (
     <div className="space-y-7">
       <div>
@@ -121,22 +125,25 @@ async function MemoReview({ params }: { params: Promise<{ id: string }> }) {
             Structured fictional case evidence
           </h3>
           <p className="text-muted-foreground mt-2 text-xs">
-            Case-linked metadata only. No real documents or authenticated checker sign-off.
+            Case-linked metadata only. No real documents or authenticated
+            checker sign-off.
           </p>
           <ul className="mt-3 space-y-2 text-sm">
             {checklist.map((item) => (
               <li className="border-border rounded-sm border p-3" key={item.id}>
                 <strong>{item.label}</strong>
                 <span className="text-muted-foreground block text-xs">
-                  {item.state} · {item.dueState} · due
-                  {" "}{item.dueDate ? businessDate(item.dueDate) : "not set"}
-                  {" · "}{item.id}
+                  {item.state} · {item.dueState} · due{" "}
+                  {item.dueDate ? businessDate(item.dueDate) : "not set"}
+                  {" · "}
+                  {item.id}
                 </span>
               </li>
             ))}
             {checklist.length === 0 && (
               <li className="text-muted-foreground">
-                No case-linked synthetic requirements recorded. This does not certify completeness.
+                No case-linked synthetic requirements recorded. This does not
+                certify completeness.
               </li>
             )}
           </ul>
