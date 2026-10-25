@@ -39,6 +39,12 @@ async function Scenario({ params }: { params: Promise<{ id: string }> }) {
       >
         ← Back to Client 360
       </Link>
+      <Link
+        href={`/clients/${encodeURIComponent(id)}/source-health`}
+        className="text-primary text-sm underline underline-offset-4"
+      >
+        Inspect source health and matched cash →
+      </Link>
       <PageHeader
         title="Client collateral scenario"
         description={`Synthetic ledger as of ${businessDate(result.asOfDate)} · No credit-policy approval or live source verification`}
