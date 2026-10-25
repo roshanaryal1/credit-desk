@@ -18,6 +18,10 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
+// The exit path never needs a database or the server-only rate limiter.
+vi.mock("@/lib/db/client", () => ({ getDb: vi.fn() }));
+vi.mock("@/lib/rate-limit", () => ({ takeAll: vi.fn() }));
+
 import { logoutAction } from "@/app/login/actions";
 
 describe("demo account exits", () => {
