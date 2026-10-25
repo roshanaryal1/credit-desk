@@ -114,9 +114,7 @@ async function seed() {
       riskLevel: "MEDIUM",
       recommendation: "HOLD",
       questionsForClient: ["Please provide the supporting records."],
-      claims: [
-        { text: "This record needs review.", evidenceIds: [invoiceId] },
-      ],
+      claims: [{ text: "This record needs review.", evidenceIds: [invoiceId] }],
       citedEvidenceIds: [invoiceId],
       validationStatus: "PASSED",
       validationErrors: [],
