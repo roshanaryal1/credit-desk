@@ -172,3 +172,21 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Login uses the full viewport, without importing client router state into
+   the root layout (Next 16 static/dynamic page prerender stays safe). */
+.credit-desk-frame:has([data-login-page]) {
+  display: block;
+}
+.credit-desk-frame:has([data-login-page]) > aside {
+  display: none;
+}
+.credit-desk-frame:has([data-login-page]) > .credit-desk-content {
+  padding: 0;
+}
+.credit-desk-frame:has([data-login-page])
+  > .credit-desk-content
+  > .credit-desk-content-inner {
+  max-width: none;
+  gap: 0;
+}

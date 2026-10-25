@@ -17,7 +17,7 @@ export const AgentOutputSchema = z.object({
     .refine((s) => words(s) <= 60, "summary must be 60 words or fewer"),
   risk_level: z.enum(["low", "medium", "high"]),
   recommendation: z.enum(["APPROVE", "HOLD", "REJECT", "REQUEST_INFO"]),
-  questions_for_client: z.array(z.string().min(1)).max(5),
+  questions_for_client: z.array(z.string().min(1).max(1000)).max(5),
   claims: z.array(ClaimSchema).min(1).max(8),
   cited_evidence_ids: z.array(z.string().min(1)).min(1),
 });

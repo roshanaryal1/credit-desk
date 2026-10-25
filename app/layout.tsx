@@ -3,7 +3,9 @@ import { Public_Sans } from "next/font/google";
 
 import { Suspense } from "react";
 
-import { Nav, NavFallback } from "@/components/nav";
+import { AppFrame } from "@/components/app-frame";
+import { NavFallback } from "@/components/nav";
+import { PersonaNav } from "@/components/persona-nav";
 import { SignOut } from "@/components/sign-out";
 import { THEME_SCRIPT, ThemeToggle } from "@/components/theme-toggle";
 
@@ -42,40 +44,35 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Prototype for discussion. All data is synthetic.
         </div>
-        <div className="flex flex-1 flex-col md:flex-row">
-          <aside className="bg-card/60 flex flex-col gap-4 border-b px-3 py-3 md:w-60 md:shrink-0 md:border-r md:border-b-0 md:px-4 md:py-7">
-            <div className="px-3">
-              <p className="font-semibold tracking-tight">Credit Desk</p>
-              <p className="text-muted-foreground text-xs">
-                Invoice finance operations
-              </p>
-            </div>
-            <Suspense fallback={<NavFallback />}>
-              <Nav />
-            </Suspense>
-            <div className="flex flex-wrap items-center md:hidden">
-              <ThemeToggle />
-              <Suspense>
-                <SignOut />
+        <AppFrame
+          navigation={
+            <aside className="bg-card/60 flex flex-col gap-4 border-b px-3 py-3 md:w-60 md:shrink-0 md:border-r md:border-b-0 md:px-4 md:py-7">
+              <div className="px-3">
+                <p className="font-semibold tracking-tight">Credit Desk</p>
+                <p className="text-muted-foreground text-xs">
+                  Invoice finance operations
+                </p>
+              </div>
+              <Suspense fallback={<NavFallback />}>
+                <PersonaNav />
               </Suspense>
-            </div>
-            <div className="hidden md:mt-auto md:flex md:flex-col">
-              <ThemeToggle />
-              <Suspense>
-                <SignOut />
-              </Suspense>
-            </div>
-          </aside>
-          <main
-            id="main"
-            tabIndex={-1}
-            className="flex-1 px-4 py-6 md:px-8 md:py-8"
-          >
-            <div className="mx-auto flex max-w-7xl flex-col gap-8">
-              {children}
-            </div>
-          </main>
-        </div>
+              <div className="flex flex-wrap items-center md:hidden">
+                <ThemeToggle />
+                <Suspense>
+                  <SignOut />
+                </Suspense>
+              </div>
+              <div className="hidden md:mt-auto md:flex md:flex-col">
+                <ThemeToggle />
+                <Suspense>
+                  <SignOut />
+                </Suspense>
+              </div>
+            </aside>
+          }
+        >
+          {children}
+        </AppFrame>
       </body>
     </html>
   );

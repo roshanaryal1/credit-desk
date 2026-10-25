@@ -1,15 +1,25 @@
 # Deploying Credit Desk
 
-Vercel hosts the app; Neon (through the Vercel Marketplace) holds the data.
-Each step below needs an account owner, so it is run by a person.
+Vercel hosts the app; a dedicated Neon PostgreSQL database holds the synthetic
+demonstration data. Deployment and database changes require the owner's
+authorization. The current project uses Node 24 and Sydney compute for both
+services. No domain purchase is needed for the existing owned subdomain.
+
+## Fail-closed database requirement
+
+A hosted runtime must have `DATABASE_URL` configured for persistent PostgreSQL.
+Without it, the app fails closed instead of silently using temporary PGlite.
+Only disposable GitHub Actions browser smoke may set both `CI=true` and
+`CREDIT_DESK_CI_PGLITE=1`; Vercel must never set the exception.
+A READY Vercel build is not evidence of migrated tables or functioning login.
 
 ## 1. Project and database
 
 1. On vercel.com, import the `credit-desk` repository. Framework: Next.js.
    Node version: 24.
-2. In the project, open Storage and add Neon Postgres. It sets
-   `DATABASE_URL` for production. Give previews their own database branch so
-   they never touch production data (SPEC 11).
+2. Connect the dedicated Neon database with an encrypted production
+   `DATABASE_URL`. A Marketplace integration is optional. Give previews their
+   own database branch so they never touch production data (SPEC 11).
 
 ## 2. Environment variables (Production)
 
@@ -26,30 +36,57 @@ Each step below needs an account owner, so it is run by a person.
 Without `DEMO_PASSWORD` and `SESSION_SECRET` the production app returns 503
 rather than serving unprotected.
 
+## Optional one-click visitor demo
+
+For a **separate fictional-only** instance, verify the connected database has no live borrower, lender or bank records, run the non-destructive demo preflight, then (and only then) set both `PUBLIC_DEMO_ENABLED=1` and `CREDIT_DESK_DATA_CLASSIFICATION=SYNTHETIC`. The latter is an operator declaration, not a technical guarantee. `DEMO_PASSWORD` and `SESSION_SECRET` must also be configured, but neither is displayed to public visitors. The five one-click demo accounts are signed, short-lived (60 minutes) and read-only. They do not require real passwords; their displayed `.example` email addresses are labels only.
+
+**Never enable on a mixed/live dataset.** No new demo code should be deployed to the public custom domain until hosted migrations/fictional seed and accessibility/browser/security acceptance pass. Disable the switches to prevent new public sessions; rotate `SESSION_SECRET` to invalidate existing sessions. The reviewer-password path remains available for privileged synthetic demonstrations.
+
+## Read-only synthetic database preflight
+
+Before any owner-authorised migration or seed, explicitly select the target
+with a secret `DATABASE_URL` in the operator environment. Run
+`npm run demo:preflight -- --target=preview` to inspect schema, migration journal
+and fictional fixture counts **without writing anything**. A successful
+preflight is preliminary, not a proof of live authentication or data provenance.
+See [the demo readiness runbook](runbooks/demo-readiness.md) for the full gates.
+Never run seed/reset against customer records or a production dataset.
+
 ## 3. Data
 
-From a local checkout, with production `DATABASE_URL` in the shell only (not
-in `.env.local`):
+The existing hosted synthetic dataset was imported with its stored explanations
+and decision history, then checked for row equality. Do not reseed it during a
+routine deployment. Run `npm run demo:preflight -- --target=production` with the
+explicit target connection provided through the approved secret mechanism.
+
+The commands below are for a **new, empty, fictional-only database** after
+explicit migration and seed authorization. `seed` replaces data. Keep the
+target connection out of `.env.local` and command history:
 
 ```bash
-export DATABASE_URL="postgres://..."      # from the Neon dashboard
 npm run db:migrate
 npm run seed -- --target=production       # data, checks, 90 days of watch runs
-npm run precompute                        # about a minute per item; see the note below
+npm run precompute                        # stored explanations; see rate-limit note
 npm run simulate                          # simulated agreement history
-unset DATABASE_URL
 ```
 
 `seed` refuses to reset a database that holds live decisions unless `--force`
 is passed.
 
-Groq's free tier caps `openai/gpt-oss-120b` at 200,000 tokens a day, about 28
-explanations. If the precompute stops with rate-limit errors, either rerun it
-the next day (it resumes) or finish with `LLM_MODEL=openai/gpt-oss-20b npm run
-precompute`. Each run records the model it used. Keep the production key's
-daily budget free on demo day so the Re-run button works.
+Provider rate limits depend on the account. Precompute resumes stored work;
+check the provider's actual response and account limits before retrying. Each
+run records its model. Deploying existing explanations does not require new
+LLM calls. Public one-click sessions cannot invoke the agent.
 
 ## 4. Deploy and smoke test
+
+Canonical production URL: **https://creditdesk.roshanaryal.com**.
+The hostname is attached to the `credit-desk` Vercel project and configured via
+an external CNAME. The legacy `credit-desk-inky.vercel.app` hostname redirects
+permanently (HTTP 308) to the canonical domain using a host-scoped, project-level
+CDN routing rule. Preserve that rule if recreating or transferring the project.
+This is independent of preview deployment URLs, and it does not make the
+synthetic prototype a production lending application.
 
 1. Deploy from the Vercel dashboard (or push to `main`).
 2. In a private window on a laptop and on a phone: sign in, open a pending

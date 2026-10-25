@@ -4,6 +4,8 @@ import { and, asc, desc, eq, lte } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
+import { incidentEventsAsOf } from "@/lib/watch/as-of-events";
+import { storedExplanationUsable } from "@/lib/agent/stored-validation";
 
 /** Incidents first detected on or before the as-of date, with current status. */
 export async function incidentsAsOf(asOf: string) {
@@ -24,7 +26,7 @@ export async function incidentsAsOf(asOf: string) {
     .from(t.incidentEvents)
     .orderBy(asc(t.incidentEvents.occurredAt));
   const latest = new Map<string, (typeof events)[number]>();
-  for (const e of events) latest.set(e.incidentId, e);
+  for (const e of incidentEventsAsOf(events, asOf)) latest.set(e.incidentId, e);
   return rows.map((r) => ({
     ...r.incident,
     clientName: r.clientName,
@@ -68,7 +70,10 @@ export async function incidentDetail(incidentId: string, asOf: string) {
     incident,
     latestDetection: visible[0] ?? null,
     detectionCount: visible.length,
-    events,
-    explained: explained ?? null,
+    events: incidentEventsAsOf(events, asOf),
+    explained:
+      explained && (await storedExplanationUsable(db, explained, asOf))
+        ? explained
+        : null,
   };
 }

@@ -7,11 +7,18 @@ export const AUTH_COOKIE = "cd_auth";
 export const DEV_SESSION_COOKIE = "cd_dev_session";
 export const SESSION_TTL_SECONDS = 12 * 60 * 60;
 
+import type { DemoPersona } from "./demo-personas";
+import { parseDemoPersona } from "./demo-personas";
+
 export interface SessionPayload {
   /** Random session id; also used for exposure and attribution. */
   sid: string;
   /** Self-declared display name (not verified). */
   name: string;
+  /** Self-selected display role; never authoritative authentication. */
+  persona?: DemoPersona;
+  /** Public one-click visitors never receive write privileges. */
+  publicDemo?: true;
   /** Expiry, epoch seconds. */
   exp: number;
 }
@@ -85,7 +92,9 @@ export async function verifySession(
     if (
       typeof payload.sid !== "string" ||
       typeof payload.exp !== "number" ||
-      payload.exp <= nowSeconds
+      payload.exp <= nowSeconds ||
+      (payload.persona !== undefined && !parseDemoPersona(payload.persona)) ||
+      (payload.publicDemo !== undefined && payload.publicDemo !== true)
     )
       return null;
     return payload;

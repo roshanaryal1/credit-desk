@@ -135,6 +135,28 @@ describe("citation validator", () => {
     expect(r.ok).toBe(false);
   });
 
+  it.each([
+    ["Why is the balance $99,999.99?", /question 1 states \$99999\.99/],
+    ["Why was it changed on 2035-01-01?", /question 1 states 2035-01-01/],
+    ["Your advance was approved. Please confirm.", /never approves or funds/],
+  ])("checks displayed client questions: %s", (question, error) => {
+    const result = run({ ...good, questions_for_client: [question] });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.join()).toMatch(error);
+  });
+
+  it("accepts questions without factual amounts and questions grounded in cited records", () => {
+    expect(
+      run({
+        ...good,
+        questions_for_client: [
+          "Can you provide the original invoice?",
+          "Why was the $10,000.00 ledger entry voided on 2026-09-10?",
+        ],
+      }).ok,
+    ).toBe(true);
+  });
+
   it("rejects an id belonging to another client at registration", () => {
     expect(() =>
       new EvidenceRegistry("cli_1").add({ id: "x", clientId: "cli_2" }),
@@ -143,6 +165,91 @@ describe("citation validator", () => {
 });
 
 describe("money evidence", () => {
+  it.each([
+    "NZD 999999.00",
+    "$1e9",
+    "$1 million",
+    "$.50",
+    "$+999999.00",
+    "NZ$999999.00",
+    "USD 1.00",
+  ])("rejects unsupported or ungrounded currency: %s", (amount) => {
+    const evidence = new EvidenceRegistry("cli_1");
+    evidence.add({ id: "one", clientId: "cli_1", amountCents: 100 });
+    for (const field of ["summary", "claim", "question"]) {
+      const output = {
+        ...good,
+        summary:
+          field === "summary" ? `Balance ${amount}.` : "Review the balance.",
+        claims: [
+          {
+            text: field === "claim" ? `Balance ${amount}.` : "Balance $1.00.",
+            evidence_ids: ["one"],
+          },
+        ],
+        questions_for_client:
+          field === "question" ? [`Why is the balance ${amount}?`] : [],
+        cited_evidence_ids: ["one"],
+      };
+      expect(validateOutput(JSON.stringify(output), evidence).ok).toBe(false);
+    }
+  });
+
+  it("supports conventional NZD amounts, signed cents and sentence punctuation", () => {
+    expect(
+      moneyMentions("$1.00, NZD 1.00, NZ$1.00. -NZD 1.00 and NZ$-1.00"),
+    ).toEqual([100, 100, 100, -100, -100]);
+    const evidence = new EvidenceRegistry("cli_1");
+    evidence.add({ id: "one", clientId: "cli_1", amountCents: 100 });
+    expect(
+      validateOutput(
+        JSON.stringify({
+          ...good,
+          summary: "Balance NZD 1.00.",
+          claims: [
+            { text: "Balance NZ$1.00, please check.", evidence_ids: ["one"] },
+          ],
+          questions_for_client: ["Can you verify the $1.00 invoice?"],
+          cited_evidence_ids: ["one"],
+        }),
+        evidence,
+      ).ok,
+    ).toBe(true);
+  });
+
+  it("rejects oversized client questions at the schema boundary", () => {
+    expect(run({ ...good, questions_for_client: ["x".repeat(1001)] }).ok).toBe(
+      false,
+    );
+  });
+  it.each(["$12,345.671", "$12,34.56", "$12345.67.8"])(
+    "rejects a malformed amount instead of matching a prefix: %s",
+    (amount) => {
+      const result = run({
+        ...good,
+        claims: [
+          { text: `The invoice is for ${amount}.`, evidence_ids: ["inv_1"] },
+        ],
+      });
+      expect(result.ok).toBe(false);
+      if (!result.ok)
+        expect(result.errors.join()).toMatch(/invalid dollar amount/);
+    },
+  );
+
+  it("accepts a grammatical comma after a grounded dollar amount", () => {
+    expect(
+      run({
+        ...good,
+        claims: [
+          {
+            text: "The invoice is for $12,345.67, issued 2026-09-01.",
+            evidence_ids: ["inv_1"],
+          },
+        ],
+      }).ok,
+    ).toBe(true);
+  });
   it("reads ungrouped amounts of four or more digits in full", () => {
     expect(moneyMentions("$12345.67 and $1234 and $1,234.56")).toEqual([
       1234567, 123400, 123456,

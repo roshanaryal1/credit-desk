@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 import {
   AUTH_COOKIE,
@@ -16,6 +17,7 @@ import type { Analyst } from "@/lib/trust/decide";
 export const MODE_COOKIE = "cd_mode";
 
 export async function currentAnalyst(): Promise<Analyst> {
+  await connection();
   const jar = await cookies();
   const mode = jar.get(MODE_COOKIE)?.value === "ASSIST" ? "ASSIST" : "SHADOW";
   const gate = gateConfig();

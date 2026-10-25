@@ -88,7 +88,7 @@ const BANK_LIMIT = 25;
 
 export class ToolExecutor {
   constructor(
-    private readonly db: Db,
+    private readonly db: Pick<Db, "select">,
     readonly scope: ToolScope,
     readonly evidence: EvidenceRegistry = new EvidenceRegistry(scope.clientId),
   ) {}

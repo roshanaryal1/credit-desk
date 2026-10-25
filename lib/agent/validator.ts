@@ -11,11 +11,14 @@ export type ValidationResult =
   | { ok: true; value: AgentOutput }
   | { ok: false; errors: string[]; value?: AgentOutput };
 
-// Grouped thousands ($1,234.56) or a plain run of digits ($12345.67); the
-// grouped form needs at least one comma so plain digits are read in full.
-// An optional minus before or after the dollar sign keeps the sign, so a
-// negative figure can never match positive evidence.
-const MONEY = /(-)?\$\s?(-)?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?/g;
+// Recognize explicit NZD and NZ$ alongside the prototype's implicit NZD $.
+// Read the whole numeric token; unsupported notation must not match a prefix.
+const CURRENCY_MARKER = /-?(?:NZ\$|\$|\bNZD(?=\s|[+\-\d.]))\s*/gi;
+const CURRENCY_NUMBER = /^[+-]?[\d,.]+(?:e[+-]?\d+)?[kmb]?/i;
+const VALID_CURRENCY_NUMBER = /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/;
+const MAGNITUDE = /^\s*(?:hundred|thousand|million|billion|trillion|[kmb])\b/i;
+const OTHER_CURRENCY =
+  /(?:\b(?:USD|AUD|CAD|EUR|GBP|JPY|CHF|CNY|RMB|HKD|SGD)\s*|\b(?:US|AU|CA|HK|SG)\$\s*|[€£¥]\s*)[+\-]?[\d.]/i;
 // Record fields that hold money in dollars; fields ending in Cents hold cents.
 // Other numbers (days to pay, counts, basis points) are never money evidence.
 const DOLLAR_FIELDS = new Set(["amount", "advance", "outstanding"]);
@@ -24,14 +27,46 @@ const ISO_DATE = /\b\d{4}-\d{2}-\d{2}\b/g;
 const FORBIDDEN =
   /\b(approved|has been funded|is funded|will be funded|we will fund)\b/i;
 
-/** Dollar amounts in text, as integer cents. */
+function currencyTokens(
+  text: string,
+): { token: string; cents: number | null }[] {
+  const out: { token: string; cents: number | null }[] = [];
+  for (const marker of text.matchAll(CURRENCY_MARKER)) {
+    const after = text.slice(marker.index! + marker[0].length);
+    const numeric = CURRENCY_NUMBER.exec(after)?.[0];
+    // A standalone NZD label is not itself a numeric assertion.
+    if (!numeric && /NZD/i.test(marker[0])) continue;
+    const remainder = after.slice(numeric?.length ?? 0);
+    // Terminal comma/full stop can be sentence punctuation, not decimal data.
+    const number = (numeric ?? "").replace(/[,.]+$/, "");
+    const token = marker[0] + (numeric ?? "");
+    const negativeBefore = marker[0].startsWith("-");
+    const malformed =
+      !VALID_CURRENCY_NUMBER.test(number) ||
+      (negativeBefore && number.startsWith("-")) ||
+      MAGNITUDE.test(remainder) ||
+      /^[a-z]/i.test(remainder);
+    if (malformed) {
+      out.push({ token, cents: null });
+      continue;
+    }
+    const [whole, fraction = ""] = number
+      .replace(/^-/, "")
+      .replaceAll(",", "")
+      .split(".");
+    const cents =
+      (negativeBefore || number.startsWith("-") ? -1 : 1) *
+      (Number(whole) * 100 + Number(fraction.padEnd(2, "0")));
+    out.push({ token, cents: Number.isSafeInteger(cents) ? cents : null });
+  }
+  return out;
+}
+
+/** Supported NZD money in text, as integer cents; validation rejects bad tokens. */
 export function moneyMentions(text: string): number[] {
-  return [...text.matchAll(MONEY)].map((m) => {
-    const whole = Number((m[3] ?? "0").replace(/,/g, ""));
-    const fraction = Number((m[4] ?? "0").padEnd(2, "0"));
-    const sign = m[1] || m[2] ? -1 : 1;
-    return sign * (whole * 100 + fraction);
-  });
+  return currencyTokens(text).flatMap((mention) =>
+    mention.cents === null ? [] : [mention.cents],
+  );
 }
 
 export function dateMentions(text: string): string[] {
@@ -94,6 +129,22 @@ export function validateOutput(
   }
   const out = parsed.data;
   const errors: string[] = [];
+  const texts = [
+    out.summary,
+    ...out.claims.map((c) => c.text),
+    ...out.questions_for_client,
+  ];
+  for (const text of texts) {
+    for (const mention of currencyTokens(text))
+      if (mention.cents === null)
+        errors.push(
+          `output contains an invalid dollar amount: ${mention.token}`,
+        );
+    if (OTHER_CURRENCY.test(text))
+      errors.push(
+        "output contains unsupported currency; only NZD amounts are supported",
+      );
+  }
 
   const unknownIds = (ids: string[]) => ids.filter((id) => !evidence.has(id));
   for (const id of unknownIds(out.cited_evidence_ids)) {
@@ -149,7 +200,25 @@ export function validateOutput(
     }
   }
 
-  const texts = [out.summary, ...out.claims.map((c) => c.text)];
+  // Questions are displayed too. They cannot smuggle unsupported facts past
+  // the checks applied to summaries and cited claims.
+  out.questions_for_client.forEach((question, i) => {
+    for (const c of moneyMentions(question)) {
+      if (!summaryFacts.cents.has(c)) {
+        errors.push(
+          `question ${i + 1} states $${(c / 100).toFixed(2)}, which is not in any cited record`,
+        );
+      }
+    }
+    for (const d of dateMentions(question)) {
+      if (!summaryFacts.dates.has(d)) {
+        errors.push(
+          `question ${i + 1} states ${d}, which is not in any cited record`,
+        );
+      }
+    }
+  });
+
   if (texts.some((s) => FORBIDDEN.test(s))) {
     errors.push(
       "output says something is approved or funded; the agent never approves or funds",
