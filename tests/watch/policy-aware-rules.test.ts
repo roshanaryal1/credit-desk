@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  runWatchRules,
-  runWatchRulesWithPolicies,
-} from "@/lib/watch/rules";
+import { runWatchRules, runWatchRulesWithPolicies } from "@/lib/watch/rules";
 import type { RiskPolicy } from "@/lib/watch/policy";
 import type { Book } from "@/lib/watch/types";
 
@@ -85,17 +82,18 @@ describe("opt-in policy-aware watch evaluation (#101)", () => {
     expect(original.map((detection) => detection.ruleId)).toEqual([
       "FUNDED_CREDIT_NOTE",
     ]);
-    const governed = runWatchRulesWithPolicies(
-      book,
-      [oldPolicy, revisedPolicy, otherPolicy],
-    );
+    const governed = runWatchRulesWithPolicies(book, [
+      oldPolicy,
+      revisedPolicy,
+      otherPolicy,
+    ]);
     expect(governed.map((detection) => detection.ruleId)).toEqual([
       "FUNDED_CREDIT_NOTE",
       "OVERDUE_FUNDED",
     ]);
-    expect(governed.find((detection) =>
-      detection.ruleId === "OVERDUE_FUNDED",
-    )).toMatchObject({
+    expect(
+      governed.find((detection) => detection.ruleId === "OVERDUE_FUNDED"),
+    ).toMatchObject({
       clientId: "client-a",
       details: {
         riskPolicyId: "policy-client-a-v2",
@@ -103,67 +101,83 @@ describe("opt-in policy-aware watch evaluation (#101)", () => {
         daysOverdue: 15,
       },
     });
-    expect(governed.find((detection) =>
-      detection.ruleId === "FUNDED_CREDIT_NOTE",
-    )?.details).toMatchObject({
+    expect(
+      governed.find((detection) => detection.ruleId === "FUNDED_CREDIT_NOTE")
+        ?.details,
+    ).toMatchObject({
       riskPolicyId: "policy-client-b-v1",
     });
     // The rule registry and input book are unchanged by the preview.
     expect(runWatchRules(book)).toEqual(original);
     expect(book.fundings.map((item) => item.advanceCents)).toEqual([
-      20_000,
-      20_000,
+      20_000, 20_000,
     ]);
   });
 
   it("selects historical versions without retroactively changing detections", () => {
-    const before = runWatchRulesWithPolicies(
-      makeBook("2026-10-19"),
-      [revisedPolicy, otherPolicy, oldPolicy],
-    );
+    const before = runWatchRulesWithPolicies(makeBook("2026-10-19"), [
+      revisedPolicy,
+      otherPolicy,
+      oldPolicy,
+    ]);
     expect(before.map((detection) => detection.ruleId)).toEqual([
       "FUNDED_CREDIT_NOTE",
     ]);
-    const after = runWatchRulesWithPolicies(
-      makeBook("2026-10-20"),
-      [otherPolicy, revisedPolicy, oldPolicy],
+    const after = runWatchRulesWithPolicies(makeBook("2026-10-20"), [
+      otherPolicy,
+      revisedPolicy,
+      oldPolicy,
+    ]);
+    expect(
+      after.some(
+        (detection) =>
+          detection.ruleId === "OVERDUE_FUNDED" &&
+          detection.details.riskPolicyId === "policy-client-a-v2",
+      ),
+    ).toBe(true);
+    expect(after).toEqual(
+      runWatchRulesWithPolicies(makeBook("2026-10-20"), [
+        oldPolicy,
+        otherPolicy,
+        revisedPolicy,
+      ]),
     );
-    expect(after.some((detection) =>
-      detection.ruleId === "OVERDUE_FUNDED" &&
-      detection.details.riskPolicyId === "policy-client-a-v2",
-    )).toBe(true);
-    expect(after).toEqual(runWatchRulesWithPolicies(
-      makeBook("2026-10-20"),
-      [oldPolicy, otherPolicy, revisedPolicy],
-    ));
   });
 
   it("fails closed for absent policies, ambiguous revisions and invalid approvals", () => {
     const book = makeBook("2026-10-20");
-    expect(() => runWatchRulesWithPolicies(book, [
-      revisedPolicy,
-      oldPolicy,
-    ])).toThrow(/No approved risk policy for client client-b/);
-    expect(() => runWatchRulesWithPolicies(book, [
-      ...[oldPolicy, revisedPolicy, otherPolicy],
-      { ...revisedPolicy, id: "duplicate-effective-date" },
-    ])).toThrow(/Ambiguous/);
-    expect(() => runWatchRulesWithPolicies(book, [
-      oldPolicy,
-      otherPolicy,
-      {
-        ...revisedPolicy,
-        approvedAt: "2026-10-21T00:00:00Z",
-      },
-    ])).toThrow(/Unapproved/);
-    expect(() => runWatchRulesWithPolicies(book, [
-      oldPolicy,
-      revisedPolicy,
-      { ...otherPolicy, thresholds: {
-        ...otherPolicy.thresholds,
-        overdueDays: -1,
-      } },
-    ])).toThrow(/day threshold/);
+    expect(() =>
+      runWatchRulesWithPolicies(book, [revisedPolicy, oldPolicy]),
+    ).toThrow(/No approved risk policy for client client-b/);
+    expect(() =>
+      runWatchRulesWithPolicies(book, [
+        ...[oldPolicy, revisedPolicy, otherPolicy],
+        { ...revisedPolicy, id: "duplicate-effective-date" },
+      ]),
+    ).toThrow(/Ambiguous/);
+    expect(() =>
+      runWatchRulesWithPolicies(book, [
+        oldPolicy,
+        otherPolicy,
+        {
+          ...revisedPolicy,
+          approvedAt: "2026-10-21T00:00:00Z",
+        },
+      ]),
+    ).toThrow(/Unapproved/);
+    expect(() =>
+      runWatchRulesWithPolicies(book, [
+        oldPolicy,
+        revisedPolicy,
+        {
+          ...otherPolicy,
+          thresholds: {
+            ...otherPolicy.thresholds,
+            overdueDays: -1,
+          },
+        },
+      ]),
+    ).toThrow(/day threshold/);
   });
 
   it("enforces Auckland business-day policy boundaries across DST", () => {
@@ -183,13 +197,12 @@ describe("opt-in policy-aware watch evaluation (#101)", () => {
       ...f,
       dueDate: "2026-09-10",
     }));
-    expect(runWatchRulesWithPolicies(b, [
-      initial,
-      daylight,
-      otherPolicy,
-    ]).some((detection) =>
-      detection.ruleId === "OVERDUE_FUNDED" &&
-      detection.clientId === "client-a",
-    )).toBe(true);
+    expect(
+      runWatchRulesWithPolicies(b, [initial, daylight, otherPolicy]).some(
+        (detection) =>
+          detection.ruleId === "OVERDUE_FUNDED" &&
+          detection.clientId === "client-a",
+      ),
+    ).toBe(true);
   });
 });
