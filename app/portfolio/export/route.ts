@@ -27,11 +27,7 @@ export async function GET(request: Request) {
 
   try {
     const db = await getDb();
-    const pack = await syntheticPortfolioReviewPack(
-      db,
-      asOf,
-      selectedClientId,
-    );
+    const pack = await syntheticPortfolioReviewPack(db, asOf, selectedClientId);
     if (!pack) return new Response("Client not found", { status: 404 });
     const result = renderPortfolioReviewPack(pack);
     const suffix = selectedClientId ? "-" + selectedClientId : "";
