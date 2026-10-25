@@ -27,12 +27,14 @@ export const SYNTHETIC_SLA_POLICY: CaseSlaPolicy = {
 const TERMINAL = new Set(["APPROVED", "HELD", "REJECTED", "CLOSED"]);
 
 function validate(policy: CaseSlaPolicy) {
-  if (!policy.version.trim() ||
-      !Number.isSafeInteger(policy.warningBusinessDays) ||
-      !Number.isSafeInteger(policy.criticalBusinessDays) ||
-      policy.warningBusinessDays < 1 ||
-      policy.criticalBusinessDays < policy.warningBusinessDays ||
-      policy.criticalBusinessDays > 365) {
+  if (
+    !policy.version.trim() ||
+    !Number.isSafeInteger(policy.warningBusinessDays) ||
+    !Number.isSafeInteger(policy.criticalBusinessDays) ||
+    policy.warningBusinessDays < 1 ||
+    policy.criticalBusinessDays < policy.warningBusinessDays ||
+    policy.criticalBusinessDays > 365
+  ) {
     throw new Error("Invalid versioned case SLA policy");
   }
   const holidays = new Set(policy.holidays ?? []);
@@ -74,9 +76,7 @@ export function classifyCaseSla(
 ) {
   const holidays = validate(policy);
   daysBetween(asOf, asOf);
-  if (!row.id.trim() ||
-      !Number.isSafeInteger(row.version) ||
-      row.version < 0) {
+  if (!row.id.trim() || !Number.isSafeInteger(row.version) || row.version < 0) {
     throw new Error("Invalid case identity or version");
   }
   const terminal = TERMINAL.has(row.state);
@@ -90,12 +90,17 @@ export function classifyCaseSla(
     const calendarDifference = daysBetween(row.dueDate, asOf);
     businessDaysLate = elapsedBusinessDays(row.dueDate, asOf, holidays);
     stage =
-      calendarDifference < 0 ? "ON_TRACK" :
-      calendarDifference === 0 ? "DUE_TODAY" :
-      businessDaysLate === 0 ? "NONWORKING_DAY_GRACE" :
-      businessDaysLate >= policy.criticalBusinessDays ? "CRITICAL" :
-      businessDaysLate >= policy.warningBusinessDays ? "BREACHED" :
-      "ON_TRACK";
+      calendarDifference < 0
+        ? "ON_TRACK"
+        : calendarDifference === 0
+          ? "DUE_TODAY"
+          : businessDaysLate === 0
+            ? "NONWORKING_DAY_GRACE"
+            : businessDaysLate >= policy.criticalBusinessDays
+              ? "CRITICAL"
+              : businessDaysLate >= policy.warningBusinessDays
+                ? "BREACHED"
+                : "ON_TRACK";
   }
   const noticeCandidate =
     stage === "BREACHED" || stage === "CRITICAL"
@@ -110,8 +115,9 @@ export function classifyCaseSla(
     noticeCandidate,
     policyVersion: policy.version,
     calendarEvidence:
-      policy.holidays === undefined ? "WEEKDAYS_ONLY" as const :
-      "INJECTED_HOLIDAYS" as const,
+      policy.holidays === undefined
+        ? ("WEEKDAYS_ONLY" as const)
+        : ("INJECTED_HOLIDAYS" as const),
     dueDate: row.dueDate,
     state: row.state,
     priority: row.priority,
@@ -125,9 +131,7 @@ export function syntheticCaseSlaQueue(
   asOf: string,
   policy: CaseSlaPolicy = SYNTHETIC_SLA_POLICY,
 ) {
-  const ranked = [...rows].map((row) =>
-    classifyCaseSla(row, asOf, policy),
-  );
+  const ranked = [...rows].map((row) => classifyCaseSla(row, asOf, policy));
   const order: Record<CaseSlaStage, number> = {
     CRITICAL: 0,
     BREACHED: 1,
@@ -137,9 +141,10 @@ export function syntheticCaseSlaQueue(
     NO_DEADLINE: 5,
     CLOSED: 6,
   };
-  return ranked.sort((a, b) =>
-    order[a.stage] - order[b.stage] ||
-    b.businessDaysLate - a.businessDaysLate ||
-    a.caseId.localeCompare(b.caseId),
+  return ranked.sort(
+    (a, b) =>
+      order[a.stage] - order[b.stage] ||
+      b.businessDaysLate - a.businessDaysLate ||
+      a.caseId.localeCompare(b.caseId),
   );
 }
