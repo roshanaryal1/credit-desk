@@ -28,6 +28,7 @@ The synthetic application expands the original invoice-finance prototype:
 | User journey | Review route | Scope and verification limit |
 | --- | --- | --- |
 | Institutional workbench | `/` | Synthetic exposure and attention priorities |
+| Portfolio review pack | `/portfolio/export` | Read-only, evidence-linked deterministic Markdown; explicit as-of date and synthetic-source gaps |
 | Analyst review queue | `/queue` | Read-only invoice and incident triage; no verified owner or checker session |
 | Client 360 | `/clients` → client | Synthetic facilities, debtors, dated collections and risk history |
 | Client-specific collateral scenario | `/clients/cli_0001/borrowing-base` | Reconciles *that client's synthetic ledger* to invoice-level haircuts; **not drawable funding** |
