@@ -122,8 +122,7 @@ export const concentrationCreep = (
     const now = exposureByDebtor(book, client.id, book.asOf);
     const before = exposureByDebtor(book, client.id, addDays(book.asOf, -1));
     for (const debtorId of now.byDebtor.keys()) {
-      if (!over(now, debtorId, client.id) ||
-          over(before, debtorId, client.id))
+      if (!over(now, debtorId, client.id) || over(before, debtorId, client.id))
         continue;
       out.push({
         ruleId: "CONCENTRATION_CREEP",
