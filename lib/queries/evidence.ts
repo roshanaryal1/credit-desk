@@ -133,3 +133,24 @@ export async function resolveEvidence(
   );
   return out;
 }
+
+/** Render only verified captured records, never substitute a current table row. */
+export function resolveCapturedEvidence(
+  records: import("@/lib/agent/evidence").EvidenceRecord[],
+): Map<string, EvidenceRow> {
+  return new Map(
+    records.map((record) => [
+      record.id,
+      {
+        id: record.id,
+        kind: `Captured ${String(record.type).replaceAll("_", " ")}`,
+        facts: Object.entries(record)
+          .filter(([key]) => !["id", "clientId", "type"].includes(key))
+          .map(
+            ([key, value]) =>
+              `${key}: ${typeof value === "object" ? JSON.stringify(value) : String(value)}`,
+          ),
+      },
+    ]),
+  );
+}

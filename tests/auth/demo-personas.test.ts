@@ -37,6 +37,7 @@ describe("self-selected demo perspectives", () => {
       "/audit",
       "/trust",
       "/api/watch/run",
+      "/operations/sources",
       "/demo/client/other",
     ])
       expect(demoRouteAllowed("CLIENT", path)).toBe(false);
@@ -49,6 +50,9 @@ describe("self-selected demo perspectives", () => {
     expect(demoRouteAllowed("AUDITOR", "/batches")).toBe(false);
     expect(demoRouteAllowed("AUDITOR", "/credit-memos/cli_0001")).toBe(true);
     expect(demoRouteAllowed("EMPLOYER", "/clients")).toBe(true);
+    expect(demoRouteAllowed("EMPLOYER", "/operations/sources")).toBe(true);
+    expect(demoRouteAllowed("AUDITOR", "/operations/sources")).toBe(true);
+    expect(demoRouteAllowed("ANALYST", "/operations/sources")).toBe(true);
     expect(demoRouteAllowed("ANALYST", "/queue")).toBe(true);
     expect(demoRouteAllowed("ANALYST", "/queue-secret")).toBe(false);
   });

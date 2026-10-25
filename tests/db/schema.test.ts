@@ -59,6 +59,7 @@ describe("schema", () => {
     expect([...APPEND_ONLY_TABLES].sort()).toEqual(
       [
         "agent_runs",
+        "agent_evidence_manifests",
         "audit_events",
         "decision_snapshots",
         "explanations",

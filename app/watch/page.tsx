@@ -306,13 +306,24 @@ async function IncidentPanel({
                     {c.text}{" "}
                     <span className="text-xs">
                       ({c.evidenceIds.join(", ")})
+                      {c.evidenceIds.map((id) => {
+                        const row = data.agentEvidence.get(id);
+                        return row ? (
+                          <span key={id} className="block">
+                            {row.kind}: {row.facts.join(", ")}
+                          </span>
+                        ) : null;
+                      })}
                     </span>
                   </li>
                 ))}
               </ul>
               <p className="text-muted-foreground text-xs">
                 {explained.run.model}, prompt {explained.run.promptVersion}.
-                Citations and figures were checked against the records.
+                {data.agentEvidenceSource === "CAPTURED"
+                  ? "Original tool evidence is preserved."
+                  : "Legacy evidence is reconstructed from dated current records, not an original tool transcript."}{" "}
+                Citations and figures were checked against these records.
               </p>
             </>
           ) : explained ? (

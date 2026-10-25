@@ -24,6 +24,7 @@ const GROUPS = [
       { href: "/trust", label: "Trust Panel" },
       { href: "/credit-memos", label: "Credit memos" },
       { href: "/audit", label: "Audit log" },
+      { href: "/operations/sources", label: "Ingestion health" },
       { href: "/about", label: "About" },
     ],
   },

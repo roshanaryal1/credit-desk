@@ -311,7 +311,7 @@ describe("saving a decision", () => {
       .from(t.decisionSnapshots)
       .where(eq(t.decisionSnapshots.decisionId, res.decisionId));
     const frozen = JSON.parse(snap!.canonicalJson);
-    expect(frozen.schemaVersion).toBe(2);
+    expect(frozen.schemaVersion).toBe(3);
     expect(frozen.citedRecords[bank!.id]).toMatchObject({
       id: bank!.id,
       amountCents: bank!.amountCents,

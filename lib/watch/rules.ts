@@ -1,13 +1,22 @@
 import { addDays, daysBetween } from "@/lib/dates";
 
 import { WATCH_CONFIG } from "./config";
+import { selectRiskPolicy, type RiskPolicy } from "./policy";
 import { exposureByDebtor, outstandingOn } from "./exposure";
 import { incidentKey } from "./keys";
 import type { Book, Detection, WatchRule } from "./types";
 
 // The five watch rules (SPEC 7). Each is pure over the book as of a date.
 
-export const paymentDrift: WatchRule = (book) => {
+export type ClientThresholds = RiskPolicy["thresholds"];
+export type ResolveThresholds = (clientId: string) => ClientThresholds;
+
+const defaultThresholds = (): ClientThresholds => WATCH_CONFIG;
+
+export const paymentDrift = (
+  book: Book,
+  resolve: ResolveThresholds = defaultThresholds,
+): Detection[] => {
   const c = WATCH_CONFIG;
   const recentFrom = addDays(book.asOf, -c.driftRecentDays);
   const priorFrom = addDays(recentFrom, -c.driftPriorDays);
@@ -28,7 +37,7 @@ export const paymentDrift: WatchRule = (book) => {
       ps.reduce((s, p) => s + daysBetween(p.issueDate, p.paidDate), 0) /
       ps.length;
     const increase = mean(recent) - mean(prior);
-    if (increase <= c.driftIncreaseDays) continue;
+    if (increase <= resolve(payments[0]!.clientId).driftIncreaseDays) continue;
     out.push({
       ruleId: "PAYMENT_DRIFT",
       incidentKey: incidentKey.paymentDrift(debtorId),
@@ -70,11 +79,15 @@ export const fundedCreditNote: WatchRule = (book) =>
     ];
   });
 
-export const overdueFunded: WatchRule = (book) =>
+export const overdueFunded = (
+  book: Book,
+  resolve: ResolveThresholds = defaultThresholds,
+): Detection[] =>
   book.fundings.flatMap((f) => {
     const outstanding = outstandingOn(f, book.asOf);
     const daysOverdue = daysBetween(f.dueDate, book.asOf);
-    if (outstanding <= 0 || daysOverdue <= WATCH_CONFIG.overdueDays) return [];
+    if (outstanding <= 0 || daysOverdue <= resolve(f.clientId).overdueDays)
+      return [];
     return [
       {
         ruleId: "OVERDUE_FUNDED" as const,
@@ -92,16 +105,25 @@ export const overdueFunded: WatchRule = (book) =>
     ];
   });
 
-export const concentrationCreep: WatchRule = (book) => {
+export const concentrationCreep = (
+  book: Book,
+  resolve: ResolveThresholds = defaultThresholds,
+): Detection[] => {
   const out: Detection[] = [];
-  const over = (e: ReturnType<typeof exposureByDebtor>, d: string) =>
+  const over = (
+    e: ReturnType<typeof exposureByDebtor>,
+    d: string,
+    clientId: string,
+  ) =>
     e.total > 0 &&
-    (e.byDebtor.get(d) ?? 0) * 10_000 > e.total * WATCH_CONFIG.concentrationBps;
+    (e.byDebtor.get(d) ?? 0) * 10_000 >
+      e.total * resolve(clientId).concentrationBps;
   for (const client of book.clients) {
     const now = exposureByDebtor(book, client.id, book.asOf);
     const before = exposureByDebtor(book, client.id, addDays(book.asOf, -1));
     for (const debtorId of now.byDebtor.keys()) {
-      if (!over(now, debtorId) || over(before, debtorId)) continue;
+      if (!over(now, debtorId, client.id) || over(before, debtorId, client.id))
+        continue;
       out.push({
         ruleId: "CONCENTRATION_CREEP",
         incidentKey: incidentKey.concentrationCreep(client.id, debtorId),
@@ -129,10 +151,16 @@ export const concentrationCreep: WatchRule = (book) => {
   return out;
 };
 
-export const facilityUtilisation: WatchRule = (book) =>
+export const facilityUtilisation = (
+  book: Book,
+  resolve: ResolveThresholds = defaultThresholds,
+): Detection[] =>
   book.clients.flatMap((client) => {
     const { total } = exposureByDebtor(book, client.id, book.asOf);
-    if (total * 10_000 <= client.facilityLimitCents * WATCH_CONFIG.facilityBps)
+    if (
+      total * 10_000 <=
+      client.facilityLimitCents * resolve(client.id).facilityBps
+    )
       return [];
     return [
       {
@@ -160,4 +188,54 @@ export const WATCH_RULES = [
 
 export function runWatchRules(book: Book): Detection[] {
   return WATCH_RULES.flatMap((rule) => rule(book));
+}
+
+/**
+ * Opt-in pure simulation against effective-dated, independently approved
+ * client policies. No incident writes or notification dispatch occur here.
+ * Existing runWatchRules uses the unchanged deterministic demo defaults.
+ */
+export function runWatchRulesWithPolicies(
+  book: Book,
+  policies: readonly RiskPolicy[],
+): Detection[] {
+  const clientIds = new Set([
+    ...book.clients.map((client) => client.id),
+    ...book.fundings.map((funding) => funding.clientId),
+    ...book.payments.map((payment) => payment.clientId),
+  ]);
+  const versions = new Map<string, RiskPolicy>();
+  for (const clientId of clientIds) {
+    const selected = selectRiskPolicy([...policies], clientId, book.asOf);
+    if (!selected) {
+      throw new Error(
+        `No approved risk policy for client ${clientId} on ${book.asOf}`,
+      );
+    }
+    versions.set(clientId, selected);
+  }
+  const resolve: ResolveThresholds = (clientId) => {
+    const policy = versions.get(clientId);
+    if (!policy) throw new Error("Unscoped client risk policy");
+    return policy.thresholds;
+  };
+  const detections = [
+    ...paymentDrift(book, resolve),
+    ...fundedCreditNote(book),
+    ...overdueFunded(book, resolve),
+    ...concentrationCreep(book, resolve),
+    ...facilityUtilisation(book, resolve),
+  ];
+  return detections.map((detection) => {
+    const policy = versions.get(detection.clientId);
+    if (!policy) throw new Error("Detection lacks an approved risk policy");
+    return {
+      ...detection,
+      details: {
+        ...detection.details,
+        riskPolicyId: policy.id,
+        riskPolicyEffectiveFrom: policy.effectiveFrom,
+      },
+    };
+  });
 }

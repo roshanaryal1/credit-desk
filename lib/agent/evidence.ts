@@ -29,4 +29,9 @@ export class EvidenceRegistry {
   ids(): string[] {
     return [...this.records.keys()];
   }
+
+  /** Frozen source records used for this run, not re-fetched at replay. */
+  recordsAtRun(): EvidenceRecord[] {
+    return [...this.records.values()].map((record) => ({ ...record }));
+  }
 }

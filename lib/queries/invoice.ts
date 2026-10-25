@@ -7,12 +7,15 @@ import * as t from "@/lib/db/schema";
 import type { Analyst } from "@/lib/trust/decide";
 import { reviewState } from "@/lib/trust/review";
 
-import { resolveEvidence } from "./evidence";
+import { readCapturedRunEvidence } from "@/lib/agent/manifest";
+
+import { resolveCapturedEvidence, resolveEvidence } from "./evidence";
 
 /**
  * Everything the invoice panel shows. In SHADOW mode the agent's output is
  * withheld on the server until a decision exists for the invoice (SPEC 9.1).
- * Showing it before a decision records an exposure for this session.
+ * Every delivery of validated agent output to a writable reviewer records
+ * an exposure, including deliveries before a decision revision.
  */
 export async function getInvoiceReview(
   invoiceId: string,
@@ -59,20 +62,35 @@ export async function getInvoiceReview(
     : [];
   const showAgent = readOnly || analyst.mode === "ASSIST" || decided;
   const explanation = showAgent ? state.explanation : null;
-  if (explanation && !decided && !readOnly) {
+  // Log delivery to a writable session even after the first decision.
+  // A revision must not be classified as blind after displaying AI output.
+  if (explanation && !readOnly) {
     await db
       .insert(t.exposures)
       .values({ sessionId: analyst.sessionId, invoiceId })
       .onConflictDoNothing();
   }
 
-  const evidenceIds = [
-    ...current.flatMap(
-      (f) => (f.details as { evidenceIds?: string[] }).evidenceIds ?? [],
-    ),
-    ...(explanation?.explanation.claims.flatMap((c) => c.evidenceIds) ?? []),
-  ];
-  const evidence = await resolveEvidence(evidenceIds);
+  const findingEvidenceIds = current.flatMap(
+    (f) => (f.details as { evidenceIds?: string[] }).evidenceIds ?? [],
+  );
+  const capture = explanation
+    ? await readCapturedRunEvidence(db, explanation)
+    : null;
+  // The initial guard already checked this output. A concurrent loss still fails closed.
+  if (capture?.status === "FAILED") return null;
+  const evidence = await resolveEvidence([
+    ...findingEvidenceIds,
+    ...(capture?.status === "PASSED"
+      ? []
+      : (explanation?.explanation.claims.flatMap((c) => c.evidenceIds) ?? [])),
+  ]);
+  const agentEvidence =
+    capture?.status === "PASSED"
+      ? resolveCapturedEvidence(capture.body.records)
+      : evidence;
+  const agentEvidenceSource =
+    capture?.status === "PASSED" ? "CAPTURED" : "LEGACY_RECONSTRUCTION";
 
   return {
     invoice: row.invoice,
@@ -85,6 +103,8 @@ export async function getInvoiceReview(
     withheld: !showAgent && state.explanation !== null,
     explanation,
     evidence,
+    agentEvidence,
+    agentEvidenceSource,
     boundExplanation: bound ?? null,
   };
 }

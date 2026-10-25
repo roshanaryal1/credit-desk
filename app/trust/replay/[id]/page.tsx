@@ -75,9 +75,14 @@ async function Replay({
           {instant(new Date(frozen.decision.decidedAt))},{" "}
           {frozen.decision.mode === "SHADOW" ? "shadow mode" : "assist mode"}
           {frozen.decision.aiContentExposedBeforeDecision
-            ? ", after seeing the agent's view"
-            : ", without seeing the agent's view"}
+            ? ", agent output delivered to this reviewer before the decision"
+            : ", no agent-output delivery recorded before the decision"}
           .{" "}
+          <span className="text-muted-foreground text-xs">
+            Exposure records describe server-side delivery, not proof of what a
+            person actually read. Older decisions may lack complete exposure
+            records.
+          </span>{" "}
           {frozen.decision.simulated ? (
             <Chip tone="neutral">Simulated</Chip>
           ) : null}

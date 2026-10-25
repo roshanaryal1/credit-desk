@@ -136,7 +136,7 @@ export async function InvoicePanel({
               </ol>
               <ol className="text-muted-foreground flex flex-col gap-1 border-t pt-2 text-xs">
                 {[...footnote.entries()].map(([id, n]) => {
-                  const ev = evidence.get(id);
+                  const ev = data.agentEvidence.get(id);
                   return (
                     <li key={id} id={`ev-${id}`} className="scroll-mt-4">
                       <span className="text-foreground">{n}.</span>{" "}
@@ -176,9 +176,12 @@ export async function InvoicePanel({
               ) : null}
               <p className="text-muted-foreground text-xs">
                 {explanation!.run.model}, prompt{" "}
-                {explanation!.run.promptVersion}. Citations and figures were
-                checked against the records; the reasoning is the agent&apos;s
-                and was not checked.
+                {explanation!.run.promptVersion}.{" "}
+                {data.agentEvidenceSource === "CAPTURED"
+                  ? "Original tool evidence is preserved."
+                  : "Legacy evidence is reconstructed from dated current records, not an original tool transcript."}{" "}
+                Citations and figures were checked against these records; the
+                reasoning is the agent&apos;s and was not checked.
               </p>
             </>
           ) : (

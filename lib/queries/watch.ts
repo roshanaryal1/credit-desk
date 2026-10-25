@@ -2,14 +2,16 @@ import "server-only";
 
 import { and, asc, desc, eq, lte } from "drizzle-orm";
 
-import { getDb } from "@/lib/db/client";
+import { getDb, type Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import { incidentEventsAsOf } from "@/lib/watch/as-of-events";
+import { readCapturedRunEvidence } from "@/lib/agent/manifest";
+import { resolveCapturedEvidence } from "./evidence";
 import { storedExplanationUsable } from "@/lib/agent/stored-validation";
 
 /** Incidents first detected on or before the as-of date, with current status. */
-export async function incidentsAsOf(asOf: string) {
-  const db = await getDb();
+export async function incidentsAsOf(asOf: string, providedDb?: Db) {
+  const db = providedDb ?? (await getDb());
   const rows = await db
     .select({
       incident: t.incidents,
@@ -66,14 +68,21 @@ export async function incidentDetail(incidentId: string, asOf: string) {
     )
     .orderBy(desc(t.agentRuns.createdAt))
     .limit(1);
+  const usable =
+    explained && (await storedExplanationUsable(db, explained, asOf))
+      ? explained
+      : null;
+  const capture = usable ? await readCapturedRunEvidence(db, usable) : null;
   return {
     incident,
+    agentEvidence: resolveCapturedEvidence(
+      capture?.status === "PASSED" ? capture.body.records : [],
+    ),
+    agentEvidenceSource:
+      capture?.status === "PASSED" ? "CAPTURED" : "LEGACY_RECONSTRUCTION",
     latestDetection: visible[0] ?? null,
     detectionCount: visible.length,
     events: incidentEventsAsOf(events, asOf),
-    explained:
-      explained && (await storedExplanationUsable(db, explained, asOf))
-        ? explained
-        : null,
+    explained: capture?.status === "FAILED" ? null : usable,
   };
 }

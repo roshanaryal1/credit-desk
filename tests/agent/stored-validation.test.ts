@@ -265,3 +265,52 @@ describe("read-time stored explanation safety", () => {
     ).toBeNull();
   });
 });
+
+it("shows original captured agent evidence separately from current invoice inputs", async () => {
+  const row = await stored();
+  const { ToolExecutor } = await import("@/lib/agent/tools");
+  const { buildRunEvidenceManifest } = await import("@/lib/agent/manifest");
+  const tools = new ToolExecutor(db, {
+    clientId: "stored-client",
+    asOf: "2026-10-20",
+  });
+  const response = await tools.getInvoice("inv_stored");
+  const capture = buildRunEvidenceManifest({
+    runId: row.run.id,
+    clientId: "stored-client",
+    asOf: "2026-10-20",
+    toolResponses: [{ sequence: 1, tool: "get_invoice", response }],
+    records: tools.evidence.recordsAtRun(),
+  });
+  await db.insert(t.agentEvidenceManifests).values({
+    runId: row.run.id,
+    clientId: "stored-client",
+    asOfDate: "2026-10-20",
+    validatorVersion: capture.body.validatorVersion,
+    canonicalJson: capture.canonicalText,
+    sha256: capture.digest,
+  });
+  await db
+    .update(t.invoices)
+    .set({ amountCents: 704750 })
+    .where(eq(t.invoices.id, "inv_stored"));
+  const { getInvoiceReview } = await import("@/lib/queries/invoice");
+  const panel = await getInvoiceReview(
+    "inv_stored",
+    {
+      sessionId: "captured-ui",
+      displayName: "Synthetic viewer",
+      mode: "ASSIST",
+    },
+    "stored-batch",
+    true,
+  );
+  expect(panel?.invoice.amountCents).toBe(704750);
+  expect(panel?.agentEvidenceSource).toBe("CAPTURED");
+  expect(panel?.agentEvidence.get("inv_stored")?.facts).toContain(
+    "amount: 6047.5",
+  );
+  expect(panel?.agentEvidence.get("inv_stored")?.facts).not.toContain(
+    "amount: 7047.5",
+  );
+});
