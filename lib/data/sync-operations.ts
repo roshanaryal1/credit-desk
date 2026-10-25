@@ -50,11 +50,7 @@ const keyOf = (row: {
   sourceKind: string;
   connectionId: string;
   clientId: string;
-}) => JSON.stringify([
-  row.clientId,
-  row.sourceKind,
-  row.connectionId,
-]);
+}) => JSON.stringify([row.clientId, row.sourceKind, row.connectionId]);
 
 function validDate(date: Date): boolean {
   return date instanceof Date && Number.isFinite(date.getTime());
@@ -77,10 +73,7 @@ export function projectSyncOperations(
   }
   const at = now.getTime();
   const current = now.toISOString();
-  const keys = new Map<
-    string,
-    { job?: SyncJob; checkpoint?: Checkpoint }
-  >();
+  const keys = new Map<string, { job?: SyncJob; checkpoint?: Checkpoint }>();
   for (const job of jobs) {
     const key = keyOf(job);
     if (keys.get(key)?.job) throw new Error("Duplicate synthetic sync job");
@@ -93,91 +86,102 @@ export function projectSyncOperations(
     }
     keys.set(key, { ...keys.get(key), checkpoint });
   }
-  return [...keys.entries()].map(([key, item]) => {
-    const src = item.job ?? item.checkpoint!;
-    if (
-      !["ACCOUNTING", "BANK"].includes(src.sourceKind) ||
-      !src.clientId.trim() ||
-      !src.connectionId.trim()
-    ) {
-      throw new Error("Invalid scoped source");
-    }
-    const job = item.job;
-    const checkpoint = item.checkpoint;
-    const futureCheckpoint =
-      checkpoint !== undefined && [
-        checkpoint.lastSuccessAt,
-        checkpoint.lastFailureAt,
-      ].some((date) => date !== null && date.getTime() > at);
-    const latestSuccess = futureCheckpoint
-      ? null
-      : checkpoint?.lastSuccessAt ?? null;
-    const latestFailure = futureCheckpoint
-      ? null
-      : checkpoint?.lastFailureAt ?? null;
-    const freshness = futureCheckpoint
-      ? "UNKNOWN"
-      : sourceHealth(
-          current,
-          latestSuccess?.toISOString() ?? null,
-          latestFailure?.toISOString() ?? null,
-          maxAgeMinutes,
-        );
-    let condition: SyncCondition = "NOT_SCHEDULED";
-    if (job) {
-      if (job.state === "DEAD") {
-        condition = "DEAD_LETTER";
-      } else if (job.state === "LEASED") {
-        condition =
-          job.leaseUntil === null || job.leaseUntil.getTime() <= at
-            ? "LEASE_EXPIRED"
-            : "IN_PROGRESS";
-      } else if (job.state === "PENDING") {
-        condition =
-          job.attempts > 0
-            ? job.nextAttemptAt.getTime() <= at
-              ? "RETRY_DUE"
-              : "RETRY_WAIT"
-            : "QUEUED";
-      } else if (job.state === "SUCCEEDED") {
-        condition = "SUCCEEDED";
-      } else {
-        throw new Error("Unknown synthetic sync job state");
+  return [...keys.entries()]
+    .map(([key, item]) => {
+      const src = item.job ?? item.checkpoint!;
+      if (
+        !["ACCOUNTING", "BANK"].includes(src.sourceKind) ||
+        !src.clientId.trim() ||
+        !src.connectionId.trim()
+      ) {
+        throw new Error("Invalid scoped source");
       }
-    }
-    const exception =
-      futureCheckpoint ? "FUTURE_CHECKPOINT" :
-      condition === "DEAD_LETTER" ? "DEAD_LETTER" :
-      condition === "LEASE_EXPIRED" ? "LEASE_EXPIRED" :
-      condition === "RETRY_DUE" ? "RETRY_DUE" :
-      freshness === "ERROR" ? "SOURCE_ERROR" :
-      freshness === "STALE" ? "SOURCE_STALE" :
-      freshness === "UNKNOWN" ? "SOURCE_UNKNOWN" :
-      null;
-    return {
-      key,
-      clientId: src.clientId,
-      sourceKind: src.sourceKind as "ACCOUNTING" | "BANK",
-      connectionId: src.connectionId,
-      condition,
-      freshness,
-      attempts: job?.attempts ?? 0,
-      maxAttempts: job?.maxAttempts ?? null,
-      nextAttemptAt: job?.nextAttemptAt.toISOString() ?? null,
-      leaseUntil: job?.leaseUntil?.toISOString() ?? null,
-      lastSuccessAt: latestSuccess?.toISOString() ?? null,
-      lastFailureAt: latestFailure?.toISOString() ?? null,
-      lastSafeError:
-        job?.lastErrorCode && SAFE_ERRORS.has(job.lastErrorCode)
-          ? job.lastErrorCode
-          : job?.lastErrorCode ? "INTERNAL" : null,
-      exception,
-    };
-  }).sort((a, b) =>
-    a.clientId.localeCompare(b.clientId) ||
-    a.sourceKind.localeCompare(b.sourceKind) ||
-    a.connectionId.localeCompare(b.connectionId),
-  );
+      const job = item.job;
+      const checkpoint = item.checkpoint;
+      const futureCheckpoint =
+        checkpoint !== undefined &&
+        [checkpoint.lastSuccessAt, checkpoint.lastFailureAt].some(
+          (date) => date !== null && date.getTime() > at,
+        );
+      const latestSuccess = futureCheckpoint
+        ? null
+        : (checkpoint?.lastSuccessAt ?? null);
+      const latestFailure = futureCheckpoint
+        ? null
+        : (checkpoint?.lastFailureAt ?? null);
+      const freshness = futureCheckpoint
+        ? "UNKNOWN"
+        : sourceHealth(
+            current,
+            latestSuccess?.toISOString() ?? null,
+            latestFailure?.toISOString() ?? null,
+            maxAgeMinutes,
+          );
+      let condition: SyncCondition = "NOT_SCHEDULED";
+      if (job) {
+        if (job.state === "DEAD") {
+          condition = "DEAD_LETTER";
+        } else if (job.state === "LEASED") {
+          condition =
+            job.leaseUntil === null || job.leaseUntil.getTime() <= at
+              ? "LEASE_EXPIRED"
+              : "IN_PROGRESS";
+        } else if (job.state === "PENDING") {
+          condition =
+            job.attempts > 0
+              ? job.nextAttemptAt.getTime() <= at
+                ? "RETRY_DUE"
+                : "RETRY_WAIT"
+              : "QUEUED";
+        } else if (job.state === "SUCCEEDED") {
+          condition = "SUCCEEDED";
+        } else {
+          throw new Error("Unknown synthetic sync job state");
+        }
+      }
+      const exception = futureCheckpoint
+        ? "FUTURE_CHECKPOINT"
+        : condition === "DEAD_LETTER"
+          ? "DEAD_LETTER"
+          : condition === "LEASE_EXPIRED"
+            ? "LEASE_EXPIRED"
+            : condition === "RETRY_DUE"
+              ? "RETRY_DUE"
+              : freshness === "ERROR"
+                ? "SOURCE_ERROR"
+                : freshness === "STALE"
+                  ? "SOURCE_STALE"
+                  : freshness === "UNKNOWN"
+                    ? "SOURCE_UNKNOWN"
+                    : null;
+      return {
+        key,
+        clientId: src.clientId,
+        sourceKind: src.sourceKind as "ACCOUNTING" | "BANK",
+        connectionId: src.connectionId,
+        condition,
+        freshness,
+        attempts: job?.attempts ?? 0,
+        maxAttempts: job?.maxAttempts ?? null,
+        nextAttemptAt: job?.nextAttemptAt.toISOString() ?? null,
+        leaseUntil: job?.leaseUntil?.toISOString() ?? null,
+        lastSuccessAt: latestSuccess?.toISOString() ?? null,
+        lastFailureAt: latestFailure?.toISOString() ?? null,
+        lastSafeError:
+          job?.lastErrorCode && SAFE_ERRORS.has(job.lastErrorCode)
+            ? job.lastErrorCode
+            : job?.lastErrorCode
+              ? "INTERNAL"
+              : null,
+        exception,
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.clientId.localeCompare(b.clientId) ||
+        a.sourceKind.localeCompare(b.sourceKind) ||
+        a.connectionId.localeCompare(b.connectionId),
+    );
 }
 
 export async function readSyntheticSyncOperations(db: Db, observedAt: Date) {
@@ -188,10 +192,7 @@ export async function readSyntheticSyncOperations(db: Db, observedAt: Date) {
     db.select({ id: t.clients.id, name: t.clients.name }).from(t.clients),
   ]);
   const rows = projectSyncOperations(jobs, checkpoints, observedAt);
-  const names = new Map(clients.map((client) => [
-    client.id,
-    client.name,
-  ]));
+  const names = new Map(clients.map((client) => [client.id, client.name]));
   for (const row of rows) {
     if (!names.has(row.clientId)) {
       throw new Error("Sync source has an unknown client partition");
@@ -203,7 +204,8 @@ export async function readSyntheticSyncOperations(db: Db, observedAt: Date) {
     counts: {
       connections: rows.length,
       deadLetters: rows.filter((row) => row.condition === "DEAD_LETTER").length,
-      expiredLeases: rows.filter((row) => row.condition === "LEASE_EXPIRED").length,
+      expiredLeases: rows.filter((row) => row.condition === "LEASE_EXPIRED")
+        .length,
       dueRetries: rows.filter((row) => row.condition === "RETRY_DUE").length,
       sourceErrors: rows.filter((row) => row.freshness === "ERROR").length,
       unknownSources: rows.filter((row) => row.freshness === "UNKNOWN").length,
