@@ -106,7 +106,7 @@ describe("structured fictional evidence checklist (#162)", () => {
     const exported = renderSyntheticMemoMarkdown(memo, checklist);
     expect(exported).toContain("DRAFT — ANALYST REVIEW REQUIRED");
     expect(exported).toContain("Case evidence requirements");
-    expect(exported).toContain(checklist[0]!.id);
+    expect(exported).toContain(checklist[0]!.id.replaceAll("_", "\\_"));
     expect(exported).toContain("Signed off by: NONE");
     expect(() =>
       renderSyntheticMemoMarkdown(memo, [
