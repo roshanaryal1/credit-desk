@@ -112,12 +112,10 @@ describe("client counterfactual borrowing-base comparison (#161)", () => {
     expect(output.counterfactual.securedAdvanceCents).toBe(7000);
     expect(output.counterfactual.availableCents).toBe(7000);
     expect(output.invoices.map((i) => i.advanceDeltaCents)).toEqual([
-      -3000,
-      -3000,
+      -3000, -3000,
     ]);
     expect(
-      output.waterfall.find((w) => w.field === "grossAdvanceCents")
-        ?.deltaCents,
+      output.waterfall.find((w) => w.field === "grossAdvanceCents")?.deltaCents,
     ).toBe(-6000);
     expect(
       output.waterfall.find((w) => w.field === "availableCents")?.deltaCents,
@@ -139,10 +137,9 @@ describe("client counterfactual borrowing-base comparison (#161)", () => {
     });
     expect(concentrated.counterfactual.concentrationExcessCents).toBe(4000);
     expect(concentrated.counterfactual.grossAdvanceCents).toBe(12800);
-    expect(concentrated.invoices.map((x) => x.concentrationDeltaCents)).toEqual([
-      2000,
-      2000,
-    ]);
+    expect(concentrated.invoices.map((x) => x.concentrationDeltaCents)).toEqual(
+      [2000, 2000],
+    );
     const capped = compareScenario("2026-10-20", policy, invoices, {
       ...inputs,
       facilityLimitCents: 5000,
@@ -197,9 +194,11 @@ describe("client counterfactual borrowing-base comparison (#161)", () => {
       },
     );
     expect(result.baseline).toEqual(first!.report);
-    expect(result.invoices.every((row) =>
-      first!.evidence.ledgerInvoiceIds.includes(row.invoiceId),
-    )).toBe(true);
+    expect(
+      result.invoices.every((row) =>
+        first!.evidence.ledgerInvoiceIds.includes(row.invoiceId),
+      ),
+    ).toBe(true);
     const foreign = new Set(other!.evidence.ledgerInvoiceIds);
     expect(result.invoices.every((row) => !foreign.has(row.invoiceId))).toBe(
       true,
