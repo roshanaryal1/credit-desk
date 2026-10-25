@@ -136,8 +136,8 @@ async function Scenario({
             </h2>
             <p className="text-muted-foreground mt-2 text-sm">
               Identical dated client invoices; only hypothetical policy inputs
-              change. Values are integer basis points and NZD cents. No
-              approved lending decision or real funding is created.
+              change. Values are integer basis points and NZD cents. No approved
+              lending decision or real funding is created.
             </p>
             <form
               method="get"
@@ -149,7 +149,10 @@ async function Scenario({
                   ["advanceRateBps", "Advance rate (bps)"],
                   ["maximumDebtorShareBps", "Concentration cap (bps)"],
                   ["reservesCents", "Reserve (NZD cents)"],
-                  ["facilityLimitCents", "Illustrative facility cap (NZD cents)"],
+                  [
+                    "facilityLimitCents",
+                    "Illustrative facility cap (NZD cents)",
+                  ],
                 ] as const
               ).map(([key, label]) => (
                 <label className="block text-sm" key={key}>
@@ -193,48 +196,86 @@ async function Scenario({
               </div>
             </form>
             {parsed.requested && !parsed.valid && (
-              <div id="scenario-errors" role="alert" className="mt-3 text-sm text-destructive">
-                Invalid scenario: {parsed.errors.map((error) =>
-                  `${error.field}: ${error.message}`
-                ).join("; ")}
+              <div
+                id="scenario-errors"
+                role="alert"
+                className="text-destructive mt-3 text-sm"
+              >
+                Invalid scenario:{" "}
+                {parsed.errors
+                  .map((error) => `${error.field}: ${error.message}`)
+                  .join("; ")}
               </div>
             )}
             {comparison && (
               <div className="mt-6 space-y-5">
-                <div className="border-border overflow-x-auto rounded-sm border" role="region" tabIndex={0} aria-label="Scenario waterfall comparison">
+                <div
+                  className="border-border overflow-x-auto rounded-sm border"
+                  role="region"
+                  tabIndex={0}
+                  aria-label="Scenario waterfall comparison"
+                >
                   <table className="w-full min-w-[620px] text-sm">
                     <thead className="bg-muted text-left">
                       <tr>
-                        <th scope="col" className="p-3">Metric</th>
-                        <th scope="col" className="p-3 text-right">Baseline</th>
-                        <th scope="col" className="p-3 text-right">Counterfactual</th>
-                        <th scope="col" className="p-3 text-right">Change</th>
+                        <th scope="col" className="p-3">
+                          Metric
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Baseline
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Counterfactual
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Change
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {comparison.waterfall.map((line) => (
                         <tr key={line.field} className="border-t">
                           <th scope="row" className="p-3 text-left font-medium">
-                            {line.field.replace(/Cents$/, "").replace(/([a-z])([A-Z])/g, "$1 $2")}
+                            {line.field
+                              .replace(/Cents$/, "")
+                              .replace(/([a-z])([A-Z])/g, "$1 $2")}
                           </th>
-                          <td className="num p-3 text-right">{money(line.baselineCents)}</td>
-                          <td className="num p-3 text-right">{money(line.scenarioCents)}</td>
                           <td className="num p-3 text-right">
-                            {line.deltaCents >= 0 ? "+" : "−"}{money(Math.abs(line.deltaCents))}
+                            {money(line.baselineCents)}
+                          </td>
+                          <td className="num p-3 text-right">
+                            {money(line.scenarioCents)}
+                          </td>
+                          <td className="num p-3 text-right">
+                            {line.deltaCents >= 0 ? "+" : "−"}
+                            {money(Math.abs(line.deltaCents))}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div className="border-border overflow-x-auto rounded-sm border" role="region" tabIndex={0} aria-label="Per-invoice counterfactual deltas">
+                <div
+                  className="border-border overflow-x-auto rounded-sm border"
+                  role="region"
+                  tabIndex={0}
+                  aria-label="Per-invoice counterfactual deltas"
+                >
                   <table className="w-full min-w-[610px] text-sm">
                     <thead className="bg-muted text-left">
                       <tr>
-                        <th scope="col" className="p-3">Source invoice</th>
-                        <th scope="col" className="p-3 text-right">Baseline advance</th>
-                        <th scope="col" className="p-3 text-right">Scenario advance</th>
-                        <th scope="col" className="p-3 text-right">Difference</th>
+                        <th scope="col" className="p-3">
+                          Source invoice
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Baseline advance
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Scenario advance
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Difference
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -242,12 +283,19 @@ async function Scenario({
                         <tr key={invoice.invoiceId} className="border-t">
                           <th scope="row" className="p-3 text-left">
                             {invoice.invoiceId}
-                            <span className="text-muted-foreground block text-xs">{invoice.debtorId}</span>
+                            <span className="text-muted-foreground block text-xs">
+                              {invoice.debtorId}
+                            </span>
                           </th>
-                          <td className="num p-3 text-right">{money(invoice.baselineAdvanceCents)}</td>
-                          <td className="num p-3 text-right">{money(invoice.scenarioAdvanceCents)}</td>
                           <td className="num p-3 text-right">
-                            {invoice.advanceDeltaCents >= 0 ? "+" : "−"}{money(Math.abs(invoice.advanceDeltaCents))}
+                            {money(invoice.baselineAdvanceCents)}
+                          </td>
+                          <td className="num p-3 text-right">
+                            {money(invoice.scenarioAdvanceCents)}
+                          </td>
+                          <td className="num p-3 text-right">
+                            {invoice.advanceDeltaCents >= 0 ? "+" : "−"}
+                            {money(Math.abs(invoice.advanceDeltaCents))}
                           </td>
                         </tr>
                       ))}
@@ -255,8 +303,8 @@ async function Scenario({
                   </table>
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Baseline: {comparison.baseline.policyVersion}. Counterfactual:
-                  {" "}{comparison.counterfactual.policyVersion}. Invoice face
+                  Baseline: {comparison.baseline.policyVersion}. Counterfactual:{" "}
+                  {comparison.counterfactual.policyVersion}. Invoice face
                   amounts, dated receipts, credit notes and source IDs remain
                   unchanged. The final availability delta is not the sum of
                   invoice advances because reserves, existing drawings and
