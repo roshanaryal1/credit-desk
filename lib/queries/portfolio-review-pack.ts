@@ -82,9 +82,7 @@ export async function syntheticPortfolioReviewPack(
         facilityLimitCents: client.facilityLimitCents,
         fundedPrincipalCents: dossier.inUseCents,
         commitmentHeadroomCents: dossier.commitmentHeadroomCents,
-        receivableOutstandingCents: known
-          ? ageing.totalOutstandingCents
-          : null,
+        receivableOutstandingCents: known ? ageing.totalOutstandingCents : null,
         buckets,
         receiptsLast30DaysCents: known
           ? ageing.collections.reduce(
