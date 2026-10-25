@@ -32,9 +32,9 @@ async function Sources() {
         <p className="text-muted-foreground mt-2 text-sm">
           The dashboard inspects fictional checkpoints and jobs at a fixed
           simulation instant. Job rows are mutable operational state, not
-          historical replay. No Xero or Akahu consented connection,
-          verified customer account or live ingestion worker is claimed.
-          No retry, lease, data access or provider action can be triggered here.
+          historical replay. No Xero or Akahu consented connection, verified
+          customer account or live ingestion worker is claimed. No retry, lease,
+          data access or provider action can be triggered here.
         </p>
         <p className="text-muted-foreground mt-2 text-xs">
           Simulation reference (UTC): {report.observedAt}
@@ -43,7 +43,10 @@ async function Sources() {
       <section aria-label="Sync health metrics">
         <dl className="border-border bg-card grid rounded-sm border sm:grid-cols-3">
           {[
-            ["Configured source jobs and checkpoints", report.counts.connections],
+            [
+              "Configured source jobs and checkpoints",
+              report.counts.connections,
+            ],
             ["Dead-lettered jobs", report.counts.deadLetters],
             ["Expired leases", report.counts.expiredLeases],
             ["Due retries", report.counts.dueRetries],
@@ -70,11 +73,21 @@ async function Sources() {
           <table className="w-full min-w-[820px] text-sm">
             <thead className="border-border text-muted-foreground border-b text-left">
               <tr>
-                <th className="p-3" scope="col">Fictional client and source</th>
-                <th className="p-3" scope="col">Job</th>
-                <th className="p-3" scope="col">Freshness</th>
-                <th className="p-3" scope="col">Exception</th>
-                <th className="p-3" scope="col">Last success / retry</th>
+                <th className="p-3" scope="col">
+                  Fictional client and source
+                </th>
+                <th className="p-3" scope="col">
+                  Job
+                </th>
+                <th className="p-3" scope="col">
+                  Freshness
+                </th>
+                <th className="p-3" scope="col">
+                  Exception
+                </th>
+                <th className="p-3" scope="col">
+                  Last success / retry
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -82,7 +95,7 @@ async function Sources() {
                 <tr key={row.key} className="border-border border-b align-top">
                   <th scope="row" className="p-3 text-left font-medium">
                     {row.clientName}
-                    <span className="text-muted-foreground block break-all text-xs">
+                    <span className="text-muted-foreground block text-xs break-all">
                       {row.clientId} · {row.sourceKind} · {row.connectionId}
                     </span>
                   </th>
@@ -102,7 +115,9 @@ async function Sources() {
                     )}
                   </td>
                   <td className="p-3 text-xs">
-                    <span className="block">{row.lastSuccessAt ?? "UNKNOWN"}</span>
+                    <span className="block">
+                      {row.lastSuccessAt ?? "UNKNOWN"}
+                    </span>
                     <span className="text-muted-foreground block">
                       Retry: {row.nextAttemptAt ?? "not scheduled"}
                     </span>
@@ -113,8 +128,8 @@ async function Sources() {
           </table>
           {report.rows.length === 0 && (
             <p className="text-muted-foreground p-5 text-sm" role="status">
-              No synthetic source sync jobs or checkpoints are registered.
-              This means source completeness is UNKNOWN, not healthy or empty.
+              No synthetic source sync jobs or checkpoints are registered. This
+              means source completeness is UNKNOWN, not healthy or empty.
             </p>
           )}
         </div>
@@ -122,7 +137,10 @@ async function Sources() {
       <p className="text-muted-foreground text-xs">
         Source errors are allowlisted codes; original provider error text and
         credentials are not exposed. Refer to{" "}
-        <Link href="/clients" className="text-primary underline underline-offset-4">
+        <Link
+          href="/clients"
+          className="text-primary underline underline-offset-4"
+        >
           Client 360
         </Link>{" "}
         for dated synthetic balances. Real sync monitoring and alerting remain
