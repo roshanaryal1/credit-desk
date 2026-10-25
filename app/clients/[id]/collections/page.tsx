@@ -72,15 +72,21 @@ async function CollectionsView({
         </p>
       </div>
       <section aria-labelledby="collections-pulse-heading">
-        <h2 id="collections-pulse-heading" className="mb-3 text-base font-semibold">
+        <h2
+          id="collections-pulse-heading"
+          className="mb-3 text-base font-semibold"
+        >
           Reconciled client collections pulse
         </h2>
         <p className="text-muted-foreground mb-4 text-xs">
-          Deterministic synthetic ledger measures, not a credit score,
-          approved borrowing availability, or verified real-world DSO.
+          Deterministic synthetic ledger measures, not a credit score, approved
+          borrowing availability, or verified real-world DSO.
         </p>
         {pulse.status === "INSUFFICIENT_SOURCE_RECORDS" ? (
-          <p className="border-border bg-card rounded-sm border p-5 text-sm" role="status">
+          <p
+            className="border-border bg-card rounded-sm border p-5 text-sm"
+            role="status"
+          >
             No dated ledger evidence exists for a portfolio pulse. Monetary
             movements and concentration are UNKNOWN rather than verified zero.
           </p>
@@ -89,13 +95,22 @@ async function CollectionsView({
             <dl className="border-border bg-card grid rounded-sm border sm:grid-cols-3">
               {[
                 ["Overdue receivables", pulse.overdueNowCents],
-                ["Overdue 30 days previously", pulse.overduePrevious30DaysCents],
+                [
+                  "Overdue 30 days previously",
+                  pulse.overduePrevious30DaysCents,
+                ],
                 ["Arrears change over 30 days", pulse.overdueMovementCents],
                 ["Receipts in last 30 days", pulse.receiptsLast30DaysCents],
-                ["Receipts in preceding 30 days", pulse.receiptsPrevious30DaysCents],
+                [
+                  "Receipts in preceding 30 days",
+                  pulse.receiptsPrevious30DaysCents,
+                ],
                 ["Credit notes in last 30 days", pulse.creditsLast30DaysCents],
               ].map(([label, value]) => (
-                <div className="border-border border-b p-4 sm:border-r" key={label}>
+                <div
+                  className="border-border border-b p-4 sm:border-r"
+                  key={label}
+                >
                   <dt className="text-muted-foreground text-xs">{label}</dt>
                   <dd className="num mt-2 text-lg font-semibold">
                     {value === null ? "UNKNOWN" : money(value as number)}
@@ -104,20 +119,24 @@ async function CollectionsView({
               ))}
             </dl>
             <div className="border-border bg-card mt-4 rounded-sm border p-5">
-              <h3 className="text-sm font-semibold">Largest synthetic debtor exposure</h3>
+              <h3 className="text-sm font-semibold">
+                Largest synthetic debtor exposure
+              </h3>
               <p className="mt-2 text-sm">
                 {pulse.largestDebtor?.name ?? "Insufficient evidence"}
-                {" · "}{pulse.largestDebtor
+                {" · "}
+                {pulse.largestDebtor
                   ? money(pulse.largestDebtor.outstandingCents)
                   : "UNKNOWN"}
-                {" · "}{pulse.largestDebtor?.shareBps === null
+                {" · "}
+                {pulse.largestDebtor?.shareBps === null
                   ? "share not measurable"
                   : ((pulse.largestDebtor?.shareBps ?? 0) / 100).toFixed(2) +
                     "% of dated receivables"}
               </p>
-              <p className="text-muted-foreground mt-2 break-all text-xs">
-                Contributing ledger IDs:
-                {" "}{pulse.largestDebtor?.ledgerInvoiceIds.join(", ") || "none"}
+              <p className="text-muted-foreground mt-2 text-xs break-all">
+                Contributing ledger IDs:{" "}
+                {pulse.largestDebtor?.ledgerInvoiceIds.join(", ") || "none"}
               </p>
               <p className="text-muted-foreground mt-2 text-xs">
                 {pulse.observations.length} evidence-linked descriptive
