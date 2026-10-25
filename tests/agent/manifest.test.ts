@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { ChatCompletionMessage } from "openai/resources/chat/completions";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import type { LlmClient, LlmResult } from "@/lib/agent/llm";
 import {
@@ -9,12 +9,23 @@ import {
 } from "@/lib/agent/manifest";
 import { runAgentForInvoice } from "@/lib/agent/runner";
 import { runAllBatches } from "@/lib/checks/runner";
-import { createMemoryDb } from "@/lib/db/client";
+import { createMemoryDb, type Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import { DEV_PARAMS, generate } from "@/lib/seed/generate";
 import { writeDataset } from "@/lib/seed/write";
 import { storedExplanationUsable } from "@/lib/agent/stored-validation";
 import { sha256 } from "@/lib/trust/canonical";
+
+// These integration cases migrate PGlite, seed the complete synthetic book,
+// and run real checks/tools. Seeded cases exceed the default five-second CI
+// budget; use the original manifest integration cases' scoped 90 seconds.
+const fixtureDatabases = new Set<Db>();
+
+afterEach(async () => {
+  const databases = [...fixtureDatabases];
+  fixtureDatabases.clear();
+  await Promise.all(databases.map((db) => db.$client.close()));
+}, 90_000);
 
 const toolCall = (id: string): ChatCompletionMessage => ({
   role: "assistant",
@@ -84,6 +95,7 @@ function model(
 
 async function fixture() {
   const db = await createMemoryDb();
+  fixtureDatabases.add(db);
   await writeDataset(db, generate(DEV_PARAMS));
   const first = (await runAllBatches(db)).find((r) => r.findings.length > 0)!;
   const [invoice] = await db
@@ -344,7 +356,7 @@ it("rejects subject-client/date mismatch and incomplete or substituted transcrip
       explanation,
     }),
   ).toBe(false);
-});
+}, 90_000);
 
 it("freezes the verified original capture after current invoice data changes", async () => {
   const { db, invoice } = await fixture();
@@ -402,7 +414,7 @@ it("freezes the verified original capture after current invoice data changes", a
   expect(evidence.get(invoice.id)?.facts).toContain(
     `amount: ${invoice.amountCents / 100}`,
   );
-});
+}, 90_000);
 
 it("upgrades existing runs as legacy without rewriting their stored history", async () => {
   const { mkdtemp, cp, readFile, writeFile, rm } =
@@ -456,7 +468,7 @@ it("upgrades existing runs as legacy without rewriting their stored history", as
     await client.close();
     await rm(folder, { recursive: true, force: true });
   }
-});
+}, 90_000);
 
 it("captures nested ledger credits and funding adjustments through the actual runner", async () => {
   const { db, invoice } = await fixture();
@@ -549,4 +561,4 @@ it("captures nested ledger credits and funding adjustments through the actual ru
       "funding_adjustment",
     ]),
   );
-});
+}, 90_000);
