@@ -27,6 +27,46 @@ Enable only on an **isolated, seeded, verified fictional-data deployment**, with
 - No funding transfers or real dual-approval rights are granted. OIDC identities, MFA, per-tenant grants, session revocation, role-attributed audit and enforcement at each DB access remain required for #109 enterprise scope.
 - Do not assume a hosted serverless function may persist an unconfigured PGlite DB. A separately seeded Postgres demo DB is required for real hosted walkthrough (#76).
 
+## Exit and role switching
+
+After signing in as any of the five personas, the **Signed in as** card appears
+immediately below the Credit Desk logo on desktop and mobile. It identifies the
+active perspective and contains two keyboard-accessible actions:
+
+- **Sign out** revokes the signed session cookie and the demo mode cookie,
+  then opens `/login`.
+- **Switch role** revokes those same cookies and opens the demo-role picker at
+  `/login#quick-demo-title`. Choosing another role starts a new, signed session,
+  not a privilege escalation of the old session.
+
+The controls are deliberately at the top of navigation, not at the bottom of a
+long sidebar. Neither action relies on clearing client-side local storage.
+Logout is a server action, and protected routes must require a valid session
+after either exit.
+
+### Manual acceptance matrix
+
+For **Employer, Analyst, Checker, Client, and Auditor**, verify on both narrow
+mobile (390px) and desktop (1440px):
+
+1. Sign in with the one-click demo, confirm the active role is correctly labelled
+   in the account card and both exit buttons are visible without scrolling down
+   the navigation sidebar.
+2. Choose **Switch role**. Confirm the role picker is focused/visible, select a
+   different persona, and verify the previous view is replaced by the new
+   persona's allowed landing route.
+3. Choose **Sign out**. Confirm the normal login page is shown. A fresh direct
+   request to a protected route must redirect to login; previous role access
+   must not persist.
+4. Repeat the exit controls with keyboard only, and check focus visibility.
+   Repeat with the password-protected reviewer sign-in.
+5. Confirm no exit controls appear on an unauthenticated login page, and that
+   an expired/tampered session is not treated as an active role.
+
+The unit regression `tests/auth/logout.test.ts` checks cookie deletion,
+redirect destinations, and rejection of unexpected submitted redirect intent.
+Those checks do **not** substitute for a real deployed-browser session test.
+
 ## Review steps
 
 1. Sign in as Client with the shared password; inspect only the fixed borrower snapshot. Attempt direct `/clients`, `/queue`, and `/audit` — each must redirect to the borrower view. Confirm sign-out allows switching.
