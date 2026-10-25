@@ -47,11 +47,13 @@ async function CaseList({
       : "all";
   const db = await getDb();
   const rows = await listDemoCases(db, filter, DEMO_TODAY);
-  const requirements = (await Promise.all(
-    [...new Set(rows.map((row) => row.clientId))].map((clientId) =>
-      clientEvidenceRequirements(db, clientId, DEMO_TODAY),
-    ),
-  )).flat();
+  const requirements = (
+    await Promise.all(
+      [...new Set(rows.map((row) => row.clientId))].map((clientId) =>
+        clientEvidenceRequirements(db, clientId, DEMO_TODAY),
+      ),
+    )
+  ).flat();
   return (
     <>
       <Link
@@ -124,22 +126,32 @@ async function CaseList({
                 </p>
                 <details className="mt-3 text-xs">
                   <summary className="text-primary cursor-pointer font-semibold underline-offset-4">
-                    Evidence checklist ({requirements.filter((item) => item.caseId === row.id).length})
+                    Evidence checklist (
+                    {
+                      requirements.filter((item) => item.caseId === row.id)
+                        .length
+                    }
+                    )
                   </summary>
                   <ul className="mt-2 space-y-2">
-                    {requirements.filter((item) => item.caseId === row.id).map((item) => (
-                      <li key={item.id} className="border-border rounded-sm border p-2">
-                        <span className="font-semibold">{item.label}</span>
-                        <span className="text-muted-foreground block">
-                          {item.state} · {item.dueState} · {item.id}
-                        </span>
-                        {item.sourceId && (
+                    {requirements
+                      .filter((item) => item.caseId === row.id)
+                      .map((item) => (
+                        <li
+                          key={item.id}
+                          className="border-border rounded-sm border p-2"
+                        >
+                          <span className="font-semibold">{item.label}</span>
                           <span className="text-muted-foreground block">
-                            Source {item.sourceId}
+                            {item.state} · {item.dueState} · {item.id}
                           </span>
-                        )}
-                      </li>
-                    ))}
+                          {item.sourceId && (
+                            <span className="text-muted-foreground block">
+                              Source {item.sourceId}
+                            </span>
+                          )}
+                        </li>
+                      ))}
                   </ul>
                 </details>
                 <p className="text-muted-foreground mt-1 text-xs">
