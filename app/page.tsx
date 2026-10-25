@@ -34,6 +34,13 @@ export default function OverviewPage() {
           <p className="num text-sm font-semibold">
             {businessDate(DEMO_TODAY)}
           </p>
+          <Link
+            href={`/portfolio/export?asOf=${DEMO_TODAY}`}
+            className="text-primary mt-2 block text-xs font-semibold underline underline-offset-4 focus-visible:ring-2"
+            download
+          >
+            Download synthetic review pack
+          </Link>
         </div>
       </header>
       <Suspense fallback={<Loading label="Loading portfolio position..." />}>
