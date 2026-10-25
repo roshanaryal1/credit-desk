@@ -1,7 +1,9 @@
 import { daysBetween } from "@/lib/dates";
 import type { getClientReceivablesAgeing } from "@/lib/queries/client-ageing";
 
-type Ageing = NonNullable<Awaited<ReturnType<typeof getClientReceivablesAgeing>>>;
+type Ageing = NonNullable<
+  Awaited<ReturnType<typeof getClientReceivablesAgeing>>
+>;
 
 function checkedAmount(value: number) {
   if (!Number.isSafeInteger(value) || value < 0) {
@@ -26,16 +28,17 @@ export function collectionsRiskSummary(input: Ageing) {
     input.totalOutstandingCents,
     input.overdueCents,
     input.currentCents,
-  ]) checkedAmount(value);
-  if (
-    input.totalOutstandingCents !==
-    input.overdueCents + input.currentCents
-  ) throw new Error("Client receivables summary does not reconcile");
+  ])
+    checkedAmount(value);
+  if (input.totalOutstandingCents !== input.overdueCents + input.currentCents)
+    throw new Error("Client receivables summary does not reconcile");
 
   const byDebtor = new Map(input.debtors.map((row) => [row.debtorId, row]));
   const collectionIds = new Set<string>();
-  if (byDebtor.size !== input.debtors.length ||
-      input.collections.length !== input.debtors.length) {
+  if (
+    byDebtor.size !== input.debtors.length ||
+    input.collections.length !== input.debtors.length
+  ) {
     throw new Error("Missing or duplicated debtor collections history");
   }
   for (const row of input.collections) {
@@ -44,16 +47,22 @@ export function collectionsRiskSummary(input: Ageing) {
     }
     collectionIds.add(row.debtorId);
   }
-  const outstanding = centsTotal(input.debtors.map((r) => {
-    checkedAmount(r.grossOutstandingCents);
-    return r.grossOutstandingCents;
-  }));
-  const overdue = centsTotal(input.debtors.map((r) => {
-    checkedAmount(r.overdueCents);
-    return r.overdueCents;
-  }));
-  if (outstanding !== input.totalOutstandingCents ||
-      overdue !== input.overdueCents) {
+  const outstanding = centsTotal(
+    input.debtors.map((r) => {
+      checkedAmount(r.grossOutstandingCents);
+      return r.grossOutstandingCents;
+    }),
+  );
+  const overdue = centsTotal(
+    input.debtors.map((r) => {
+      checkedAmount(r.overdueCents);
+      return r.overdueCents;
+    }),
+  );
+  if (
+    outstanding !== input.totalOutstandingCents ||
+    overdue !== input.overdueCents
+  ) {
     throw new Error("Debtor amounts disagree with client ledger totals");
   }
   if (!input.debtors.length) {
@@ -87,9 +96,11 @@ export function collectionsRiskSummary(input: Ageing) {
     input.collections.map((r) => r.creditsLast30DaysCents),
   );
   for (const row of input.collections) {
-    if (row.overdueMovement30DaysCents !==
+    if (
+      row.overdueMovement30DaysCents !==
         row.overdueNowCents - row.overdue30DaysAgoCents ||
-        row.overdueNowCents !== byDebtor.get(row.debtorId)?.overdueCents) {
+      row.overdueNowCents !== byDebtor.get(row.debtorId)?.overdueCents
+    ) {
       throw new Error("Debtor collections movement does not reconcile");
     }
   }
@@ -98,23 +109,26 @@ export function collectionsRiskSummary(input: Ageing) {
       b.grossOutstandingCents - a.grossOutstandingCents ||
       a.debtorId.localeCompare(b.debtorId),
   )[0]!;
-  const shareBps = outstanding > 0
-    ? Number(
-        (BigInt(largest.grossOutstandingCents) * BigInt(10_000)) /
-          BigInt(outstanding),
-      )
-    : null;
-  const observations = input.collections.flatMap((r) =>
-    r.signals.map((s) => ({
-      id: r.debtorId + ":" + s.code,
-      debtorId: r.debtorId,
-      debtorName: byDebtor.get(r.debtorId)!.debtorName,
-      code: s.code,
-      description: s.description,
-      invoiceIds: [...new Set(s.invoiceIds)].sort(),
-      sourceIds: [...new Set(s.sourceIds)].sort(),
-    })),
-  ).sort((a, b) => a.id.localeCompare(b.id));
+  const shareBps =
+    outstanding > 0
+      ? Number(
+          (BigInt(largest.grossOutstandingCents) * BigInt(10_000)) /
+            BigInt(outstanding),
+        )
+      : null;
+  const observations = input.collections
+    .flatMap((r) =>
+      r.signals.map((s) => ({
+        id: r.debtorId + ":" + s.code,
+        debtorId: r.debtorId,
+        debtorName: byDebtor.get(r.debtorId)!.debtorName,
+        code: s.code,
+        description: s.description,
+        invoiceIds: [...new Set(s.invoiceIds)].sort(),
+        sourceIds: [...new Set(s.sourceIds)].sort(),
+      })),
+    )
+    .sort((a, b) => a.id.localeCompare(b.id));
   return {
     clientId: input.clientId,
     asOf: input.asOf,
@@ -133,7 +147,8 @@ export function collectionsRiskSummary(input: Ageing) {
       shareBps,
       ledgerInvoiceIds: largest.invoices
         .filter((invoice) => invoice.outstandingCents > 0)
-        .map((invoice) => invoice.invoiceId).sort(),
+        .map((invoice) => invoice.invoiceId)
+        .sort(),
     },
     observations,
     dsoDays: null,
