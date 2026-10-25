@@ -76,7 +76,8 @@ export async function verifyCapturedRunEvidence(
     if (
       saved.validatorVersion !== EVIDENCE_VALIDATOR_VERSION ||
       sha256(saved.canonicalJson) !== saved.sha256
-    ) return "FAILED";
+    )
+      return "FAILED";
     const payload = JSON.parse(saved.canonicalJson) as CapturedRunEvidence;
     if (
       canonicalJson(payload) !== saved.canonicalJson ||
@@ -87,24 +88,31 @@ export async function verifyCapturedRunEvidence(
       payload.validatorVersion !== saved.validatorVersion ||
       !Array.isArray(payload.records) ||
       !Array.isArray(payload.toolResponses)
-    ) return "FAILED";
+    )
+      return "FAILED";
     const registry = new EvidenceRegistry(payload.clientId);
     const seen = new Set<string>();
     for (const record of payload.records) {
       if (
-        !record || typeof record.id !== "string" ||
+        !record ||
+        typeof record.id !== "string" ||
         typeof record.clientId !== "string" ||
         seen.has(record.id)
-      ) return "FAILED";
+      )
+        return "FAILED";
       registry.add(record);
       seen.add(record.id);
     }
     // Verify the capture is a complete ordered transcript; it is not proof
     // that model reasoning was correct. Invalid transcripts fail closed.
-    if (payload.toolResponses.some((entry, index) =>
-      entry.sequence !== index + 1 ||
-      !/^[A-Z_]+$|^get_[a-z_]+$/.test(entry.tool),
-    )) return "FAILED";
+    if (
+      payload.toolResponses.some(
+        (entry, index) =>
+          entry.sequence !== index + 1 ||
+          !/^[A-Z_]+$|^get_[a-z_]+$/.test(entry.tool),
+      )
+    )
+      return "FAILED";
     const raw = JSON.stringify({
       summary: explanation.summary,
       risk_level: explanation.riskLevel.toLowerCase(),
