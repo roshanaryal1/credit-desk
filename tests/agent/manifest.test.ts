@@ -3,7 +3,10 @@ import type { ChatCompletionMessage } from "openai/resources/chat/completions";
 import { describe, expect, it } from "vitest";
 
 import type { LlmClient, LlmRequest, LlmResult } from "@/lib/agent/llm";
-import { buildRunEvidenceManifest, verifyCapturedRunEvidence } from "@/lib/agent/manifest";
+import {
+  buildRunEvidenceManifest,
+  verifyCapturedRunEvidence,
+} from "@/lib/agent/manifest";
 import { runAgentForInvoice } from "@/lib/agent/runner";
 import { runAllBatches } from "@/lib/checks/runner";
 import { createMemoryDb } from "@/lib/db/client";
@@ -46,10 +49,12 @@ function model(invoice: typeof t.invoices.$inferSelect): LlmClient {
         risk_level: "medium",
         recommendation: "HOLD",
         questions_for_client: [],
-        claims: [{
-          text: "Submitted invoice record for review.",
-          evidence_ids: [invoice.id],
-        }],
+        claims: [
+          {
+            text: "Submitted invoice record for review.",
+            evidence_ids: [invoice.id],
+          },
+        ],
         cited_evidence_ids: [invoice.id],
       };
       return {
@@ -99,36 +104,45 @@ describe("immutable tool-evidence manifests (#164)", () => {
     expect(original.records.map((r: { id: string }) => r.id)).toContain(
       invoice.id,
     );
-    expect(original.toolResponses.map((row: { tool: string }) => row.tool)).toEqual(
-      ["get_invoice"],
-    );
-    expect(await verifyCapturedRunEvidence(db, {
-      run,
-      explanation,
-    })).toBe("PASSED");
+    expect(
+      original.toolResponses.map((row: { tool: string }) => row.tool),
+    ).toEqual(["get_invoice"]);
+    expect(
+      await verifyCapturedRunEvidence(db, {
+        run,
+        explanation,
+      }),
+    ).toBe("PASSED");
 
     // Source changes cannot silently replace a captured original record.
-    await db.update(t.invoices)
+    await db
+      .update(t.invoices)
       .set({ amountCents: invoice.amountCents + 50_000 })
       .where(eq(t.invoices.id, invoice.id));
-    expect(await verifyCapturedRunEvidence(db, {
-      run,
-      explanation,
-    })).toBe("PASSED");
-    expect(await storedExplanationUsable(db, {
-      run,
-      explanation,
-    })).toBe(true);
+    expect(
+      await verifyCapturedRunEvidence(db, {
+        run,
+        explanation,
+      }),
+    ).toBe("PASSED");
+    expect(
+      await storedExplanationUsable(db, {
+        run,
+        explanation,
+      }),
+    ).toBe(true);
   }, 90_000);
 
   it("rejects cross-client capture before writing any manifest", () => {
-    expect(() => buildRunEvidenceManifest({
-      runId: "run-x",
-      clientId: "client-1",
-      asOf: "2026-10-20",
-      toolResponses: [],
-      records: [{ id: "foreign", clientId: "client-2", amount: 10 }],
-    })).toThrow(/another client/);
+    expect(() =>
+      buildRunEvidenceManifest({
+        runId: "run-x",
+        clientId: "client-1",
+        asOf: "2026-10-20",
+        toolResponses: [],
+        records: [{ id: "foreign", clientId: "client-2", amount: 10 }],
+      }),
+    ).toThrow(/another client/);
   });
 
   it("fails closed for tampering and loss, without live source fallback", async () => {
@@ -138,57 +152,86 @@ describe("immutable tool-evidence manifests (#164)", () => {
       log: () => {},
     });
     if (done.status !== "PASSED") throw new Error("Expected test run");
-    const [run] = await db.select().from(t.agentRuns)
+    const [run] = await db
+      .select()
+      .from(t.agentRuns)
       .where(eq(t.agentRuns.id, done.runId));
-    const [explanation] = await db.select().from(t.explanations)
+    const [explanation] = await db
+      .select()
+      .from(t.explanations)
       .where(eq(t.explanations.agentRunId, done.runId));
-    await expect(db.update(t.agentEvidenceManifests)
-      .set({ canonicalJson: "{}" })
-      .where(eq(t.agentEvidenceManifests.runId, done.runId))).rejects.toThrow();
+    await expect(
+      db
+        .update(t.agentEvidenceManifests)
+        .set({ canonicalJson: "{}" })
+        .where(eq(t.agentEvidenceManifests.runId, done.runId)),
+    ).rejects.toThrow();
 
     // Simulate full-DB privileged tampering, which triggers cannot prevent.
-    await db.execute(sql`alter table agent_evidence_manifests disable trigger agent_evidence_manifests_append_only`);
-    await db.execute(sql`update agent_evidence_manifests set canonical_json = '{}' where run_id = ${done.runId}`);
-    await db.execute(sql`alter table agent_evidence_manifests enable trigger agent_evidence_manifests_append_only`);
-    expect(await verifyCapturedRunEvidence(db, { run, explanation })).toBe("FAILED");
+    await db.execute(
+      sql`alter table agent_evidence_manifests disable trigger agent_evidence_manifests_append_only`,
+    );
+    await db.execute(
+      sql`update agent_evidence_manifests set canonical_json = '{}' where run_id = ${done.runId}`,
+    );
+    await db.execute(
+      sql`alter table agent_evidence_manifests enable trigger agent_evidence_manifests_append_only`,
+    );
+    expect(await verifyCapturedRunEvidence(db, { run, explanation })).toBe(
+      "FAILED",
+    );
     expect(await storedExplanationUsable(db, { run, explanation })).toBe(false);
 
-    await db.execute(sql`alter table agent_evidence_manifests disable trigger agent_evidence_manifests_append_only`);
-    await db.execute(sql`delete from agent_evidence_manifests where run_id = ${done.runId}`);
-    await db.execute(sql`alter table agent_evidence_manifests enable trigger agent_evidence_manifests_append_only`);
-    expect(await verifyCapturedRunEvidence(db, { run, explanation })).toBe("FAILED");
+    await db.execute(
+      sql`alter table agent_evidence_manifests disable trigger agent_evidence_manifests_append_only`,
+    );
+    await db.execute(
+      sql`delete from agent_evidence_manifests where run_id = ${done.runId}`,
+    );
+    await db.execute(
+      sql`alter table agent_evidence_manifests enable trigger agent_evidence_manifests_append_only`,
+    );
+    expect(await verifyCapturedRunEvidence(db, { run, explanation })).toBe(
+      "FAILED",
+    );
   }, 90_000);
 
   it("rolls back the run when the evidence manifest cannot be inserted", async () => {
     const { db, invoice } = await fixture();
-    await expect(db.transaction(async (tx) => {
-      await tx.insert(t.agentRuns).values({
-        id: "run_fails_atomicity",
-        subjectType: "INVOICE",
-        subjectId: invoice.id,
-        provider: "test",
-        model: "test",
-        promptVersion: "test",
-        configVersion: "test",
-        codeSha: "test",
-        attempts: 1,
-        status: "ERROR",
-        tokensIn: 0,
-        tokensOut: 0,
-        latencyMs: 0,
-        asOfDate: "2026-10-20",
-        evidenceManifestRequired: true,
-      });
-      await tx.insert(t.agentEvidenceManifests).values({
-        runId: "run_fails_atomicity",
-        clientId: "nonexistent-client",
-        asOfDate: "2026-10-20",
-        validatorVersion: "captured-evidence-v1",
-        canonicalJson: "{}",
-        sha256: sha256("{}"),
-      });
-    })).rejects.toThrow();
-    expect(await db.select().from(t.agentRuns)
-      .where(eq(t.agentRuns.id, "run_fails_atomicity"))).toHaveLength(0);
+    await expect(
+      db.transaction(async (tx) => {
+        await tx.insert(t.agentRuns).values({
+          id: "run_fails_atomicity",
+          subjectType: "INVOICE",
+          subjectId: invoice.id,
+          provider: "test",
+          model: "test",
+          promptVersion: "test",
+          configVersion: "test",
+          codeSha: "test",
+          attempts: 1,
+          status: "ERROR",
+          tokensIn: 0,
+          tokensOut: 0,
+          latencyMs: 0,
+          asOfDate: "2026-10-20",
+          evidenceManifestRequired: true,
+        });
+        await tx.insert(t.agentEvidenceManifests).values({
+          runId: "run_fails_atomicity",
+          clientId: "nonexistent-client",
+          asOfDate: "2026-10-20",
+          validatorVersion: "captured-evidence-v1",
+          canonicalJson: "{}",
+          sha256: sha256("{}"),
+        });
+      }),
+    ).rejects.toThrow();
+    expect(
+      await db
+        .select()
+        .from(t.agentRuns)
+        .where(eq(t.agentRuns.id, "run_fails_atomicity")),
+    ).toHaveLength(0);
   }, 90_000);
 });
