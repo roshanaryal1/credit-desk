@@ -92,11 +92,9 @@ export function compareScenario(
     version: baselinePolicy.version + "/COUNTERFACTUAL",
   };
   const baseline = borrowingBase(asOf, baselinePolicy, [...receivables]);
-  const counterfactual = borrowingBase(
-    asOf,
-    counterfactualPolicy,
-    [...receivables],
-  );
+  const counterfactual = borrowingBase(asOf, counterfactualPolicy, [
+    ...receivables,
+  ]);
   const waterfall = WATERFALL_FIELDS.map((field) => ({
     field,
     baselineCents: baseline[field],
@@ -116,7 +114,9 @@ export function compareScenario(
       original.netCents !== changed.netCents ||
       original.excludedCents !== changed.excludedCents
     ) {
-      throw new Error("Scenario changed source facts or eligibility exclusions");
+      throw new Error(
+        "Scenario changed source facts or eligibility exclusions",
+      );
     }
     return {
       invoiceId: original.invoiceId,
@@ -135,7 +135,8 @@ export function compareScenario(
   });
   const sum = (values: number[]) => {
     const result = values.reduce((a, b) => a + b, 0);
-    if (!Number.isSafeInteger(result)) throw new Error("Scenario delta overflow");
+    if (!Number.isSafeInteger(result))
+      throw new Error("Scenario delta overflow");
     return result;
   };
   if (
