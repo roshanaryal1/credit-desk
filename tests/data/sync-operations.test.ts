@@ -46,42 +46,42 @@ describe("read-only ingestion operations (#100)", () => {
     });
 
     const expired = await ensureSyncJob(
-      db, connection("expired"), at("2026-10-20T11:00:00Z"),
+      db,
+      connection("expired"),
+      at("2026-10-20T11:00:00Z"),
     );
     await claimSyncJob(db, expired, at("2026-10-20T11:00:00Z"), 30);
 
     const due = await ensureSyncJob(
-      db, connection("due"), at("2026-10-20T11:50:00Z"),
+      db,
+      connection("due"),
+      at("2026-10-20T11:50:00Z"),
     );
-    const dueClaim = await claimSyncJob(
-      db, due, at("2026-10-20T11:50:00Z"),
-    );
-    expect(await failSyncJob(
-      db, dueClaim!, "TIMEOUT", at("2026-10-20T11:50:00Z"),
-    )).toBe("RETRY");
+    const dueClaim = await claimSyncJob(db, due, at("2026-10-20T11:50:00Z"));
+    expect(
+      await failSyncJob(db, dueClaim!, "TIMEOUT", at("2026-10-20T11:50:00Z")),
+    ).toBe("RETRY");
 
     const waiting = await ensureSyncJob(
-      db, connection("waiting"), at("2026-10-20T11:59:30Z"),
+      db,
+      connection("waiting"),
+      at("2026-10-20T11:59:30Z"),
     );
     const waitingClaim = await claimSyncJob(
-      db, waiting, at("2026-10-20T11:59:30Z"),
+      db,
+      waiting,
+      at("2026-10-20T11:59:30Z"),
     );
-    await failSyncJob(
-      db, waitingClaim!, "NETWORK", at("2026-10-20T11:59:30Z"),
-    );
+    await failSyncJob(db, waitingClaim!, "NETWORK", at("2026-10-20T11:59:30Z"));
 
     const dead = await ensureSyncJob(
-      db, connection("dead"), at("2026-10-20T11:55:00Z"),
+      db,
+      connection("dead"),
+      at("2026-10-20T11:55:00Z"),
     );
-    const deadClaim = await claimSyncJob(
-      db, dead, at("2026-10-20T11:55:00Z"),
-    );
-    await failSyncJob(
-      db, deadClaim!, "CONFLICT", at("2026-10-20T11:55:00Z"),
-    );
-    await ensureSyncJob(
-      db, connection("new"), at("2026-10-20T12:30:00Z"),
-    );
+    const deadClaim = await claimSyncJob(db, dead, at("2026-10-20T11:55:00Z"));
+    await failSyncJob(db, deadClaim!, "CONFLICT", at("2026-10-20T11:55:00Z"));
+    await ensureSyncJob(db, connection("new"), at("2026-10-20T12:30:00Z"));
 
     const view = await readSyntheticSyncOperations(db, now);
     expect(view.counts).toMatchObject({
@@ -91,21 +91,23 @@ describe("read-only ingestion operations (#100)", () => {
       dueRetries: 1,
       unknownSources: 5,
     });
-    const states = new Map(view.rows.map((r) => [
-      r.connectionId,
-      r.condition,
-    ]));
-    expect(states).toEqual(new Map([
-      ["dead", "DEAD_LETTER"],
-      ["due", "RETRY_DUE"],
-      ["expired", "LEASE_EXPIRED"],
-      ["new", "QUEUED"],
-      ["waiting", "RETRY_WAIT"],
-    ]));
-    expect(view.rows.find((r) => r.connectionId === "dead"))
-      .toMatchObject({ lastSafeError: "CONFLICT", exception: "DEAD_LETTER" });
-    expect(view.rows.every((r) => r.clientName === "Synthetic Customer A"))
-      .toBe(true);
+    const states = new Map(view.rows.map((r) => [r.connectionId, r.condition]));
+    expect(states).toEqual(
+      new Map([
+        ["dead", "DEAD_LETTER"],
+        ["due", "RETRY_DUE"],
+        ["expired", "LEASE_EXPIRED"],
+        ["new", "QUEUED"],
+        ["waiting", "RETRY_WAIT"],
+      ]),
+    );
+    expect(view.rows.find((r) => r.connectionId === "dead")).toMatchObject({
+      lastSafeError: "CONFLICT",
+      exception: "DEAD_LETTER",
+    });
+    expect(
+      view.rows.every((r) => r.clientName === "Synthetic Customer A"),
+    ).toBe(true);
     expect(view.rows.every((r) => !("leaseToken" in r))).toBe(true);
     expect(await db.select().from(t.ingestionEvents)).toHaveLength(0);
   }, 90_000);
@@ -144,10 +146,7 @@ describe("read-only ingestion operations (#100)", () => {
       },
     ]);
     const first = await readSyntheticSyncOperations(db, now);
-    const byConnection = new Map(first.rows.map((r) => [
-      r.connectionId,
-      r,
-    ]));
+    const byConnection = new Map(first.rows.map((r) => [r.connectionId, r]));
     expect(byConnection.get("fresh")).toMatchObject({
       freshness: "FRESH",
       condition: "NOT_SCHEDULED",
@@ -171,10 +170,12 @@ describe("read-only ingestion operations (#100)", () => {
 
   it("fails closed on impossible jobs, invalid scope, unsafe timestamps and missing clients", async () => {
     const db = await seeded();
-    expect(() => projectSyncOperations([], [], at("invalid")))
-      .toThrow(/Invalid UTC/);
-    expect(() => projectSyncOperations([], [], now, 0))
-      .toThrow(/Invalid freshness/);
+    expect(() => projectSyncOperations([], [], at("invalid"))).toThrow(
+      /Invalid UTC/,
+    );
+    expect(() => projectSyncOperations([], [], now, 0)).toThrow(
+      /Invalid freshness/,
+    );
     await ensureSyncJob(
       db,
       {
@@ -185,12 +186,14 @@ describe("read-only ingestion operations (#100)", () => {
       now,
     );
     const jobs = await db.select().from(t.ingestionSyncJobs);
-    expect(() => projectSyncOperations([...jobs, ...jobs], [], now))
-      .toThrow(/Duplicate/);
-    expect(() => projectSyncOperations([
-      { ...jobs[0]!, state: "CORRUPT" },
-    ], [], now)).toThrow(/Unknown synthetic sync job state/);
-    expect(await readSyntheticSyncOperations(db, now))
-      .toMatchObject({ sourceMode: "SYNTHETIC_ONLY" });
+    expect(() => projectSyncOperations([...jobs, ...jobs], [], now)).toThrow(
+      /Duplicate/,
+    );
+    expect(() =>
+      projectSyncOperations([{ ...jobs[0]!, state: "CORRUPT" }], [], now),
+    ).toThrow(/Unknown synthetic sync job state/);
+    expect(await readSyntheticSyncOperations(db, now)).toMatchObject({
+      sourceMode: "SYNTHETIC_ONLY",
+    });
   }, 90_000);
 });
