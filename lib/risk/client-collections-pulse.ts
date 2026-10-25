@@ -100,7 +100,7 @@ export function collectionsRiskSummary(input: Ageing) {
   )[0]!;
   const shareBps = outstanding > 0
     ? Number(
-        (BigInt(largest.grossOutstandingCents) * 10_000n) /
+        (BigInt(largest.grossOutstandingCents) * BigInt(10_000)) /
           BigInt(outstanding),
       )
     : null;
