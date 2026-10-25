@@ -112,11 +112,7 @@ async function source() {
 describe("client collections pulse (#104)", () => {
   it("reconciles a hand-calculated debtor and cash summary with stable source IDs", async () => {
     const db = await source();
-    const r = (await getClientReceivablesAgeing(
-      db,
-      "client-a",
-      "2026-10-20",
-    ))!;
+    const r = (await getClientReceivablesAgeing(db, "client-a", "2026-10-20"))!;
     const pulse = collectionsRiskSummary(r);
     expect(pulse).toMatchObject({
       clientId: "client-a",
@@ -134,15 +130,15 @@ describe("client collections pulse (#104)", () => {
       shareBps: 6666,
       ledgerInvoiceIds: ["ledger-a1", "ledger-a3"],
     });
-    expect(pulse.observations.every((o) =>
-      ["debtor-a1", "debtor-a2"].includes(o.debtorId),
-    )).toBe(true);
-    expect(pulse.observations.some((o) =>
-      o.sourceIds.includes("credit:credit-a1"),
-    )).toBe(true);
-    expect(pulse.largestDebtor?.ledgerInvoiceIds).not.toContain(
-      "ledger-other",
-    );
+    expect(
+      pulse.observations.every((o) =>
+        ["debtor-a1", "debtor-a2"].includes(o.debtorId),
+      ),
+    ).toBe(true);
+    expect(
+      pulse.observations.some((o) => o.sourceIds.includes("credit:credit-a1")),
+    ).toBe(true);
+    expect(pulse.largestDebtor?.ledgerInvoiceIds).not.toContain("ledger-other");
     expect(collectionsRiskSummary(r)).toEqual(pulse);
   }, 90_000);
 
@@ -163,8 +159,9 @@ describe("client collections pulse (#104)", () => {
       "client-b",
       "2026-10-20",
     ))!;
-    expect(collectionsRiskSummary(other).largestDebtor?.outstandingCents)
-      .toBe(100_000);
+    expect(collectionsRiskSummary(other).largestDebtor?.outstandingCents).toBe(
+      100_000,
+    );
     expect(collectionsRiskSummary(other).clientId).toBe("client-b");
   }, 90_000);
 
@@ -193,20 +190,26 @@ describe("client collections pulse (#104)", () => {
       "client-a",
       "2026-10-20",
     ))!;
-    expect(() => collectionsRiskSummary({
-      ...r,
-      overdueCents: r.overdueCents + 1,
-    })).toThrow(/reconcile/);
-    expect(() => collectionsRiskSummary({
-      ...r,
-      collections: r.collections.slice(0, 1),
-    })).toThrow(/Missing or duplicated/);
-    expect(() => collectionsRiskSummary({
-      ...r,
-      collections: r.collections.map((x) => ({
-        ...x,
-        overdue30DaysAgoCents: Number.MAX_SAFE_INTEGER,
-      })),
-    })).toThrow();
+    expect(() =>
+      collectionsRiskSummary({
+        ...r,
+        overdueCents: r.overdueCents + 1,
+      }),
+    ).toThrow(/reconcile/);
+    expect(() =>
+      collectionsRiskSummary({
+        ...r,
+        collections: r.collections.slice(0, 1),
+      }),
+    ).toThrow(/Missing or duplicated/);
+    expect(() =>
+      collectionsRiskSummary({
+        ...r,
+        collections: r.collections.map((x) => ({
+          ...x,
+          overdue30DaysAgoCents: Number.MAX_SAFE_INTEGER,
+        })),
+      }),
+    ).toThrow();
   }, 90_000);
 });
