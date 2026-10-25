@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, eq } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 
 import { CONFIG_VERSION } from "@/lib/checks/config";
 import type { Db } from "@/lib/db/client";
