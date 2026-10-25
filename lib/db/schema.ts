@@ -292,7 +292,9 @@ export const agentRuns = pgTable(
     // invoice, the incident detection date for an incident.
     asOfDate: businessDate("as_of_date"),
     // Legacy records default false; all newly captured runs require a manifest.
-    evidenceManifestRequired: boolean("evidence_manifest_required").notNull().default(false),
+    evidenceManifestRequired: boolean("evidence_manifest_required")
+      .notNull()
+      .default(false),
     createdAt: instant("created_at").notNull().defaultNow(),
   },
   (t) => [index("runs_subject_idx").on(t.subjectType, t.subjectId)],
@@ -326,8 +328,12 @@ export const explanations = pgTable(
 export const agentEvidenceManifests = pgTable(
   "agent_evidence_manifests",
   {
-    runId: text("run_id").primaryKey().references(() => agentRuns.id),
-    clientId: text("client_id").notNull().references(() => clients.id),
+    runId: text("run_id")
+      .primaryKey()
+      .references(() => agentRuns.id),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
     asOfDate: businessDate("as_of_date").notNull(),
     validatorVersion: text("validator_version").notNull(),
     canonicalJson: text("canonical_json").notNull(),
