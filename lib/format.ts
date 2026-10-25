@@ -9,7 +9,26 @@ const nzd = new Intl.NumberFormat("en-NZ", {
 });
 
 export function money(cents: number): string {
-  return nzd.format(cents / 100);
+  // Keep the established Intl fallback for non-integer or unsupported inputs.
+  // Valid money amounts retain every cent even near Number.MAX_SAFE_INTEGER.
+  if (!Number.isSafeInteger(cents)) return nzd.format(cents / 100);
+  const integerCents = BigInt(cents);
+  const negative = cents < 0 || Object.is(cents, -0);
+  const absoluteCents = negative ? -integerCents : integerCents;
+  const hundred = BigInt(100);
+  const wholeDollars = absoluteCents / hundred;
+  const fraction = (absoluteCents % hundred).toString().padStart(2, "0");
+  // BigInt has no negative zero, but Intl needs it for negative sub-dollar
+  // amounts to keep the locale's own minus-sign/currency placement.
+  const signedDollars = negative
+    ? wholeDollars === BigInt(0)
+      ? -0
+      : -wholeDollars
+    : wholeDollars;
+  return nzd
+    .formatToParts(signedDollars)
+    .map((part) => (part.type === "fraction" ? fraction : part.value))
+    .join("");
 }
 
 const shortDate = new Intl.DateTimeFormat("en-NZ", {

@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 
 import { draftMemoFromSyntheticClient } from "@/lib/credit/memo-demo";
+import { clientEvidenceRequirements } from "@/lib/credit/evidence-checklist";
+import { DEMO_TODAY } from "@/lib/demo";
 import { renderSyntheticMemoMarkdown } from "@/lib/credit/memo-export";
 import { getDb } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -28,7 +30,8 @@ export async function GET(
     facilityLimitCents: client.facilityLimitCents,
     fundsInUseCents: funds.get(id) ?? 0,
   });
-  const markdown = renderSyntheticMemoMarkdown(memo);
+  const checklist = await clientEvidenceRequirements(db, id, DEMO_TODAY);
+  const markdown = renderSyntheticMemoMarkdown(memo, checklist);
   return new Response(markdown, {
     status: 200,
     headers: {

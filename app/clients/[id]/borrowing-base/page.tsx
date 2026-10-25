@@ -8,20 +8,32 @@ import { getDb } from "@/lib/db/client";
 import { DEMO_TODAY } from "@/lib/demo";
 import { businessDate, money } from "@/lib/format";
 import { indicativeClientBorrowingBase } from "@/lib/queries/client-borrowing-base";
+import {
+  compareScenario,
+  parseScenarioParams,
+  type ScenarioKey,
+} from "@/lib/credit/scenario-comparison";
 
 export default function ClientBorrowingBasePage({
   params,
+  searchParams,
 }: PageProps<"/clients/[id]/borrowing-base">) {
   return (
     <Suspense
       fallback={<Loading label="Reconciling synthetic receivables..." />}
     >
-      <Scenario params={params} />
+      <Scenario params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function Scenario({ params }: { params: Promise<{ id: string }> }) {
+async function Scenario({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await connection();
   const { id } = await params;
   const result = await indicativeClientBorrowingBase(
@@ -30,6 +42,21 @@ async function Scenario({ params }: { params: Promise<{ id: string }> }) {
     DEMO_TODAY,
   );
   if (!result) notFound();
+  const submitted = await searchParams;
+  const parsed = parseScenarioParams(submitted);
+  const comparison =
+    parsed.requested && parsed.valid && result.report
+      ? compareScenario(
+          result.asOfDate,
+          result.baselinePolicy,
+          result.sourceReceivables,
+          parsed.values,
+        )
+      : null;
+  const rawField = (key: ScenarioKey) =>
+    typeof submitted[key] === "string"
+      ? submitted[key]
+      : String(result.baselinePolicy[key]);
 
   return (
     <div className="space-y-7">
@@ -38,6 +65,12 @@ async function Scenario({ params }: { params: Promise<{ id: string }> }) {
         className="text-primary text-sm underline-offset-4 hover:underline"
       >
         ← Back to Client 360
+      </Link>
+      <Link
+        href={`/clients/${encodeURIComponent(id)}/source-health`}
+        className="text-primary text-sm underline underline-offset-4"
+      >
+        Inspect source health and matched cash →
       </Link>
       <PageHeader
         title="Client collateral scenario"
@@ -99,6 +132,192 @@ async function Scenario({ params }: { params: Promise<{ id: string }> }) {
                 </p>
               </div>
             ))}
+          </section>
+          <section
+            aria-labelledby="comparison-heading"
+            className="border-border bg-card rounded-sm border p-5"
+          >
+            <h2 id="comparison-heading" className="text-base font-semibold">
+              Compare alternative assumptions
+            </h2>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Identical dated client invoices; only hypothetical policy inputs
+              change. Values are integer basis points and NZD cents. No approved
+              lending decision or real funding is created.
+            </p>
+            <form
+              method="get"
+              className="mt-4 grid gap-3 sm:grid-cols-2"
+              aria-label="Counterfactual scenario inputs"
+            >
+              {(
+                [
+                  ["advanceRateBps", "Advance rate (bps)"],
+                  ["maximumDebtorShareBps", "Concentration cap (bps)"],
+                  ["reservesCents", "Reserve (NZD cents)"],
+                  [
+                    "facilityLimitCents",
+                    "Illustrative facility cap (NZD cents)",
+                  ],
+                ] as const
+              ).map(([key, label]) => (
+                <label className="block text-sm" key={key}>
+                  <span className="mb-1 block font-medium">{label}</span>
+                  <input
+                    name={key}
+                    type="number"
+                    inputMode="numeric"
+                    step="1"
+                    min="0"
+                    max={
+                      key === "advanceRateBps" ||
+                      key === "maximumDebtorShareBps"
+                        ? 10000
+                        : undefined
+                    }
+                    defaultValue={rawField(key)}
+                    className="border-input bg-background focus-visible:ring-ring w-full rounded-sm border px-3 py-2 focus-visible:ring-2"
+                    aria-invalid={
+                      parsed.requested &&
+                      !parsed.valid &&
+                      parsed.errors.some((error) => error.field === key)
+                    }
+                    aria-describedby="scenario-errors"
+                  />
+                </label>
+              ))}
+              <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+                <button
+                  type="submit"
+                  className="bg-primary text-primary-foreground focus-visible:ring-ring rounded-sm px-4 py-2 text-sm font-semibold focus-visible:ring-2"
+                >
+                  Compare
+                </button>
+                <Link
+                  href={`/clients/${encodeURIComponent(id)}/borrowing-base`}
+                  className="text-primary text-sm underline underline-offset-4"
+                >
+                  Reset to baseline
+                </Link>
+              </div>
+            </form>
+            {parsed.requested && !parsed.valid && (
+              <div
+                id="scenario-errors"
+                role="alert"
+                className="text-destructive mt-3 text-sm"
+              >
+                Invalid scenario:{" "}
+                {parsed.errors
+                  .map((error) => `${error.field}: ${error.message}`)
+                  .join("; ")}
+              </div>
+            )}
+            {comparison && (
+              <div className="mt-6 space-y-5">
+                <div
+                  className="border-border overflow-x-auto rounded-sm border"
+                  role="region"
+                  tabIndex={0}
+                  aria-label="Scenario waterfall comparison"
+                >
+                  <table className="w-full min-w-[620px] text-sm">
+                    <thead className="bg-muted text-left">
+                      <tr>
+                        <th scope="col" className="p-3">
+                          Metric
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Baseline
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Counterfactual
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Change
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comparison.waterfall.map((line) => (
+                        <tr key={line.field} className="border-t">
+                          <th scope="row" className="p-3 text-left font-medium">
+                            {line.field
+                              .replace(/Cents$/, "")
+                              .replace(/([a-z])([A-Z])/g, "$1 $2")}
+                          </th>
+                          <td className="num p-3 text-right">
+                            {money(line.baselineCents)}
+                          </td>
+                          <td className="num p-3 text-right">
+                            {money(line.scenarioCents)}
+                          </td>
+                          <td className="num p-3 text-right">
+                            {line.deltaCents >= 0 ? "+" : "−"}
+                            {money(Math.abs(line.deltaCents))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  className="border-border overflow-x-auto rounded-sm border"
+                  role="region"
+                  tabIndex={0}
+                  aria-label="Per-invoice counterfactual deltas"
+                >
+                  <table className="w-full min-w-[610px] text-sm">
+                    <thead className="bg-muted text-left">
+                      <tr>
+                        <th scope="col" className="p-3">
+                          Source invoice
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Baseline advance
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Scenario advance
+                        </th>
+                        <th scope="col" className="p-3 text-right">
+                          Difference
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comparison.invoices.map((invoice) => (
+                        <tr key={invoice.invoiceId} className="border-t">
+                          <th scope="row" className="p-3 text-left">
+                            {invoice.invoiceId}
+                            <span className="text-muted-foreground block text-xs">
+                              {invoice.debtorId}
+                            </span>
+                          </th>
+                          <td className="num p-3 text-right">
+                            {money(invoice.baselineAdvanceCents)}
+                          </td>
+                          <td className="num p-3 text-right">
+                            {money(invoice.scenarioAdvanceCents)}
+                          </td>
+                          <td className="num p-3 text-right">
+                            {invoice.advanceDeltaCents >= 0 ? "+" : "−"}
+                            {money(Math.abs(invoice.advanceDeltaCents))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Baseline: {comparison.baseline.policyVersion}. Counterfactual:{" "}
+                  {comparison.counterfactual.policyVersion}. Invoice face
+                  amounts, dated receipts, credit notes and source IDs remain
+                  unchanged. The final availability delta is not the sum of
+                  invoice advances because reserves, existing drawings and
+                  facility caps also apply.
+                </p>
+              </div>
+            )}
           </section>
           <section
             aria-labelledby="scenario-waterfall"

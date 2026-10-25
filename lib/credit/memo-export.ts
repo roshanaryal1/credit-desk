@@ -1,3 +1,4 @@
+import type { EvidenceRequirement } from "./evidence-checklist";
 import { assembleCreditMemo, type CreditMemoDraft } from "./memo";
 
 /** This export is an evidence register for a synthetic draft, not approval. */
@@ -16,7 +17,10 @@ function safeSourceId(value: string): string {
   return value;
 }
 
-export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
+export function renderSyntheticMemoMarkdown(
+  memo: CreditMemoDraft,
+  checklist: readonly EvidenceRequirement[] = [],
+): string {
   if (memo.status !== "DRAFT_REVIEW_REQUIRED" || memo.signedOffBy !== null) {
     throw new Error("Only unsigned review-required drafts may be exported");
   }
@@ -127,6 +131,37 @@ export function renderSyntheticMemoMarkdown(memo: CreditMemoDraft): string {
   }
   lines.push("", "## Missing evidence — mandatory reviewer checks", "");
   for (const item of memo.missingItems) lines.push("- " + safeMarkdown(item));
+  const seenRequirements = new Set<string>();
+  for (const item of checklist) {
+    if (
+      item.clientId !== memo.clientId ||
+      seenRequirements.has(item.id) ||
+      !["MISSING", "RECEIVED", "EXPIRED", "NOT_REQUIRED"].includes(item.state)
+    ) {
+      throw new Error("Invalid client-scoped evidence checklist");
+    }
+    seenRequirements.add(item.id);
+  }
+  lines.push("", "## Case evidence requirements: FICTIONAL METADATA", "");
+  if (checklist.length === 0) {
+    lines.push("- No seeded case-linked requirements; completeness UNKNOWN");
+  }
+  for (const item of [...checklist].sort((a, b) => a.id.localeCompare(b.id))) {
+    lines.push(
+      "- " +
+        safeMarkdown(item.id) +
+        " | " +
+        safeMarkdown(item.label) +
+        " | " +
+        item.state +
+        " | " +
+        item.dueState +
+        " | Due " +
+        (item.dueDate ?? "UNKNOWN") +
+        " | Source " +
+        (item.sourceId ? safeSourceId(item.sourceId) : "NOT VERIFIED"),
+    );
+  }
   lines.push(
     "",
     "No AI or human approval is recorded by this export.",

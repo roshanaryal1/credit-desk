@@ -9,6 +9,7 @@ import { getDb } from "@/lib/db/client";
 import { businessDate, money } from "@/lib/format";
 import { getClientDossier } from "@/lib/queries/client-360";
 import { getClientReceivablesAgeing } from "@/lib/queries/client-ageing";
+import { collectionsRiskSummary } from "@/lib/risk/client-collections-pulse";
 
 export const metadata = { title: "Collections insights · Credit Desk" };
 
@@ -35,6 +36,7 @@ async function CollectionsView({
     getClientReceivablesAgeing(db, id, DEMO_TODAY),
   ]);
   if (!dossier || !ageing) notFound();
+  const pulse = collectionsRiskSummary(ageing);
   const rows = [...ageing.collections].sort(
     (a, b) =>
       b.overdueNowCents - a.overdueNowCents ||
@@ -69,6 +71,83 @@ async function CollectionsView({
           credits. No number or flag authorises funding.
         </p>
       </div>
+      <section aria-labelledby="collections-pulse-heading">
+        <h2
+          id="collections-pulse-heading"
+          className="mb-3 text-base font-semibold"
+        >
+          Reconciled client collections pulse
+        </h2>
+        <p className="text-muted-foreground mb-4 text-xs">
+          Deterministic synthetic ledger measures, not a credit score, approved
+          borrowing availability, or verified real-world DSO.
+        </p>
+        {pulse.status === "INSUFFICIENT_SOURCE_RECORDS" ? (
+          <p
+            className="border-border bg-card rounded-sm border p-5 text-sm"
+            role="status"
+          >
+            No dated ledger evidence exists for a portfolio pulse. Monetary
+            movements and concentration are UNKNOWN rather than verified zero.
+          </p>
+        ) : (
+          <>
+            <dl className="border-border bg-card grid rounded-sm border sm:grid-cols-3">
+              {[
+                ["Overdue receivables", pulse.overdueNowCents],
+                [
+                  "Overdue 30 days previously",
+                  pulse.overduePrevious30DaysCents,
+                ],
+                ["Arrears change over 30 days", pulse.overdueMovementCents],
+                ["Receipts in last 30 days", pulse.receiptsLast30DaysCents],
+                [
+                  "Receipts in preceding 30 days",
+                  pulse.receiptsPrevious30DaysCents,
+                ],
+                ["Credit notes in last 30 days", pulse.creditsLast30DaysCents],
+              ].map(([label, value]) => (
+                <div
+                  className="border-border border-b p-4 sm:border-r"
+                  key={label}
+                >
+                  <dt className="text-muted-foreground text-xs">{label}</dt>
+                  <dd className="num mt-2 text-lg font-semibold">
+                    {value === null ? "UNKNOWN" : money(value as number)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <div className="border-border bg-card mt-4 rounded-sm border p-5">
+              <h3 className="text-sm font-semibold">
+                Largest synthetic debtor exposure
+              </h3>
+              <p className="mt-2 text-sm">
+                {pulse.largestDebtor?.name ?? "Insufficient evidence"}
+                {" · "}
+                {pulse.largestDebtor
+                  ? money(pulse.largestDebtor.outstandingCents)
+                  : "UNKNOWN"}
+                {" · "}
+                {pulse.largestDebtor?.shareBps === null
+                  ? "share not measurable"
+                  : ((pulse.largestDebtor?.shareBps ?? 0) / 100).toFixed(2) +
+                    "% of dated receivables"}
+              </p>
+              <p className="text-muted-foreground mt-2 text-xs break-all">
+                Contributing ledger IDs:{" "}
+                {pulse.largestDebtor?.ledgerInvoiceIds.join(", ") || "none"}
+              </p>
+              <p className="text-muted-foreground mt-2 text-xs">
+                {pulse.observations.length} evidence-linked descriptive
+                observation(s). Expand individual debtors below for dated
+                invoices, receipts and credit-note source IDs. No new model
+                prediction or lending decision is generated.
+              </p>
+            </div>
+          </>
+        )}
+      </section>
       <section aria-labelledby="collections-table-title">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <div>

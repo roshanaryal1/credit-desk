@@ -1,3 +1,6 @@
+import type { StoredExplanation } from "@/lib/agent/stored-validation";
+import { readCapturedRunEvidence } from "@/lib/agent/manifest";
+
 import { and, desc, eq, inArray, lt, or } from "drizzle-orm";
 
 import { buildCheckContext } from "@/lib/checks/context";
@@ -8,7 +11,7 @@ import { PROMPT_VERSION, SYSTEM_PROMPT } from "@/lib/agent/prompts";
 
 import { canonicalJson, sha256 } from "./canonical";
 
-export const SNAPSHOT_SCHEMA_VERSION = 2;
+export const SNAPSHOT_SCHEMA_VERSION = 3;
 
 export interface SnapshotInput {
   invoiceId: string;
@@ -33,7 +36,8 @@ export async function buildSnapshot(db: Db, input: SnapshotInput) {
       ),
     )
     .orderBy(t.findings.checkId);
-  let explanation = null;
+  let explanation: (StoredExplanation & { prompt: string | null }) | null =
+    null;
   if (input.decision.explanationIdAtDecision) {
     const [row] = await db
       .select({ explanation: t.explanations, run: t.agentRuns })
@@ -48,6 +52,26 @@ export async function buildSnapshot(db: Db, input: SnapshotInput) {
         }
       : null;
   }
+  const capture = explanation
+    ? await readCapturedRunEvidence(db, explanation)
+    : null;
+  if (capture?.status === "FAILED")
+    throw Error("Bound explanation capture is invalid");
+  const originalManifest = capture?.status === "PASSED" ? capture.saved : null;
+  const citedIds = [
+    ...new Set([
+      ...(explanation?.explanation.citedEvidenceIds ?? []),
+      ...(explanation?.explanation.claims.flatMap((c) => c.evidenceIds) ?? []),
+    ]),
+  ];
+  const frozenCitedRecords =
+    capture?.status === "PASSED"
+      ? Object.fromEntries(
+          capture.body.records
+            .filter((r) => citedIds.includes(r.id))
+            .map((r) => [r.id, r]),
+        )
+      : await citedRecords(db, citedIds);
   const allocations = context.receiptAllocations;
   const bankIds = allocations.map((a) => a.bankTransactionId);
   const bankLines = bankIds.length
@@ -65,15 +89,14 @@ export async function buildSnapshot(db: Db, input: SnapshotInput) {
     findings,
     bankLines,
     explanation,
-    // Every record the explanation cites, frozen as it was, so replay never
-    // needs live data to show the evidence the analyst saw (SPEC 9.3).
-    citedRecords: await citedRecords(db, [
-      ...new Set([
-        ...(explanation?.explanation.citedEvidenceIds ?? []),
-        ...(explanation?.explanation.claims.flatMap((c) => c.evidenceIds) ??
-          []),
-      ]),
-    ]),
+    // Original agent capture stays distinct from the decision-time check inputs.
+    agentEvidenceManifest: originalManifest,
+    agentEvidenceSource: originalManifest
+      ? "CAPTURED"
+      : explanation
+        ? "LEGACY_RECONSTRUCTION"
+        : null,
+    citedRecords: frozenCitedRecords,
     decision: input.decision,
   };
 }

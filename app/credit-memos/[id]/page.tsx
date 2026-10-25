@@ -5,6 +5,9 @@ import { Suspense } from "react";
 
 import { PageHeader, Loading } from "@/components/page";
 import { draftMemoFromSyntheticClient } from "@/lib/credit/memo-demo";
+import { clientEvidenceRequirements } from "@/lib/credit/evidence-checklist";
+import { getDb } from "@/lib/db/client";
+import { DEMO_TODAY } from "@/lib/demo";
 import { businessDate } from "@/lib/format";
 import { listClients } from "@/lib/queries/book";
 
@@ -26,6 +29,11 @@ async function MemoReview({ params }: { params: Promise<{ id: string }> }) {
   const client = (await listClients()).find((c) => c.id === id);
   if (!client) notFound();
   const memo = draftMemoFromSyntheticClient(client);
+  const checklist = await clientEvidenceRequirements(
+    await getDb(),
+    id,
+    DEMO_TODAY,
+  );
   return (
     <div className="space-y-7">
       <div>
@@ -112,6 +120,42 @@ async function MemoReview({ params }: { params: Promise<{ id: string }> }) {
           </ul>
         </section>
 
+        <section aria-labelledby="checklist-heading" className="mt-7">
+          <h3 id="checklist-heading" className="text-sm font-semibold">
+            Structured fictional case evidence
+          </h3>
+          <p className="text-muted-foreground mt-2 text-xs">
+            Case-linked metadata only. No real documents or authenticated
+            checker sign-off.
+          </p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {checklist.map((item) => (
+              <li className="border-border rounded-sm border p-3" key={item.id}>
+                <strong>{item.label}</strong>
+                <span className="text-muted-foreground block text-xs">
+                  {item.state} · {item.dueState} · due{" "}
+                  {item.dueDate ? businessDate(item.dueDate) : "not set"}
+                  {" · "}
+                  {item.id}
+                </span>
+                {item.sourceHref ? (
+                  <Link
+                    href={item.sourceHref}
+                    className="text-primary mt-2 inline-block text-xs underline underline-offset-4"
+                  >
+                    Open submitted invoice
+                  </Link>
+                ) : null}
+              </li>
+            ))}
+            {checklist.length === 0 && (
+              <li className="text-muted-foreground">
+                No case-linked synthetic requirements recorded. This does not
+                certify completeness.
+              </li>
+            )}
+          </ul>
+        </section>
         <section aria-labelledby="sources-heading" className="mt-7">
           <h3 id="sources-heading" className="text-sm font-semibold">
             Evidence register

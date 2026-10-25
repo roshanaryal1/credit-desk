@@ -120,6 +120,7 @@ export async function clientBorrowingReview(
     asOf,
     report,
     policy,
+    receivables,
     ageing,
     evidence: {
       ledgerInvoiceIds: ids,

@@ -6,6 +6,7 @@ import * as t from "@/lib/db/schema";
 import { EvidenceRegistry } from "./evidence";
 import { ToolExecutor } from "./tools";
 import { validateOutput } from "./validator";
+import { verifyCapturedRunEvidence } from "./manifest";
 
 export interface StoredExplanation {
   explanation: typeof t.explanations.$inferSelect;
@@ -35,6 +36,19 @@ export async function storedExplanationUsable(
   const { explanation, run } = stored;
   if (explanation.validationStatus !== "PASSED" || run.status !== "PASSED")
     return false;
+  const captured = await verifyCapturedRunEvidence(db, stored);
+  if (captured !== "LEGACY") {
+    // A cryptographically valid original transcript must still not leak an
+    // explanation to a historical screen before its review business date.
+    if (captured !== "PASSED") return false;
+    if (visibleAsOf !== undefined) {
+      if (!validDay(visibleAsOf) || !run.asOfDate || !validDay(run.asOfDate)) {
+        return false;
+      }
+      if (run.asOfDate > visibleAsOf) return false;
+    }
+    return true;
+  }
   try {
     const [invoice] =
       run.subjectType === "INVOICE"

@@ -32,6 +32,7 @@ The synthetic application expands the original invoice-finance prototype:
 | User journey | Review route | Scope and verification limit |
 | --- | --- | --- |
 | Institutional workbench | `/` | Synthetic exposure and attention priorities |
+| Portfolio review pack | `/portfolio/export` | Read-only, evidence-linked deterministic Markdown; explicit as-of date and synthetic-source gaps |
 | Analyst review queue | `/queue` | Read-only invoice and incident triage; no verified owner or checker session |
 | Client 360 | `/clients` → client | Synthetic facilities, debtors, dated collections and risk history |
 | Client-specific collateral scenario | `/clients/cli_0001/borrowing-base` | Reconciles *that client's synthetic ledger* to invoice-level haircuts; **not drawable funding** |
@@ -69,7 +70,7 @@ credit-policy approval, a full accessibility audit, or bank-grade security.
 For implementation provenance, dependency order, known gaps and the
 one-pass review checklist, see
 [`docs/review/integrated-acceptance.md`](docs/review/integrated-acceptance.md)
-and [the latest release verification](docs/review/2026-10-25-release.md),
+and [the latest release verification](docs/review/2026-10-26-followups.md),
 plus GitHub issues #99 and #135. The original v1 screenshots below remain
 historic examples and are not the full v2 visual acceptance evidence.
 

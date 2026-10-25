@@ -53,20 +53,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                   Invoice finance operations
                 </p>
               </div>
+              <Suspense>
+                <SignOut />
+              </Suspense>
               <Suspense fallback={<NavFallback />}>
                 <PersonaNav />
               </Suspense>
-              <div className="flex flex-wrap items-center md:hidden">
+              <div className="flex flex-wrap items-center md:mt-auto md:flex-col md:items-start">
                 <ThemeToggle />
-                <Suspense>
-                  <SignOut />
-                </Suspense>
-              </div>
-              <div className="hidden md:mt-auto md:flex md:flex-col">
-                <ThemeToggle />
-                <Suspense>
-                  <SignOut />
-                </Suspense>
               </div>
             </aside>
           }

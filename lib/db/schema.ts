@@ -291,6 +291,10 @@ export const agentRuns = pgTable(
     // The business date the run reasoned about: submission date for an
     // invoice, the incident detection date for an incident.
     asOfDate: businessDate("as_of_date"),
+    // Legacy records default false; all newly captured runs require a manifest.
+    evidenceManifestRequired: boolean("evidence_manifest_required")
+      .notNull()
+      .default(false),
     createdAt: instant("created_at").notNull().defaultNow(),
   },
   (t) => [index("runs_subject_idx").on(t.subjectType, t.subjectId)],
@@ -317,6 +321,26 @@ export const explanations = pgTable(
     validationErrors: jsonb("validation_errors").$type<string[]>().notNull(),
   },
   (t) => [uniqueIndex("explanations_run_uq").on(t.agentRunId)],
+);
+
+// Exact, canonical evidence delivered by read-only tools during each agent run.
+// The manifest is inserted in the same transaction as the run and explanation.
+export const agentEvidenceManifests = pgTable(
+  "agent_evidence_manifests",
+  {
+    runId: text("run_id")
+      .primaryKey()
+      .references(() => agentRuns.id),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+    asOfDate: businessDate("as_of_date").notNull(),
+    validatorVersion: text("validator_version").notNull(),
+    canonicalJson: text("canonical_json").notNull(),
+    sha256: text("sha256").notNull(),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (row) => [index("agent_evidence_client_idx").on(row.clientId)],
 );
 
 export const decisions = pgTable(
@@ -360,7 +384,8 @@ export const decisionSnapshots = pgTable("decision_snapshots", {
   createdAt: instant("created_at").notNull().defaultNow(),
 });
 
-// Analyst exposure to agent output, recorded before any decision (SPEC 9.1).
+// First delivery of validated agent output to a writable reviewer per
+// session/invoice, including before revisions (SPEC 9.1).
 export const exposures = pgTable(
   "exposures",
   {
@@ -635,6 +660,7 @@ export const watchLabels = pgTable(
 /** Tables that must never be updated or deleted (SPEC 4.2). */
 export const APPEND_ONLY_TABLES = [
   "agent_runs",
+  "agent_evidence_manifests",
   "explanations",
   "decision_snapshots",
   "audit_events",

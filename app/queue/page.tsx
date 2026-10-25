@@ -79,6 +79,14 @@ async function QueueData({
             genuine user approval or settlement authority.
           </p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/queue/sla"
+            className="text-primary focus-visible:ring-ring rounded-sm border px-4 py-2 text-sm font-semibold focus-visible:ring-2"
+          >
+            View fictional SLA monitor →
+          </Link>
+        </div>
         <Link
           href="/queue/cases"
           className="text-primary focus-visible:ring-ring rounded-sm border px-4 py-2 text-sm font-semibold focus-visible:ring-2"

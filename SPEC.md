@@ -131,8 +131,11 @@ The lender's records:
   decided_at (X4, X12, X21).
 - `decision_snapshots`: decision_id, canonical_json (text), sha256,
   prev_sha256, schema_version, created_at. Append-only (C1, C2, X11).
-- `exposures`: session_id, invoice_id, exposed_at. Records that a session saw
-  agent output for an invoice (9.1).
+- `exposures`: session_id, invoice_id, exposed_at. Records the first
+  delivery of validated agent output to a writable reviewer session for an
+  invoice, even after its initial decision. Public/read-only delivery is not
+  recorded. This is an exposure record, not proof the person read the output
+  (9.1).
 - `watch_detections`: id, rule_id, incident_key, as_of_date, details_json,
   config_version. One row per rule, incident key and date (X16).
 - `incidents`: id, incident_key (unique), rule_id, client_id, debtor_id

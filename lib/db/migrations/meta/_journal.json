@@ -43,6 +43,13 @@
       "when": 1792863600000,
       "tag": "0005_credit_case_history",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792928088234,
+      "tag": "0006_agent_evidence_manifests",
+      "breakpoints": true
     }
   ]
 }

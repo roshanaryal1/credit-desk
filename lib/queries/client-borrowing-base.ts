@@ -1,7 +1,11 @@
 import "server-only";
 
 import type { Db } from "@/lib/db/client";
-import type { BorrowingBaseReport } from "@/lib/credit/borrowing-base";
+import type {
+  BorrowingBaseReport,
+  BorrowingPolicy,
+  Receivable,
+} from "@/lib/credit/borrowing-base";
 import { clientBorrowingReview } from "./client-borrowing-review";
 
 export interface IndicativeBorrowingBase {
@@ -9,6 +13,8 @@ export interface IndicativeBorrowingBase {
   clientId: string;
   asOfDate: string;
   report: BorrowingBaseReport | null;
+  baselinePolicy: BorrowingPolicy;
+  sourceReceivables: Receivable[];
   assumptions: readonly string[];
   sourceInvoiceIds: string[];
 }
@@ -39,6 +45,8 @@ export async function indicativeClientBorrowingBase(
     clientId,
     asOfDate,
     report: sourceInvoiceIds.length ? review.report : null,
+    baselinePolicy: review.policy,
+    sourceReceivables: review.receivables,
     assumptions,
     sourceInvoiceIds,
   };

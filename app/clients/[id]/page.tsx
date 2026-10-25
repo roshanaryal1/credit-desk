@@ -58,6 +58,14 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
       </div>
       <div>
         <Link
+          href={`/clients/${encodeURIComponent(id)}/source-health`}
+          className="border-border bg-card hover:bg-accent/50 focus-visible:ring-ring inline-flex items-center rounded-sm border px-4 py-3 text-sm font-semibold focus-visible:ring-2"
+        >
+          Inspect accounting and bank source reconciliation →
+        </Link>
+      </div>
+      <div>
+        <Link
           href={`/clients/${encodeURIComponent(id)}/borrowing-base`}
           className="border-border bg-card hover:bg-accent/50 focus-visible:ring-ring inline-flex items-center gap-2 rounded-sm border px-4 py-3 text-sm font-semibold focus-visible:ring-2"
         >
