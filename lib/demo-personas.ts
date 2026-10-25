@@ -79,7 +79,14 @@ export function demoRouteAllowed(persona: DemoPersona, path: string): boolean {
       "/portfolio",
       "/trust",
     ],
-    AUDITOR: ["/trust", "/audit", "/clients", "/credit-memos", "/watch", "/portfolio"],
+    AUDITOR: [
+      "/trust",
+      "/audit",
+      "/clients",
+      "/credit-memos",
+      "/watch",
+      "/portfolio",
+    ],
   } as const;
   return (
     path === "/" ||
