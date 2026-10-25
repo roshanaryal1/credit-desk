@@ -21,6 +21,10 @@ import {
   ToolExecutor,
 } from "./tools";
 import { validateOutput, type ValidationResult } from "./validator";
+import {
+  buildRunEvidenceManifest,
+  type CapturedToolResponse,
+} from "./manifest";
 
 // Agent runner for flagged invoices (SPEC 8): a bounded tool loop, the
 // citation validator, one retry with the errors, and an immutable run record.
@@ -184,6 +188,8 @@ async function runAgentLoop(
   let result: ValidationResult | null = null;
   let status: "PASSED" | "FAILED" | "ERROR" = "ERROR";
   let errors: string[] = [];
+  const capturedToolResponses: CapturedToolResponse[] = [];
+  const knownToolNames = new Set(TOOL_DEFINITIONS.map((tool) => tool.function.name));
 
   try {
     for (;;) {
@@ -223,6 +229,14 @@ async function runAgentLoop(
               : {
                   error: `tool call limit reached; call ${SUBMIT_TOOL_NAME} now`,
                 };
+          const known = knownToolNames.has(call.function.name);
+          capturedToolResponses.push({
+            sequence: capturedToolResponses.length + 1,
+            tool: known ? call.function.name : "UNSUPPORTED",
+            // Unknown names may contain untrusted text; omit them from the
+            // durable transcript. Never save raw args, API headers or keys.
+            response: known ? output : { error: "unsupported tool" },
+          });
           messages.push({
             role: "tool",
             tool_call_id: call.id,
@@ -308,7 +322,14 @@ async function runAgentLoop(
   }
 
   const latencyMs = now() - started;
-  // The run and its explanation commit together, so resuming never treats
+  const originalEvidence = buildRunEvidenceManifest({
+    runId,
+    clientId: subject.clientId,
+    asOf: subject.asOf,
+    toolResponses: capturedToolResponses,
+    records: tools.evidence.recordsAtRun(),
+  });
+  // The run, original evidence and explanation commit together, so resuming never treats
   // a run as done when its explanation was not saved.
   await db.transaction(async (tx) => {
     await tx.insert(t.agentRuns).values({
@@ -326,6 +347,15 @@ async function runAgentLoop(
       tokensOut,
       latencyMs,
       asOfDate: subject.asOf,
+      evidenceManifestRequired: true,
+    });
+    await tx.insert(t.agentEvidenceManifests).values({
+      runId,
+      clientId: subject.clientId,
+      asOfDate: subject.asOf,
+      validatorVersion: originalEvidence.body.validatorVersion,
+      canonicalJson: originalEvidence.canonicalText,
+      sha256: originalEvidence.digest,
     });
     const value = result?.value;
     if (value) {
