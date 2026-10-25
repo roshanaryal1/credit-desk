@@ -64,7 +64,7 @@ describe("synthetic as-of portfolio review pack (#163)", () => {
     expect(first.markdown).toContain("including 1 high-severity");
     expect(first.markdown).toContain("\\=SUM");
     expect(first.markdown).toContain("\\| Synthetic");
-    expect(first.markdown).toContain("ledger_1");
+    expect(first.markdown).toContain("ledger\\\\_1");
     expect(first.markdown).toContain("/clients/cli_demo/collections");
     expect(first.markdown).toContain("NOT drawable availability");
     expect(first.markdown).toContain(first.digest);
