@@ -21,6 +21,7 @@ const routes = [
   { route: "/", name: "workbench" },
   { route: "/queue", name: "review-queue" },
   { route: "/queue/cases", name: "synthetic-case-workboard" },
+  { route: "/queue/sla", name: "synthetic-case-sla" },
   { route: "/clients", name: "client-directory" },
   { route: "/clients/cli_0001", name: "client-dossier" },
   { route: "/clients/cli_0001/activity", name: "client-activity" },
