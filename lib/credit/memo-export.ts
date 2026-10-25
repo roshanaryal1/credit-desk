@@ -146,15 +146,20 @@ export function renderSyntheticMemoMarkdown(
   if (checklist.length === 0) {
     lines.push("- No seeded case-linked requirements; completeness UNKNOWN");
   }
-  for (const item of [...checklist].sort((a, b) =>
-    a.id.localeCompare(b.id),
-  )) {
+  for (const item of [...checklist].sort((a, b) => a.id.localeCompare(b.id))) {
     lines.push(
-      "- " + safeMarkdown(item.id) + " | " +
-        safeMarkdown(item.label) + " | " +
-        item.state + " | " + item.dueState +
-        " | Due " + (item.dueDate ?? "UNKNOWN") +
-        " | Source " + (item.sourceId ? safeSourceId(item.sourceId) : "NOT VERIFIED"),
+      "- " +
+        safeMarkdown(item.id) +
+        " | " +
+        safeMarkdown(item.label) +
+        " | " +
+        item.state +
+        " | " +
+        item.dueState +
+        " | Due " +
+        (item.dueDate ?? "UNKNOWN") +
+        " | Source " +
+        (item.sourceId ? safeSourceId(item.sourceId) : "NOT VERIFIED"),
     );
   }
   lines.push(
