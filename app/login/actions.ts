@@ -143,9 +143,17 @@ export async function quickDemoAction(
   redirect(DEMO_PERSONAS[persona].home);
 }
 
-export async function logoutAction() {
+/**
+ * Both exits revoke the current signed session. Switching focuses the demo
+ * picker; signing out returns to the normal login landing page.
+ */
+export async function logoutAction(formData?: FormData) {
   const jar = await cookies();
   jar.delete(AUTH_COOKIE);
   jar.delete(MODE_COOKIE);
-  redirect("/login");
+  redirect(
+    formData?.get("intent") === "switch"
+      ? "/login#quick-demo-title"
+      : "/login",
+  );
 }
