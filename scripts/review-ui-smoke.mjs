@@ -31,6 +31,7 @@ const routes = [
   { route: "/watch/trends", name: "risk-trends" },
   { route: "/trust", name: "trust-panel" },
   { route: "/audit", name: "audit-history" },
+  { route: "/operations/sources", name: "synthetic-ingestion-operations" },
   { route: "/borrowing-base", name: "sample-waterfall" },
   { route: "/credit-memos", name: "credit-memo-directory" },
   { route: "/credit-memos/cli_0001", name: "credit-memo-draft" },
