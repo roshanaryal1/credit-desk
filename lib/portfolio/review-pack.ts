@@ -76,9 +76,9 @@ export function renderPortfolioReviewPack(input: PortfolioReviewPack) {
   const clients = [...input.clients].sort((a, b) => a.id.localeCompare(b.id));
   const funded = total(clients.map((c) => c.fundedPrincipalCents));
   const headroom = total(clients.map((c) => c.commitmentHeadroomCents));
-  const fullAgeing = clients.every(
-    (c) => c.receivableOutstandingCents !== null,
-  );
+  const fullAgeing =
+    clients.length > 0 &&
+    clients.every((c) => c.receivableOutstandingCents !== null);
   const receivables = fullAgeing
     ? total(clients.map((c) => c.receivableOutstandingCents ?? 0))
     : null;
