@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AUTH_COOKIE } from "@/lib/auth";
-import { MODE_COOKIE } from "@/lib/session";
 
 const mocks = vi.hoisted(() => ({
   deleteCookie: vi.fn(),
@@ -29,7 +28,7 @@ describe("demo account exits", () => {
   it("signs out by clearing both cookies and returning to login", async () => {
     await expect(logoutAction()).rejects.toThrow("NEXT_REDIRECT");
     expect(mocks.deleteCookie).toHaveBeenCalledWith(AUTH_COOKIE);
-    expect(mocks.deleteCookie).toHaveBeenCalledWith(MODE_COOKIE);
+    expect(mocks.deleteCookie).toHaveBeenCalledWith("cd_mode");
     expect(mocks.redirectTo).toHaveBeenCalledWith("/login");
   });
 
@@ -38,7 +37,7 @@ describe("demo account exits", () => {
     form.set("intent", "switch");
     await expect(logoutAction(form)).rejects.toThrow("NEXT_REDIRECT");
     expect(mocks.deleteCookie).toHaveBeenCalledWith(AUTH_COOKIE);
-    expect(mocks.deleteCookie).toHaveBeenCalledWith(MODE_COOKIE);
+    expect(mocks.deleteCookie).toHaveBeenCalledWith("cd_mode");
     expect(mocks.redirectTo).toHaveBeenCalledWith("/login#quick-demo-title");
   });
 
