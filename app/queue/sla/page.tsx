@@ -16,7 +16,9 @@ export const metadata = { title: "Synthetic case SLA" };
 
 export default function CaseSlaPage() {
   return (
-    <Suspense fallback={<Loading label="Calculating fictional case deadlines..." />}>
+    <Suspense
+      fallback={<Loading label="Calculating fictional case deadlines..." />}
+    >
       <CaseSlaView />
     </Suspense>
   );
@@ -45,15 +47,14 @@ async function CaseSlaView() {
         <p className="text-muted-foreground mt-2 text-sm">
           Deadline stages use Monday–Friday calendar days and the fictional
           policy below. No official NZ public holidays or lender service
-          schedules have been supplied, so the results are NOT contractual
-          SLA breaches. No notices are delivered, and this self-selected demo
+          schedules have been supplied, so the results are NOT contractual SLA
+          breaches. No notices are delivered, and this self-selected demo
           persona has no authority to assign or approve cases.
         </p>
         <p className="text-muted-foreground mt-2 text-xs">
           Warning after {SYNTHETIC_SLA_POLICY.warningBusinessDays} working
-          day(s); critical after
-          {" "}{SYNTHETIC_SLA_POLICY.criticalBusinessDays}. Staff identity
-          and holiday approval require separate verification.
+          day(s); critical after {SYNTHETIC_SLA_POLICY.criticalBusinessDays}.
+          Staff identity and holiday approval require separate verification.
         </p>
       </section>
       <section aria-label="Synthetic due-date pulse">
@@ -76,18 +77,24 @@ async function CaseSlaView() {
         </h2>
         <ul className="border-border bg-card divide-border divide-y rounded-sm border">
           {rows.map((row) => (
-            <li key={row.caseId} className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <li
+              key={row.caseId}
+              className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"
+            >
               <div>
                 <p className="text-sm font-semibold">{row.clientName}</p>
                 <p className="text-muted-foreground mt-1 text-xs">
                   {row.caseId} · {row.state.replaceAll("_", " ")}
-                  {" · "}{row.priority} priority
+                  {" · "}
+                  {row.priority} priority
                 </p>
-                <p className="mt-2 text-sm font-semibold">{row.stage.replaceAll("_", " ")}</p>
+                <p className="mt-2 text-sm font-semibold">
+                  {row.stage.replaceAll("_", " ")}
+                </p>
                 <p className="text-muted-foreground mt-1 text-xs">
                   {row.businessDaysLate} counted weekdays after due date
-                  {" · "}Due:
-                  {" "}{row.dueDate ? businessDate(row.dueDate) : "UNKNOWN"}
+                  {" · "}Due:{" "}
+                  {row.dueDate ? businessDate(row.dueDate) : "UNKNOWN"}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
                   Synthetic owner: {row.ownerId ?? "unassigned"}
