@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { Loading, PageHeader } from "@/components/page";
 import { getDb } from "@/lib/db/client";
+import { clientEvidenceRequirements } from "@/lib/credit/evidence-checklist";
 import { DEMO_TODAY } from "@/lib/demo";
 import { businessDate } from "@/lib/format";
 import {
@@ -44,7 +45,13 @@ async function CaseList({
     CASE_FILTERS.includes(sp.filter as CaseViewFilter)
       ? (sp.filter as CaseViewFilter)
       : "all";
-  const rows = await listDemoCases(await getDb(), filter, DEMO_TODAY);
+  const db = await getDb();
+  const rows = await listDemoCases(db, filter, DEMO_TODAY);
+  const requirements = (await Promise.all(
+    [...new Set(rows.map((row) => row.clientId))].map((clientId) =>
+      clientEvidenceRequirements(db, clientId, DEMO_TODAY),
+    ),
+  )).flat();
   return (
     <>
       <Link
@@ -115,6 +122,26 @@ async function CaseList({
                   {" · "}
                   Version {row.version}
                 </p>
+                <details className="mt-3 text-xs">
+                  <summary className="text-primary cursor-pointer font-semibold underline-offset-4">
+                    Evidence checklist ({requirements.filter((item) => item.caseId === row.id).length})
+                  </summary>
+                  <ul className="mt-2 space-y-2">
+                    {requirements.filter((item) => item.caseId === row.id).map((item) => (
+                      <li key={item.id} className="border-border rounded-sm border p-2">
+                        <span className="font-semibold">{item.label}</span>
+                        <span className="text-muted-foreground block">
+                          {item.state} · {item.dueState} · {item.id}
+                        </span>
+                        {item.sourceId && (
+                          <span className="text-muted-foreground block">
+                            Source {item.sourceId}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
                 <p className="text-muted-foreground mt-1 text-xs">
                   Fictional assignee: {row.ownerId ?? "unassigned"}
                   {" · "}
