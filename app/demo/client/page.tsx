@@ -30,11 +30,9 @@ async function BorrowerView() {
     getClientDossier(db, DEMO_CLIENT_ID, DEMO_TODAY),
     getClientReceivablesAgeing(db, DEMO_CLIENT_ID, DEMO_TODAY),
   ]);
-  const checklist = (await clientEvidenceRequirements(
-    db,
-    DEMO_CLIENT_ID,
-    DEMO_TODAY,
-  )).filter((item) => item.state === "MISSING" || item.state === "EXPIRED");
+  const checklist = (
+    await clientEvidenceRequirements(db, DEMO_CLIENT_ID, DEMO_TODAY)
+  ).filter((item) => item.state === "MISSING" || item.state === "EXPIRED");
   if (!dossier || !ageing) {
     return (
       <p role="status" className="text-muted-foreground">
@@ -106,7 +104,9 @@ async function BorrowerView() {
         </p>
       </section>
       <section className="border-border bg-card rounded-sm border p-6">
-        <h2 className="text-base font-semibold">Outstanding fictional evidence</h2>
+        <h2 className="text-base font-semibold">
+          Outstanding fictional evidence
+        </h2>
         <p className="text-muted-foreground mt-2 text-xs">
           Only the configured fictional borrower’s checklist appears here.
           Statuses are seeded metadata, not document verification or consent.
@@ -116,15 +116,15 @@ async function BorrowerView() {
             <li className="border-border rounded-sm border p-3" key={item.id}>
               <span className="font-semibold">{item.label}</span>
               <span className="text-muted-foreground block text-xs">
-                {item.state} · {item.dueState} · Due:
-                {" "}{item.dueDate ? businessDate(item.dueDate) : "not set"}
+                {item.state} · {item.dueState} · Due:{" "}
+                {item.dueDate ? businessDate(item.dueDate) : "not set"}
               </span>
             </li>
           ))}
           {checklist.length === 0 && (
             <li className="text-muted-foreground">
-              No outstanding fictional checklist rows are available.
-              This does not certify all documents as complete.
+              No outstanding fictional checklist rows are available. This does
+              not certify all documents as complete.
             </li>
           )}
         </ul>
