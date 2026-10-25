@@ -73,26 +73,28 @@ describe("structured fictional evidence checklist (#162)", () => {
     const rows = await listDemoCases(db);
     expect(rows).toHaveLength(5);
     const clientId = rows[0]!.clientId;
-    const checklist = await clientEvidenceRequirements(db, clientId, DEMO_TODAY);
+    const checklist = await clientEvidenceRequirements(
+      db,
+      clientId,
+      DEMO_TODAY,
+    );
     expect(checklist.length).toBeGreaterThan(0);
     expect(checklist.every((r) => r.clientId === clientId)).toBe(true);
     expect(new Set(checklist.map((r) => r.id)).size).toBe(checklist.length);
     expect(
-      checklist.filter((r) => r.kind === "SUBMITTED_INVOICE").every((r) =>
-        r.state === "RECEIVED" ? r.sourceId !== null : r.sourceId === null,
-      ),
+      checklist
+        .filter((r) => r.kind === "SUBMITTED_INVOICE")
+        .every((r) =>
+          r.state === "RECEIVED" ? r.sourceId !== null : r.sourceId === null,
+        ),
     ).toBe(true);
 
     const otherClient = ds.clients.find((c) => c.id !== clientId)!.id!;
-    const other = await clientEvidenceRequirements(
-      db,
-      otherClient,
-      DEMO_TODAY,
-    );
+    const other = await clientEvidenceRequirements(db, otherClient, DEMO_TODAY);
     expect(other.every((r) => r.clientId === otherClient)).toBe(true);
-    expect(other.some((r) =>
-      checklist.some((mine) => mine.id === r.id),
-    )).toBe(false);
+    expect(other.some((r) => checklist.some((mine) => mine.id === r.id))).toBe(
+      false,
+    );
 
     const client = ds.clients.find((c) => c.id === clientId)!;
     const memo = draftMemoFromSyntheticClient({
@@ -107,10 +109,12 @@ describe("structured fictional evidence checklist (#162)", () => {
     expect(exported).toContain(checklist[0]!.id);
     expect(exported).toContain("Signed off by: NONE");
     expect(() =>
-      renderSyntheticMemoMarkdown(memo, [{
-        ...checklist[0]!,
-        clientId: "someone-else",
-      }]),
+      renderSyntheticMemoMarkdown(memo, [
+        {
+          ...checklist[0]!,
+          clientId: "someone-else",
+        },
+      ]),
     ).toThrow(/client-scoped/);
   }, 90_000);
 });
