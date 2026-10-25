@@ -13,6 +13,10 @@ decided without seeing it, and replays any decision exactly as it was made.
 demonstration with signed demo sessions, not a live lending platform. The legacy
 Vercel host redirects to this address (HTTP 308 verified on 25 October 2026).
 
+[Watch or download the three-minute walkthrough](docs/walkthrough/creditdesk-2026-10-25.webm)
+(silent, captioned, recorded from the live fictional demo).
+[Recording details and reproduction](docs/walkthrough/README.md).
+
 **Rules detect, the model explains, a validator checks the model, and a person
 decides.** The agent never approves, funds or changes anything.
 

@@ -1,0 +1,93 @@
+{
+  "recordedAt": "2026-10-25T03:38:27.267Z",
+  "origin": "https://creditdesk.roshanaryal.com",
+  "sourceCommit": "c5e30cedbb877bbfc357bc056df0c4e9eb4f31fa",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "access": "Public fictional credit analyst, read-only",
+  "audio": "None; captions are added to the recorded browser view",
+  "plannedSeconds": 180,
+  "scenes": [
+    {
+      "title": "A fictional credit operations desk",
+      "caption": "All records are synthetic. This walkthrough uses a public, read-only account.",
+      "route": "/login",
+      "seconds": 10
+    },
+    {
+      "title": "Choose a demo perspective",
+      "caption": "The credit analyst view opens the review queue. Demo roles do not verify real identities.",
+      "route": "/queue",
+      "seconds": 10
+    },
+    {
+      "title": "Overview",
+      "caption": "Start with synthetic exposure, pending reviews and the work that needs attention.",
+      "route": "/",
+      "seconds": 15
+    },
+    {
+      "title": "Client relationships",
+      "caption": "Open a fictional borrower and follow the evidence behind its facility position.",
+      "route": "/clients",
+      "seconds": 10
+    },
+    {
+      "title": "Client 360",
+      "caption": "Facility headroom, debtor exposure and dated ledger balances are shown together. Headroom is not drawable funding.",
+      "route": "/clients/cli_0001",
+      "seconds": 15
+    },
+    {
+      "title": "Evidence and activity",
+      "caption": "The timeline links recorded synthetic events and preserves their business dates.",
+      "route": "/clients/cli_0001/activity",
+      "seconds": 10
+    },
+    {
+      "title": "Collections",
+      "caption": "Inspect dated arrears and payment evidence. Historical comparisons respect when invoices became known.",
+      "route": "/clients/cli_0001/collections",
+      "seconds": 15
+    },
+    {
+      "title": "Borrowing-base scenario",
+      "caption": "Reconcile the same client's ledger to exclusions and haircuts. These illustrative policy inputs do not authorize lending.",
+      "route": "/clients/cli_0001/borrowing-base",
+      "seconds": 15
+    },
+    {
+      "title": "Invoice Check",
+      "caption": "Rules detect issues; cited explanations support review. Stored synthetic decisions remain separate from funding authority.",
+      "route": "/batches/bat_0007?invoice=inv_0215",
+      "seconds": 20
+    },
+    {
+      "title": "Portfolio Watch",
+      "caption": "Review synthetic detections and their evidence. Counts describe recorded events, not a risk forecast.",
+      "route": "/watch",
+      "seconds": 15
+    },
+    {
+      "title": "Credit assessment draft",
+      "caption": "The memo lists evidence and missing facts. Its Markdown export is unsigned and requires analyst review.",
+      "route": "/credit-memos/cli_0001",
+      "seconds": 15
+    },
+    {
+      "title": "Trust Panel",
+      "caption": "Compare decisions with agent recommendations while keeping simulated history and exposed reviews distinct.",
+      "route": "/trust",
+      "seconds": 15
+    },
+    {
+      "title": "Frozen decision replay",
+      "caption": "Reopen a stored synthetic decision and verify its checksum. The snapshot preserves what was recorded at decision time.",
+      "route": "/trust/replay/dec_39407850_inv_0215",
+      "seconds": 15
+    }
+  ],
+  "elapsedSeconds": 181.533267792
+}
