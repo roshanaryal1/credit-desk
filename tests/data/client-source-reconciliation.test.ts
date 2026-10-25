@@ -115,13 +115,35 @@ async function fixture() {
     },
   ]);
   await db.insert(t.receiptAllocations).values([
-    { bankTransactionId: "bank-matched", ledgerEntryId: "ledger-1", amountCents: 10000 },
-    { bankTransactionId: "bank-partial", ledgerEntryId: "ledger-2", amountCents: 3000 },
-    { bankTransactionId: "bank-foreign", ledgerEntryId: "ledger-foreign", amountCents: 4000 },
+    {
+      bankTransactionId: "bank-matched",
+      ledgerEntryId: "ledger-1",
+      amountCents: 10000,
+    },
+    {
+      bankTransactionId: "bank-partial",
+      ledgerEntryId: "ledger-2",
+      amountCents: 3000,
+    },
+    {
+      bankTransactionId: "bank-foreign",
+      ledgerEntryId: "ledger-foreign",
+      amountCents: 4000,
+    },
   ]);
   await db.insert(t.creditNotes).values([
-    { id: "credit-current", ledgerEntryId: "ledger-2", date: day, amountCents: 750 },
-    { id: "credit-future", ledgerEntryId: "ledger-2", date: "2026-10-21", amountCents: 999 },
+    {
+      id: "credit-current",
+      ledgerEntryId: "ledger-2",
+      date: day,
+      amountCents: 750,
+    },
+    {
+      id: "credit-future",
+      ledgerEntryId: "ledger-2",
+      date: "2026-10-21",
+      amountCents: 999,
+    },
   ]);
   return db;
 }
@@ -137,7 +159,10 @@ describe("synthetic source-health and cash reconciliation (#160)", () => {
   it("reconciles bank rows exactly once and isolates client/date", async () => {
     const db = await fixture();
     const report = (await clientSourceReconciliation(
-      db, "test-client", day, cutoff,
+      db,
+      "test-client",
+      day,
+      cutoff,
     ))!;
     expect(report.bankTotalCents).toBe(23000);
     expect(report.allocatedCents).toBe(13000);
@@ -157,13 +182,16 @@ describe("synthetic source-health and cash reconciliation (#160)", () => {
     expect(checkStatus(report, "ACCOUNTING")).toBe("UNKNOWN");
     expect(checkStatus(report, "BANK")).toBe("UNKNOWN");
     const other = (await clientSourceReconciliation(
-      db, "foreign-client", day, cutoff,
+      db,
+      "foreign-client",
+      day,
+      cutoff,
     ))!;
     expect(other.bankTotalCents).toBe(4000);
     expect(other.allocatedCents).toBe(4000);
-    expect(await clientSourceReconciliation(
-      db, "not-a-client", day, cutoff,
-    )).toBeNull();
+    expect(
+      await clientSourceReconciliation(db, "not-a-client", day, cutoff),
+    ).toBeNull();
   }, 60_000);
 
   it("uses injected cutoff to label FRESH, STALE and ERROR without lookahead", async () => {
@@ -209,13 +237,21 @@ describe("synthetic source-health and cash reconciliation (#160)", () => {
       },
     ]);
     const report = (await clientSourceReconciliation(
-      db, "test-client", day, cutoff, 60,
+      db,
+      "test-client",
+      day,
+      cutoff,
+      60,
     ))!;
     expect(checkStatus(report, "ACCOUNTING")).toBe("FRESH");
     expect(checkStatus(report, "BANK")).toBe("ERROR");
     expect(report.acceptedObservationIds).toEqual(["before-cutoff"]);
     const older = (await clientSourceReconciliation(
-      db, "test-client", day, new Date("2026-10-20T11:00:00Z"), 30,
+      db,
+      "test-client",
+      day,
+      new Date("2026-10-20T11:00:00Z"),
+      30,
     ))!;
     expect(checkStatus(older, "BANK")).toBe("STALE");
     expect(checkStatus(older, "ACCOUNTING")).toBe("UNKNOWN");
@@ -229,14 +265,14 @@ describe("synthetic source-health and cash reconciliation (#160)", () => {
       ledgerEntryId: "ledger-2",
       amountCents: 6000,
     });
-    await expect(clientSourceReconciliation(
-      db, "test-client", day, cutoff,
-    )).rejects.toThrow(/exceeds available cash/);
-    await expect(clientSourceReconciliation(
-      db, "test-client", "2026-02-30", cutoff,
-    )).rejects.toThrow(/business date/);
-    await expect(clientSourceReconciliation(
-      db, "test-client", day, new Date("invalid"),
-    )).rejects.toThrow(/UTC cutoff/);
+    await expect(
+      clientSourceReconciliation(db, "test-client", day, cutoff),
+    ).rejects.toThrow(/exceeds available cash/);
+    await expect(
+      clientSourceReconciliation(db, "test-client", "2026-02-30", cutoff),
+    ).rejects.toThrow(/business date/);
+    await expect(
+      clientSourceReconciliation(db, "test-client", day, new Date("invalid")),
+    ).rejects.toThrow(/UTC cutoff/);
   }, 60_000);
 });
