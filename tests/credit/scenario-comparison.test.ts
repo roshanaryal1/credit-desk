@@ -125,14 +125,10 @@ describe("client counterfactual borrowing-base comparison (#161)", () => {
     expect(output.baseline.treatments.map((x) => x.invoiceId)).toEqual(
       output.counterfactual.treatments.map((x) => x.invoiceId),
     );
-    expect(compareScenario("2026-10-20", policy, invoices, inputs).baseline).toEqual(
-      compareScenario("2026-10-20", policy, invoices, inputs).counterfactual
-        ? {
-            ...compareScenario("2026-10-20", policy, invoices, inputs)
-              .counterfactual,
-            policyVersion: "ILLUSTRATIVE-NOT-APPROVED",
-          }
-        : {},
+    const reset = compareScenario("2026-10-20", policy, invoices, inputs);
+    expect(reset.waterfall.every((row) => row.deltaCents === 0)).toBe(true);
+    expect(reset.invoices.every((row) => row.advanceDeltaCents === 0)).toBe(
+      true,
     );
   });
 
