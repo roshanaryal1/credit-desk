@@ -129,7 +129,10 @@ async function seed() {
       recommendation: "HOLD",
       questionsForClient: [],
       claims: [
-        { text: "This record needs review.", evidenceIds: ["inv_invalid_exposure"] },
+        {
+          text: "This record needs review.",
+          evidenceIds: ["inv_invalid_exposure"],
+        },
       ],
       citedEvidenceIds: ["inv_invalid_exposure"],
       validationStatus: "FAILED",
@@ -177,8 +180,15 @@ describe("shadow-mode explanation delivery and revision exposure (#166)", () => 
       ...analyst,
       sessionId: "public-read-only",
     };
-    const publicReview = await getInvoiceReview(invoiceId, publicAnalyst, batchId, true);
-    expect(publicReview?.explanation?.explanation.id).toBe("exp_exposure_valid");
+    const publicReview = await getInvoiceReview(
+      invoiceId,
+      publicAnalyst,
+      batchId,
+      true,
+    );
+    expect(publicReview?.explanation?.explanation.id).toBe(
+      "exp_exposure_valid",
+    );
     expect(await sessionExposures(publicAnalyst.sessionId)).toHaveLength(0);
 
     // Private ASSIST mode still records delivery before any first decision.
@@ -187,7 +197,9 @@ describe("shadow-mode explanation delivery and revision exposure (#166)", () => 
       sessionId: "private-assist-exposure",
       mode: "ASSIST",
     };
-    expect((await getInvoiceReview(invoiceId, assist, batchId))?.explanation).not.toBeNull();
+    expect(
+      (await getInvoiceReview(invoiceId, assist, batchId))?.explanation,
+    ).not.toBeNull();
     expect(await sessionExposures(assist.sessionId)).toHaveLength(1);
     await getInvoiceReview(invoiceId, assist, batchId);
     expect(await sessionExposures(assist.sessionId)).toHaveLength(1);
@@ -219,9 +231,9 @@ describe("shadow-mode explanation delivery and revision exposure (#166)", () => 
       .select()
       .from(t.decisionSnapshots)
       .where(eq(t.decisionSnapshots.decisionId, revised));
-    expect(JSON.parse(snapshot.canonicalJson).decision.aiContentExposedBeforeDecision).toBe(
-      true,
-    );
+    expect(
+      JSON.parse(snapshot.canonicalJson).decision.aiContentExposedBeforeDecision,
+    ).toBe(true);
     expect(await verifySnapshot(db, revised)).toEqual({
       checksumMatches: true,
       chainMatches: true,
@@ -233,9 +245,15 @@ describe("shadow-mode explanation delivery and revision exposure (#166)", () => 
       sessionId: "failed-or-wrong-route",
       mode: "ASSIST",
     };
-    const invalid = await getInvoiceReview("inv_invalid_exposure", failedAnalyst, batchId);
+    const invalid = await getInvoiceReview(
+      "inv_invalid_exposure",
+      failedAnalyst,
+      batchId,
+    );
     expect(invalid?.explanation).toBeNull();
-    expect(await getInvoiceReview(invoiceId, failedAnalyst, "wrong-batch")).toBeNull();
+    expect(
+      await getInvoiceReview(invoiceId, failedAnalyst, "wrong-batch"),
+    ).toBeNull();
     expect(await sessionExposures(failedAnalyst.sessionId)).toHaveLength(0);
 
     // Read-only delivery remains excluded even after an existing decision.
