@@ -131,6 +131,9 @@ describe("immutable tool-evidence manifests (#164)", () => {
         explanation,
       }),
     ).toBe(true);
+    expect(
+      await storedExplanationUsable(db, { run, explanation }, "2020-01-01"),
+    ).toBe(false);
   }, 90_000);
 
   it("rejects cross-client capture before writing any manifest", () => {
