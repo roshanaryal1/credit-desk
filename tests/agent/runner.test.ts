@@ -236,6 +236,94 @@ describe("agent runner", () => {
     expect(out).toMatchObject({ status: "PASSED", attempts: 2 });
   });
 
+  it("redacts provider exceptions from outcomes, logs and durable evidence", async () => {
+    const marker = "SYNTHETIC_PRIVATE_UPSTREAM_DETAIL";
+    const logs: Record<string, unknown>[] = [];
+    const llm = new ScriptedLlm([
+      () => {
+        throw new Error(marker, { cause: { privateResponseDetail: marker } });
+      },
+    ]);
+    const out = await runAgentForInvoice(db, llm, flagged.id, {
+      codeSha: "test",
+      log: (line) => logs.push(line),
+    });
+    expect(out.status).toBe("ERROR");
+    expect(out.errors).toEqual([
+      "The agent service is temporarily unavailable. Try the run again.",
+    ]);
+    expect(logs).toHaveLength(1);
+    expect(logs[0]).toMatchObject({
+      event: "agent_run",
+      runId: out.runId,
+      errorCode: "RUN_FAILED",
+      errorCount: 1,
+    });
+    expect(logs[0]).not.toHaveProperty("errors");
+    expect(logs[0]).not.toHaveProperty("subjectId");
+    const [capture] = await db
+      .select()
+      .from(t.agentEvidenceManifests)
+      .where(eq(t.agentEvidenceManifests.runId, out.runId));
+    expect(JSON.stringify({ out, logs, capture })).not.toContain(marker);
+  }, 30_000);
+
+  it("does not echo private provider diagnostics into the recovery request", async () => {
+    const marker = "SYNTHETIC_PRIVATE_TOOL_FAILURE";
+    let calls = 0;
+    const messages: unknown[] = [];
+    const llm: LlmClient = {
+      provider: "test",
+      model: "scripted",
+      async complete(request) {
+        messages.push(structuredClone(request.messages));
+        calls++;
+        if (calls === 1) {
+          return {
+            message: toolCall("get_invoice", { invoice_id: flagged.id }),
+            tokensIn: 1,
+            tokensOut: 1,
+          };
+        }
+        if (calls === 2)
+          throw new Error(`Tool call validation failed: ${marker}`);
+        return { message: answer(grounded()), tokensIn: 1, tokensOut: 1 };
+      },
+    };
+    const logs: Record<string, unknown>[] = [];
+    const out = await runAgentForInvoice(db, llm, flagged.id, {
+      codeSha: "test",
+      log: (line) => logs.push(line),
+    });
+    expect(out).toMatchObject({ status: "PASSED", attempts: 2, errors: [] });
+    expect(calls).toBe(3);
+    expect(JSON.stringify({ out, logs, messages })).not.toContain(marker);
+  }, 30_000);
+
+  it.each([null, "SYNTHETIC_NON_ERROR_DETAIL"])(
+    "safely classifies non-Error provider rejection %s",
+    async (failure) => {
+      const llm = new ScriptedLlm([
+        () => {
+          throw failure;
+        },
+      ]);
+      const logs: Record<string, unknown>[] = [];
+      const out = await runAgentForInvoice(db, llm, flagged.id, {
+        codeSha: "test",
+        log: (line) => logs.push(line),
+      });
+      expect(out.status).toBe("ERROR");
+      expect(out.errors).toEqual([
+        "The agent service is temporarily unavailable. Try the run again.",
+      ]);
+      expect(JSON.stringify({ out, logs })).not.toContain(
+        "SYNTHETIC_NON_ERROR_DETAIL",
+      );
+    },
+    30_000,
+  );
+
   it("skips clear invoices without calling the model", async () => {
     const results = await runAllBatches(db);
     const clear = results.find((r) => r.findings.length === 0)!.invoiceId;
