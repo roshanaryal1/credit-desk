@@ -282,6 +282,78 @@ async function checkEvidenceAndScenario(page, label) {
   });
 }
 
+async function checkDateFilters(page, label) {
+  await page.goto(origin + "/watch");
+  await waitForRenderedContent(page);
+  const input = page.getByLabel("Go to date", { exact: true });
+  const today = await input.inputValue();
+  const start = await input.getAttribute("min");
+  const baseline = await page.locator("main").innerText();
+  for (const query of [
+    "asOf=2026-99-99",
+    "asOf=2026-00-00",
+    "asOf=2026-09-99",
+    "asOf=2026-09-31",
+    "asOf=2026-02-29",
+    "asOf=invalid",
+    "asOf=",
+    "asOf=2026-07-22&asOf=2026-10-19",
+  ]) {
+    await page.goto(origin + "/watch?" + query);
+    await waitForRenderedContent(page);
+    if (
+      (await input.inputValue()) !== today ||
+      (await page.locator("main").innerText()) !== baseline
+    )
+      throw new Error(
+        `${label}: invalid Watch date changed the fallback content: ${query}`,
+      );
+  }
+  for (const [value, expected] of [
+    ["2024-02-29", start],
+    [start, start],
+    [today, today],
+    ["9999-12-31", today],
+  ]) {
+    await page.goto(origin + "/watch?asOf=" + value);
+    await waitForRenderedContent(page);
+    if ((await input.inputValue()) !== expected)
+      throw new Error(
+        `${label}: valid Watch date lost its range clamp: ${value}`,
+      );
+    await page
+      .getByRole("navigation", { name: "Move through the history" })
+      .waitFor({ state: "visible" });
+  }
+  const activity = "/clients/cli_0001/activity";
+  await page.goto(origin + activity);
+  await waitForRenderedContent(page);
+  const activityBaseline = await page.locator("main").innerText();
+  for (const query of [
+    "asOf=2026-09-99",
+    "asOf=2026-00-00",
+    "asOf=2026-07-22&asOf=2026-10-19",
+  ]) {
+    await page.goto(origin + activity + "?" + query);
+    await waitForRenderedContent(page);
+    if (
+      (await page
+        .getByLabel("Business as of", { exact: true })
+        .inputValue()) !== today ||
+      (await page.locator("main").innerText()) !== activityBaseline
+    )
+      throw new Error(
+        `${label}: activity date fallback changed or rendered an error: ${query}`,
+      );
+  }
+  behaviorChecks.push({
+    viewport: label,
+    check:
+      "Watch malformed and repeated dates preserve fallback content; valid dates retain clamps; activity malformed dates remain safe",
+    result: "PASS",
+  });
+}
+
 function observeBrowser(page, label) {
   page.on("pageerror", (error) => errors.push(`${label}: ${error.message}`));
   const requiredAsset = (request) =>
@@ -432,6 +504,7 @@ try {
       });
       process.stdout.write(`OK ${label} ${item.route}: ${title}\n`);
     }
+    await checkDateFilters(page, label);
     await checkEvidenceAndScenario(page, label);
     if (label === "desktop") {
       // Browser fetch inherits the signed, HttpOnly session cookie from the
