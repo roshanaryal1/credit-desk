@@ -1,3 +1,5 @@
+import { validateCapturedReceipt } from "@/lib/data/captured-receipts";
+
 import { eq } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
@@ -7,7 +9,11 @@ import { canonicalJson, sha256 } from "@/lib/trust/canonical";
 import { EvidenceRegistry, type EvidenceRecord } from "./evidence";
 import { validateOutput } from "./validator";
 
-export const EVIDENCE_VALIDATOR_VERSION = "captured-evidence-v1";
+export const EVIDENCE_VALIDATOR_VERSION = "captured-evidence-v2";
+const SUPPORTED_VALIDATORS = new Set([
+  "captured-evidence-v1",
+  EVIDENCE_VALIDATOR_VERSION,
+]);
 
 export interface CapturedToolResponse {
   sequence: number;
@@ -19,7 +25,7 @@ export interface CapturedRunEvidence {
   runId: string;
   clientId: string;
   asOf: string;
-  validatorVersion: typeof EVIDENCE_VALIDATOR_VERSION;
+  validatorVersion: "captured-evidence-v1" | typeof EVIDENCE_VALIDATOR_VERSION;
   toolResponses: CapturedToolResponse[];
   records: EvidenceRecord[];
 }
@@ -33,7 +39,11 @@ export function buildRunEvidenceManifest(input: {
   records: EvidenceRecord[];
 }) {
   const registry = new EvidenceRegistry(input.clientId);
-  for (const record of input.records) registry.add(record);
+  for (const record of input.records) {
+    if (record.type === "bank_transaction")
+      validateCapturedReceipt(record, input.clientId, input.asOf);
+    registry.add(record);
+  }
   const body: CapturedRunEvidence = {
     runId: input.runId,
     clientId: input.clientId,
@@ -154,6 +164,8 @@ function verifyTranscript(payload: CapturedRunEvidence) {
       const date = dateField ? record[dateField] : undefined;
       if (dateField && (!validDay(date) || date > payload.asOf))
         throw Error("Evidence outside capture date");
+      if (record.type === "bank_transaction")
+        validateCapturedReceipt(record, payload.clientId, payload.asOf);
       returned.set(record.id, record);
     }
   }
@@ -199,7 +211,7 @@ export async function readCapturedRunEvidence(
     if (!saved)
       return { status: run.evidenceManifestRequired ? "FAILED" : "LEGACY" };
     if (
-      saved.validatorVersion !== EVIDENCE_VALIDATOR_VERSION ||
+      !SUPPORTED_VALIDATORS.has(saved.validatorVersion) ||
       sha256(saved.canonicalJson) !== saved.sha256
     )
       return { status: "FAILED" };

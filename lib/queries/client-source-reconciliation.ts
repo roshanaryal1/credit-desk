@@ -2,6 +2,8 @@ import "server-only";
 
 import { and, asc, eq, inArray, lte } from "drizzle-orm";
 
+import { validatedReceiptAllocations } from "@/lib/data/receipt-reconciliation";
+
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import { addDays } from "@/lib/dates";
@@ -183,14 +185,8 @@ export async function clientSourceReconciliation(
   }
   const ledgerById = new Map(ledgers.map((row) => [row.id, row]));
   const ledgerIds = [...ledgerById.keys()];
-  const bankIds = banks.map((row) => row.id);
-  const [allocations, creditNotes] = await Promise.all([
-    bankIds.length
-      ? db
-          .select()
-          .from(t.receiptAllocations)
-          .where(inArray(t.receiptAllocations.bankTransactionId, bankIds))
-      : [],
+  const [{ allocations }, creditNotes] = await Promise.all([
+    validatedReceiptAllocations(db, clientId, banks),
     ledgerIds.length
       ? db
           .select()
@@ -203,25 +199,6 @@ export async function clientSourceReconciliation(
           )
       : [],
   ]);
-  const allocationLedgerIds = [
-    ...new Set(allocations.map((row) => row.ledgerEntryId)),
-  ];
-  // Read ownership only for references outside the visible snapshot. These
-  // may be same-client future records or invalid cross-client allocations;
-  // never expose another client's source fields in the returned report.
-  const unseenLedgerIds = allocationLedgerIds.filter(
-    (id) => !ledgerById.has(id),
-  );
-  const unseenOwners = unseenLedgerIds.length
-    ? await db
-        .select({ id: t.ledgerEntries.id, clientId: t.ledgerEntries.clientId })
-        .from(t.ledgerEntries)
-        .where(inArray(t.ledgerEntries.id, unseenLedgerIds))
-    : [];
-  const ownerByLedgerId = new Map([
-    ...ledgers.map((row) => [row.id, row.clientId] as const),
-    ...unseenOwners.map((row) => [row.id, row.clientId] as const),
-  ]);
   const rows = banks.map((bank) => {
     checked(bank.amountCents, "Bank amount");
     const bankAllocations = allocations.filter(
@@ -231,15 +208,6 @@ export async function clientSourceReconciliation(
       checked(row.amountCents, "Receipt allocation");
     if (sum(bankAllocations.map((row) => row.amountCents)) > bank.amountCents) {
       throw new Error("Bank allocation exceeds available cash");
-    }
-    if (
-      bankAllocations.some(
-        (row) => ownerByLedgerId.get(row.ledgerEntryId) !== clientId,
-      )
-    ) {
-      throw new Error(
-        "Receipt allocation source is missing or outside this client",
-      );
     }
     const allocated = bankAllocations.filter((row) =>
       ledgerById.has(row.ledgerEntryId),

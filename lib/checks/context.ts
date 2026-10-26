@@ -1,5 +1,7 @@
 import { and, asc, desc, eq, gte, lt, lte } from "drizzle-orm";
 
+import { validatedReceiptAllocations } from "@/lib/data/receipt-reconciliation";
+
 import { CHECK_CONFIG } from "@/lib/checks/config";
 import type {
   CheckContext,
@@ -119,7 +121,6 @@ export async function buildCheckContext(
           eq(ledgerEntries.clientId, client.id),
           eq(ledgerEntries.invoiceNumber, invoice.invoiceNumber),
           lte(ledgerEntries.recordedDate, asOf),
-          eq(bankTransactions.clientId, client.id),
           lt(bankTransactions.date, asOf),
         ),
       )
@@ -188,6 +189,15 @@ export async function buildCheckContext(
         ),
       )
       .orderBy(asc(fundingAdjustments.id)),
+  ]);
+
+  await validatedReceiptAllocations(db, client.id, [
+    ...new Map(
+      receipts.map(({ bankTransaction }) => [
+        bankTransaction.id,
+        bankTransaction,
+      ]),
+    ).values(),
   ]);
 
   const statuses = new Map<
