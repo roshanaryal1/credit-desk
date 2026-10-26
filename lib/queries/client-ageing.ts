@@ -2,6 +2,8 @@ import "server-only";
 
 import { and, eq, inArray, lte } from "drizzle-orm";
 
+import { validatedReceiptAllocations } from "@/lib/data/receipt-reconciliation";
+
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import { debtorAgeing } from "@/lib/risk/debtor-ageing";
@@ -92,11 +94,12 @@ export async function getClientReceivablesAgeing(
         .from(t.bankTransactions)
         .where(
           and(
-            eq(t.bankTransactions.clientId, clientId),
+            lte(t.bankTransactions.date, asOf),
             inArray(t.bankTransactions.id, bankIds),
           ),
         )
     : [];
+  const validated = await validatedReceiptAllocations(db, clientId, banks);
   const byBank = new Map(banks.map((b) => [b.id, b]));
   const debtorsById = new Map(debtors.map((d) => [d.id, d.name]));
   const byInvoice: CollectionsReceivable[] = ledgers.map((row) => {
@@ -110,8 +113,10 @@ export async function getClientReceivablesAgeing(
       recordedDate: row.recordedDate,
       dueDate: dueDate(row.issueDate, client.paymentTermsDays),
       faceCents: row.amountCents,
-      receiptAllocations: receiptRows
-        .filter((a) => a.ledgerEntryId === row.id)
+      receiptAllocations: validated.allocations
+        .filter(
+          (a) => a.ledgerEntryId === row.id && byBank.has(a.bankTransactionId),
+        )
         .map((a) => {
           const bank = byBank.get(a.bankTransactionId);
           if (!bank) {

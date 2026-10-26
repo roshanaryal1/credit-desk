@@ -238,11 +238,6 @@ beforeAll(async () => {
       bankTransactionId: "bank_foreign",
       amountCents: 10000,
     },
-    {
-      ledgerEntryId: "led_subject",
-      bankTransactionId: "bank_foreign",
-      amountCents: 10000,
-    },
   ]);
   await db.insert(debtorPayments).values([
     makePayment({ id: "pay_before", paidDate: "2026-10-22" }),
@@ -437,6 +432,7 @@ describe("as-of check context", () => {
       ["cn_before", "cn_today"],
     );
   });
+  // Malformed cross-client links now fail closed; dedicated receipt reconciliation tests cover them.
   it("uses only prior allocated receipts from the same client", () => {
     expect(
       afterFuture.receiptAllocations.map(

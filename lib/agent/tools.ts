@@ -2,6 +2,8 @@ import { and, asc, desc, eq, gte, inArray, lte, or } from "drizzle-orm";
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
 import { z } from "zod";
 
+import { validatedReceiptAllocations } from "@/lib/data/receipt-reconciliation";
+
 import { CONFIG_VERSION } from "@/lib/checks/config";
 import { addDays, daysBetween } from "@/lib/dates";
 import type { Db } from "@/lib/db/client";
@@ -278,6 +280,8 @@ export class ToolExecutor {
         and(
           eq(t.ledgerEntries.debtorId, debtorId),
           eq(t.ledgerEntries.clientId, this.scope.clientId),
+          lte(t.ledgerEntries.recordedDate, this.scope.asOf),
+          lte(t.ledgerEntries.issueDate, this.scope.asOf),
         ),
       );
     const matches = await this.db
@@ -298,12 +302,35 @@ export class ToolExecutor {
       .limit(BANK_LIMIT + 1);
     const truncated = matches.length > BANK_LIMIT;
     const rows = matches.slice(0, BANK_LIMIT);
+    let validated;
+    try {
+      validated = await validatedReceiptAllocations(
+        this.db,
+        this.scope.clientId,
+        rows,
+      );
+    } catch {
+      return { error: "Receipt allocation sources could not be reconciled" };
+    }
+    // Allocation rows have no own observation timestamp. If a linked ledger
+    // is not yet visible, even its contribution to an aggregate is unproven.
+    if (
+      validated.allocations.some((allocation) => {
+        const ledger = validated.ledgerById.get(allocation.ledgerEntryId)!;
+        return (
+          ledger.issueDate > this.scope.asOf ||
+          ledger.recordedDate > this.scope.asOf
+        );
+      })
+    )
+      return {
+        error: "Receipt allocation sources are not visible at this review date",
+      };
     const out = [];
     for (const b of rows) {
-      const allocations = await this.db
-        .select()
-        .from(t.receiptAllocations)
-        .where(eq(t.receiptAllocations.bankTransactionId, b.id));
+      const allocations = validated.allocations.filter(
+        (allocation) => allocation.bankTransactionId === b.id,
+      );
       out.push(
         this.register({
           id: b.id,
@@ -313,9 +340,16 @@ export class ToolExecutor {
           amount: cents(b.amountCents),
           counterpartyName: b.counterpartyName,
           reference: b.reference,
+          allocatedCents: validated.allocations
+            .filter((a) => a.bankTransactionId === b.id)
+            .reduce((total, a) => total + a.amountCents, 0),
           allocations: allocations.map((a) => ({
             ledgerEntryId: a.ledgerEntryId,
             amount: cents(a.amountCents),
+            ledger: {
+              ...validated.ledgerById.get(a.ledgerEntryId)!,
+              debtorClientId: this.scope.clientId,
+            },
           })),
         }),
       );
