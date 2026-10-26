@@ -65,7 +65,12 @@ export default function EvaluationPage() {
         title="Checks"
         description={`Config ${r.configVersion}. Precision: of the invoices a check flagged, how many it should have. Recall: of the invoices it should have flagged, how many it did.`}
       >
-        <div className="bg-card overflow-x-auto rounded-md border">
+        <div
+          role="region"
+          aria-label="Check precision and recall"
+          tabIndex={0}
+          className="bg-card overflow-x-auto rounded-md border focus-visible:ring-2"
+        >
           <table className="w-full text-sm">
             <caption className="sr-only">
               Precision and recall per check on the development and holdout
@@ -199,41 +204,60 @@ export default function EvaluationPage() {
         )}
         {r.agent?.byModel ? (
           <div className="flex flex-col gap-2 text-sm">
-            <table className="bg-card w-full max-w-xl rounded-md border">
-              <caption className="sr-only">Agent results by model</caption>
-              <thead className="text-muted-foreground border-b">
-                <tr>
-                  <th scope="col" className="px-3 py-2 text-left font-medium">
-                    Model
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Items
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Passed
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Needed a retry
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {Object.entries(r.agent.byModel).map(([model, m]) => (
-                  <tr key={model}>
-                    <th scope="row" className="px-3 py-2 text-left font-normal">
-                      {model}
+            <div
+              role="region"
+              aria-label="Agent results by model"
+              tabIndex={0}
+              className="bg-card max-w-xl overflow-x-auto rounded-md border focus-visible:ring-2"
+            >
+              <table className="w-full">
+                <caption className="sr-only">Agent results by model</caption>
+                <thead className="text-muted-foreground border-b">
+                  <tr>
+                    <th scope="col" className="px-3 py-2 text-left font-medium">
+                      Model
                     </th>
-                    <td className="num px-3 py-2 text-right">{m.runs}</td>
-                    <td className="num px-3 py-2 text-right">
-                      {percent(m.passRate)}
-                    </td>
-                    <td className="num px-3 py-2 text-right">
-                      {percent(m.retryRate)}
-                    </td>
+                    <th
+                      scope="col"
+                      className="px-3 py-2 text-right font-medium"
+                    >
+                      Items
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-2 text-right font-medium"
+                    >
+                      Passed
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-2 text-right font-medium"
+                    >
+                      Needed a retry
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y">
+                  {Object.entries(r.agent.byModel).map(([model, m]) => (
+                    <tr key={model}>
+                      <th
+                        scope="row"
+                        className="px-3 py-2 text-left font-normal"
+                      >
+                        {model}
+                      </th>
+                      <td className="num px-3 py-2 text-right">{m.runs}</td>
+                      <td className="num px-3 py-2 text-right">
+                        {percent(m.passRate)}
+                      </td>
+                      <td className="num px-3 py-2 text-right">
+                        {percent(m.retryRate)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <p className="text-muted-foreground max-w-prose">
               {r.agent.note} Across all {r.agent.allRuns?.runs} attempts,{" "}
               {percent(r.agent.allRuns?.passRate ?? null)} passed. The smaller
