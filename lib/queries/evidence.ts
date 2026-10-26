@@ -1,8 +1,7 @@
 import "server-only";
 
-import { inArray } from "drizzle-orm";
-
 import { getDb } from "@/lib/db/client";
+import { loadReviewEvidence } from "@/lib/trust/review-evidence";
 import * as t from "@/lib/db/schema";
 import { businessDate, money } from "@/lib/format";
 
@@ -14,20 +13,20 @@ export interface EvidenceRow {
   facts: string[];
 }
 
-export async function resolveEvidence(
-  ids: string[],
-): Promise<Map<string, EvidenceRow>> {
-  const db = await getDb();
+export function presentReviewEvidence(
+  records: Record<string, Record<string, unknown>>,
+): Map<string, EvidenceRow> {
   const out = new Map<string, EvidenceRow>();
-  const want = [...new Set(ids)];
-  if (want.length === 0) return out;
+  const rows = Object.values(records);
   const by = <T>(rows: T[], f: (r: T) => EvidenceRow) =>
     rows.forEach((r) => {
       const e = f(r);
       out.set(e.id, e);
     });
   by(
-    await db.select().from(t.invoices).where(inArray(t.invoices.id, want)),
+    rows.filter((r) =>
+      Object.hasOwn(r, "batchId"),
+    ) as unknown as (typeof t.invoices.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Invoice",
@@ -40,10 +39,9 @@ export async function resolveEvidence(
     }),
   );
   by(
-    await db
-      .select()
-      .from(t.ledgerEntries)
-      .where(inArray(t.ledgerEntries.id, want)),
+    rows.filter((r) =>
+      Object.hasOwn(r, "recordedDate"),
+    ) as unknown as (typeof t.ledgerEntries.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Ledger entry",
@@ -55,10 +53,9 @@ export async function resolveEvidence(
     }),
   );
   by(
-    await db
-      .select()
-      .from(t.creditNotes)
-      .where(inArray(t.creditNotes.id, want)),
+    rows.filter(
+      (r) => Object.hasOwn(r, "ledgerEntryId") && !Object.hasOwn(r, "paidDate"),
+    ) as unknown as (typeof t.creditNotes.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Credit note",
@@ -66,10 +63,9 @@ export async function resolveEvidence(
     }),
   );
   by(
-    await db
-      .select()
-      .from(t.bankTransactions)
-      .where(inArray(t.bankTransactions.id, want)),
+    rows.filter((r) =>
+      Object.hasOwn(r, "counterpartyName"),
+    ) as unknown as (typeof t.bankTransactions.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Bank receipt",
@@ -82,10 +78,9 @@ export async function resolveEvidence(
     }),
   );
   by(
-    await db
-      .select()
-      .from(t.debtorPayments)
-      .where(inArray(t.debtorPayments.id, want)),
+    rows.filter((r) =>
+      Object.hasOwn(r, "paidDate"),
+    ) as unknown as (typeof t.debtorPayments.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Debtor payment",
@@ -97,7 +92,9 @@ export async function resolveEvidence(
     }),
   );
   by(
-    await db.select().from(t.debtors).where(inArray(t.debtors.id, want)),
+    rows.filter((r) =>
+      Object.hasOwn(r, "firstSeenDate"),
+    ) as unknown as (typeof t.debtors.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Debtor",
@@ -105,7 +102,9 @@ export async function resolveEvidence(
     }),
   );
   by(
-    await db.select().from(t.findings).where(inArray(t.findings.id, want)),
+    rows.filter((r) =>
+      Object.hasOwn(r, "checkId"),
+    ) as unknown as (typeof t.findings.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Check finding",
@@ -113,7 +112,9 @@ export async function resolveEvidence(
     }),
   );
   by(
-    await db.select().from(t.fundings).where(inArray(t.fundings.id, want)),
+    rows.filter((r) =>
+      Object.hasOwn(r, "advanceCents"),
+    ) as unknown as (typeof t.fundings.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Funding",
@@ -121,10 +122,9 @@ export async function resolveEvidence(
     }),
   );
   by(
-    await db
-      .select()
-      .from(t.fundingAdjustments)
-      .where(inArray(t.fundingAdjustments.id, want)),
+    rows.filter((r) =>
+      Object.hasOwn(r, "kind"),
+    ) as unknown as (typeof t.fundingAdjustments.$inferSelect)[],
     (r) => ({
       id: r.id,
       kind: "Repayment",
@@ -152,5 +152,15 @@ export function resolveCapturedEvidence(
           ),
       },
     ]),
+  );
+}
+
+/** Outside the invoice decision flow, require an explicit client boundary. */
+export async function resolveEvidence(
+  ids: string[],
+  clientId: string,
+): Promise<Map<string, EvidenceRow>> {
+  return presentReviewEvidence(
+    await loadReviewEvidence(await getDb(), ids, clientId),
   );
 }
