@@ -9,7 +9,7 @@ const NUMBER = /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/;
 const WORD = /^[^\s()[\]{};!?`"“”]+/u;
 const LAST_WORD = /[^\s()[\]{};!?`"“”]+$/u;
 const MAGNITUDE_WORD =
-  "(?:(?:(?:hundred|thousand|million|billion|trillion)s?|mn|bn)(?![\\p{L}\\p{N}])|[kmb](?=$|[\\s.,;:!?)\\]}'\"’”]))";
+  "(?:(?:(?:hundred|thousand|million|billion|trillion)s?|mn|bn)(?![\\p{L}\\p{N}])|[kmb](?=$|[\\s\\p{P}\\p{S}]))";
 const MAGNITUDE = new RegExp(`^[^\\p{L}\\p{N}]*${MAGNITUDE_WORD}`, "iu");
 // A magnitude after a literal, with only spacing/punctuation between, scales
 // it ("'$1 million'", "$1 (million)", "$1 million-dollar").
@@ -133,6 +133,8 @@ function preceding(text: string, end: number): Candidate | null {
     const previous = LAST_WORD.exec(prefix.slice(0, -gap.length))?.[0];
     if (!previous || (!NUMERIC.test(previous) && !OPERATOR.test(previous)))
       break;
+    // A sentence ending in an ISO date is not part of the next amount.
+    if (/^\d{4}-\d{2}-\d{2}[.,:;]?$/u.test(previous)) break;
     // "NZD 1.00, 1.00 NZD" lists two literals; "1, 000 NZD" is one grouping.
     const leftmost = raw.split(/\s+/u)[0]!;
     if (
@@ -194,11 +196,22 @@ export function currencyTokens(input: string): CurrencyToken[] {
       // Exempt only label-shaped continuations (INV-NZD_123, INV-NZD-A1).
       // Digits, decimals, exponents or magnitudes (Balance-NZD999999.00,
       // NZD1e9, NZD1million) must be grounded.
-      if (/^(?:[-_]?\p{L}[\p{L}\p{N}_-]*|[-_]\d+)$/u.test(run)) continue;
+      // A label followed by another number, magnitude or operator is not a
+      // complete label: "Balance-NZD-1 000" still asserts money.
+      const tail = text.slice(end + run.length);
+      const nextWord = WORD.exec(tail.replace(/^\s+/u, ""))?.[0];
+      const continued =
+        /^\s/u.test(tail) &&
+        !!nextWord &&
+        (NUMERIC.test(nextWord) ||
+          MAGNITUDE.test(nextWord) ||
+          OPERATOR.test(nextWord));
+      if (!continued && /^(?:[-_]?\p{L}[\p{L}\p{N}_-]*|[-_]\d+)$/u.test(run))
+        continue;
       sign = "";
     }
     // "NZD $1.00": the code labels the dollar literal that follows it.
-    if (isCode && /^\s*(?:NZ)?\$/iu.test(text.slice(end))) continue;
+    if (isCode && /^\s*[-+−]?(?:NZ)?\$/iu.test(text.slice(end))) continue;
     let before = isCode ? preceding(text, start) : null;
     let after = following(text, end);
     if (before?.labelled && after) before = null;

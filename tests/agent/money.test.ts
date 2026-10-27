@@ -176,6 +176,10 @@ describe("complete NZD monetary literals (#186)", () => {
     "The balance is $1,000,$1.",
     "The balance is $1*2*.",
     "The balance is $1 * 2.",
+    "The balance is $1.00 m+.",
+    "The balance is $1.00 k-dollar.",
+    "The balance is Balance-NZD-1 000.",
+    "The balance is Balance-NZD-1 million.",
   ])("grounds amounts after hyphenated labels and grouping: %s", (text) => {
     for (const field of ["claim", "summary", "question"] as const)
       expect(validateOutput(output(text, field), registry()).ok).toBe(false);
@@ -224,6 +228,7 @@ describe("complete NZD monetary literals (#186)", () => {
       "The balance is -$1.",
       "The balance is NZD -1.",
       "The balance is $-1.",
+      "The balance is NZD -$1.00.",
     ]) {
       expect(moneyMentions(text)).toEqual([-100]);
       expect(validateOutput(output(text), r).ok).toBe(true);
@@ -234,6 +239,11 @@ describe("complete NZD monetary literals (#186)", () => {
       "Amounts are $1.00, -$1.00.",
     ])
       expect(moneyMentions(text)).toEqual([100, -100]);
+  });
+  it("does not join a preceding ISO date to a suffix amount", () => {
+    expect(moneyMentions("Issued 2026-10-20. 100 NZD is outstanding.")).toEqual(
+      [10000],
+    );
   });
   it("keeps cents exact at positive/negative safe integer boundaries", () => {
     expect(
