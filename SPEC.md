@@ -315,9 +315,21 @@ $CRON_SECRET` (C13).
 
 ### 9.3 Decision replay (C1, C2, X10, X11, X12)
 
-- The decision form carries a `review_version` (hash of the findings and
-  explanation the analyst saw) and an idempotency key. The server recomputes
-  the version in the transaction and rejects stale or duplicate submissions.
+- The decision form carries a `review_version`: the SHA-256 of the complete
+  canonical reviewed bundle, including panel invoice/debtor/batch/client rows,
+  dated check inputs, full findings/details, resolved evidence, usable agent
+  output and original capture, check configuration and decision history. The
+  server renders the panel from that bundle in one consistent transaction.
+- Saving uses a serializable transaction with at most three attempts for
+  recognised database conflicts. It reloads and compares the complete bundle,
+  rejects stale submissions, and freezes that already-validated object without
+  re-fetching source rows. A concurrent change either rejects/retries the
+  submission or serializes after a coherent reviewed state; it must never
+  produce a mixed snapshot.
+- Exact idempotent retries return their original decision ID and immutable
+  history; conflicting key reuse is rejected. New decision IDs retain the full
+  submission UUID rather than its first eight characters. Historical IDs and
+  snapshots are never rewritten.
 - In one transaction: insert the decision, its snapshot and an audit event.
 - The snapshot freezes everything needed to show the decision as made: the
   invoice, ledger entry, credit notes, allocated bank lines, the full inputs
@@ -325,6 +337,8 @@ $CRON_SECRET` (C13).
   CONCENTRATION, payment rows for SLOW_PAYER), findings, the config and
   `CONFIG_VERSION`, the explanation with its run metadata and prompt text, the
   mode, exposure flag and the decision. Plus `schema_version` and git SHA.
+  New schema-4 snapshots also preserve the canonical `reviewedState` and its
+  SHA-256 binding. Historical schema-1/2/3 replay remains factual and unchanged.
 - Serialisation: canonical JSON (sorted keys, no insignificant whitespace),
   stored as `text`. SHA-256 is over that exact string. Each snapshot stores the
   previous snapshot's hash, forming a chain.
