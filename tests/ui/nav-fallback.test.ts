@@ -29,4 +29,20 @@ describe("navigation links match what each viewer may open (#203)", () => {
     for (const href of links)
       expect(demoRouteAllowed(persona, href)).toBe(true);
   });
+
+  it("keeps server-scoped client links in verified-identity navigation", () => {
+    const html = renderToStaticMarkup(
+      createElement(Nav, {
+        persona: null,
+        allowed: ["/about"],
+        extra: [
+          {
+            heading: "Your clients",
+            items: [{ href: "/clients/cli_a", label: "Client A" }],
+          },
+        ],
+      }),
+    );
+    expect(hrefs(html)).toEqual(["/clients/cli_a", "/about"]);
+  });
 });

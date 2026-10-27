@@ -1,4 +1,4 @@
-import { count, eq, sql } from "drizzle-orm";
+import { count, eq, inArray, sql } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -54,6 +54,22 @@ export async function writeDataset(db: SeedWriter, ds: Dataset): Promise<void> {
  * Replace all demo data as one transaction. A failed insert or aborted seed
  * rolls back the TRUNCATE, keeping the previous dataset intact.
  */
+const IDENTITY_TABLES = new Set([
+  "users",
+  "user_roles",
+  "user_client_grants",
+  "auth_sessions",
+]);
+
+const IDENTITY_AUDIT_ACTIONS = [
+  "SIGN_IN",
+  "SESSION_REVOKED",
+  "USER_PROVISIONED",
+  "USER_ACCESS_CHANGED",
+  "USER_ENABLED",
+  "USER_DISABLED",
+];
+
 export async function replaceDataset(
   db: Db,
   ds: Dataset,
@@ -71,12 +87,31 @@ export async function replaceDataset(
       sql`select tablename from pg_tables where schemaname = 'public' and tablename not like '__drizzle%'`,
     );
     // Escape identifiers returned by PostgreSQL; never interpolate CLI input.
+    // Identity state (#109) is not portfolio data and survives a reseed.
     const names = tables.rows
+      .filter((row) => !IDENTITY_TABLES.has(row.tablename))
       .map((row) => `"${row.tablename.replaceAll('"', '""')}"`)
       .join(", ");
+    // Client grants reference clients, so the cascade would clear them; keep
+    // them and restore those whose client still exists after the reseed.
+    const grants = await tx.select().from(t.userClientGrants);
+    // Identity audit history belongs to the retained accounts.
+    const identityAudit = await tx
+      .select()
+      .from(t.auditEvents)
+      .where(inArray(t.auditEvents.action, IDENTITY_AUDIT_ACTIONS));
     // TRUNCATE and every insert are committed together or not at all.
     if (names) await tx.execute(sql.raw(`TRUNCATE ${names} CASCADE`));
     await writeDataset(tx, ds);
+    const clientIds = new Set(ds.clients.map((c) => c.id));
+    const kept = grants.filter((g) => clientIds.has(g.clientId));
+    if (kept.length)
+      await tx.insert(t.userClientGrants).values(kept).onConflictDoNothing();
+    if (identityAudit.length)
+      await tx
+        .insert(t.auditEvents)
+        .values(identityAudit)
+        .onConflictDoNothing();
   });
 }
 
