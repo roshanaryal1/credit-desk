@@ -17,6 +17,25 @@ import {
 
 const OPEN_PATHS = ["/login", "/api/watch/run"];
 
+/**
+ * Fetch-based server actions (Next-Action header) cannot follow an HTTP
+ * redirect to an HTML page: the client throws "An unexpected response was
+ * received from the server" (#199). Next.js clients instead navigate on an
+ * x-action-redirect header with an empty body. The action never runs.
+ */
+function redirectTo(request: NextRequest, destination: URL) {
+  if (request.headers.has("next-action")) {
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        "content-type": "text/plain",
+        "x-action-redirect": `${destination.pathname}${destination.search};push`,
+      },
+    });
+  }
+  return NextResponse.redirect(destination);
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   if (OPEN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`)))
@@ -53,7 +72,7 @@ export async function proxy(request: NextRequest) {
       const destination = request.nextUrl.clone();
       destination.pathname = DEMO_PERSONAS[persona].home;
       destination.search = "";
-      return NextResponse.redirect(destination);
+      return redirectTo(request, destination);
     }
     return NextResponse.next();
   }
@@ -61,7 +80,7 @@ export async function proxy(request: NextRequest) {
   const login = request.nextUrl.clone();
   login.pathname = "/login";
   login.search = `?next=${encodeURIComponent(pathname + search)}`;
-  return NextResponse.redirect(login);
+  return redirectTo(request, login);
 }
 
 export const config = {
