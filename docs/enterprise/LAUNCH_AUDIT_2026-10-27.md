@@ -5,7 +5,7 @@ Scope: the whole repository and a local production build, from product, security
 AI reliability, data integrity, performance, UX, accessibility, operations and
 code-quality perspectives. This audit supersedes nothing in
 [ENTERPRISE_AUDIT.md](ENTERPRISE_AUDIT.md); it re-verifies its claims against the
-current code and adds new findings.
+current code and adds new findings. Every finding is tracked as a GitHub issue under epic #180; see section 7.
 
 ## 1. Verdict
 
@@ -188,3 +188,38 @@ reaches a model.
 | Public demo sandbox | Visitors cannot affect each other; enables generous write limits (S1, S2) | 2 to 4 days |
 | SQL read models | Removes whole-table scans (F1, F2) | 3 to 5 days |
 | Background jobs for agent runs and watch runs | No 30 s server actions; retries and observability (A7, P3) | 2 to 3 days |
+
+## 7. Tracking
+
+Every finding is tracked on GitHub under epic #180. Accepted or documented
+items (S3, S7, R6) have no separate issue.
+
+| Findings | Issue |
+| --- | --- |
+| A1 | #186 (fix in PR #208), #212 |
+| A2 | #230 |
+| A3, A6 | #231 |
+| A4, A5 | #232 |
+| A7, O2 (LLM) | #245 |
+| D1, D3, D4 | #233 |
+| D2 | #234 |
+| D5 | #235 |
+| D6 | #236 |
+| S1 | #225 |
+| S2 | #227 |
+| S4, S5, S6, U8 | #229 |
+| R1, P2 | #105 |
+| R2 | #238 |
+| R3, R5 | #239 |
+| R4 | #237 |
+| P1 | #240 |
+| P3 | #241 |
+| P4, U9, C2, C3 | #247 |
+| U1, U2, U3 | #228 |
+| U4 | #242 |
+| U5, U6, U7 | #243 |
+| F1, F2, F3, U10 | #244 |
+| F4, O3, O4, O5 | #246 |
+| O1 | #213 |
+| O2 (database restore) | #214 |
+| C1 | #226 |
