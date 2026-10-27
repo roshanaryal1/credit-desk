@@ -42,7 +42,7 @@ function following(text: string, start: number): Candidate | null {
   start += space;
   let first = WORD.exec(text.slice(start))?.[0];
   // "$1.00,$2.00": a comma or semicolon before another marker ends the list item.
-  const listed = first && /^[^$]*?[,;](?=(?:NZ)?\$)/iu.exec(first)?.[0];
+  const listed = first && /^[^$]*?[,;](?=[-+−]?(?:NZ)?\$)/iu.exec(first)?.[0];
   if (listed) first = listed;
   // "NZD $6,047.50": the dollar marker starts its own literal.
   if (first && /^(?:NZ)?\$/iu.test(first)) return null;
@@ -52,6 +52,8 @@ function following(text: string, start: number): Candidate | null {
     const rest = text.slice(start);
     // A bracketed ISO date is grounded separately by dateMentions().
     if (/^[^\p{L}\p{N})\]};.,!?$]*\d{4}-\d{2}-\d{2}\b/u.test(rest)) return null;
+    // "(30 days overdue)" annotates; "(999999)" or "[999999.00]" asserts.
+    if (/^[^\p{L}\p{N})\]};.,!?$]*[\p{N}.,]+\s*\p{L}/u.test(rest)) return null;
     const wrapped = /^[^\p{L}\p{N})\]};.,!?$]*\p{N}+/u.exec(rest)?.[0];
     return wrapped
       ? { raw: wrapped, start, end: start + wrapped.length }

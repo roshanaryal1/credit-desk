@@ -208,6 +208,7 @@ describe("complete NZD monetary literals (#186)", () => {
     ["The balance is *$1.00*.", [100]],
     ["The balance is _$1.00_.", [100]],
     ["Check inv_0001 and inv_0002 for $1.00.", [100]],
+    ["The amount is $1.00 NZD (30 days overdue).", [100]],
   ] as [string, number[]][])(
     "ends literals at sentence and list boundaries: %s",
     (text, expected) => {
@@ -227,6 +228,12 @@ describe("complete NZD monetary literals (#186)", () => {
       expect(moneyMentions(text)).toEqual([-100]);
       expect(validateOutput(output(text), r).ok).toBe(true);
     }
+    // Compact signed lists split into separate literals, as with spacing.
+    for (const text of [
+      "Amounts are $1.00,-$1.00.",
+      "Amounts are $1.00, -$1.00.",
+    ])
+      expect(moneyMentions(text)).toEqual([100, -100]);
   });
   it("keeps cents exact at positive/negative safe integer boundaries", () => {
     expect(
