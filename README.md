@@ -54,7 +54,7 @@ perspectives: **Employer / lender**, **Credit analyst**, **Credit checker**,
 **Client / borrower**, and **Auditor**. These are not verified identities or
 production RBAC. The client view shows one fixed synthetic borrower's summary;
 only the password-authenticated analyst demo can record synthetic decisions.
-The optional public one-click accounts are read-only for all five perspectives.
+The optional public one-click accounts have the permissions of their perspective: the credit analyst can record synthetic decisions, incident notes, review-mode changes and rate-limited agent re-runs; the other four perspectives are read-only.
 Signing out allows selecting a different perspective. For controls, limitations and review
 steps see [docs/review/demo-personas.md](docs/review/demo-personas.md).
 
