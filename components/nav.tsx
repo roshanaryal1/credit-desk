@@ -87,8 +87,14 @@ function NavList({
               key={item.href}
               href={item.href}
               aria-current={active(item.href) ? "page" : undefined}
+              onFocus={(event) => {
+                event.currentTarget.scrollIntoView({
+                  block: "nearest",
+                  inline: "nearest",
+                });
+              }}
               className={cn(
-                "text-muted-foreground rounded-sm border-l-2 border-transparent px-3 py-2 text-sm whitespace-nowrap transition-colors",
+                "text-muted-foreground scroll-mx-1 rounded-sm border-l-2 border-transparent px-3 py-2 text-sm whitespace-nowrap transition-colors",
                 "hover:bg-accent hover:text-foreground focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
                 active(item.href) &&
                   "border-primary bg-accent/60 text-foreground font-semibold",
