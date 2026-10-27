@@ -146,15 +146,15 @@ flowchart LR
 
 ## Run it locally
 
-Requirements: Node 24 (see `.nvmrc`). No database server is needed locally:
+Requirements: Node 24.22.1 (see `.nvmrc`) and npm 12.2.1. No database server is needed locally:
 with `DATABASE_URL` empty the app uses PGlite, an in-process Postgres, stored in
 `.pglite/`.
 
 ```bash
-npm ci
+npx --yes npm@12.2.1 ci
 cp .env.example .env.local          # then fill in the values below
 npm run seed -- --target=local      # data, checks and 90 days of watch runs
-npm run precompute                  # agent explanations (needs LLM_API_KEY; about a minute per item; Groq's free tier allows about 28 per model per day)
+npm run precompute                  # agent explanations; needs LLM_API_KEY and provider quota
 npm run simulate                    # simulated past decisions for the agreement history
 npm run dev
 ```

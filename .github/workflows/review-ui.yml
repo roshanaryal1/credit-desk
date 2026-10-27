@@ -8,6 +8,9 @@ on:
       - "lib/**"
       - ".github/workflows/review-ui.yml"
       - "scripts/review-ui-smoke.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".nvmrc"
   workflow_dispatch:
 
 permissions:
@@ -28,13 +31,17 @@ jobs:
       # This workflow seeds fictional data only; never set on a live deployment.
       PUBLIC_DEMO_ENABLED: "1"
       CREDIT_DESK_DATA_CLASSIFICATION: "SYNTHETIC"
-      PLAYWRIGHT_PACKAGE: /tmp/credit-desk-review-browser/node_modules/playwright
+      PLAYWRIGHT_PACKAGE: playwright
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Use the project package manager
+        run: npm install --global npm@12.2.1
       - name: Generate disposable CI-only login credentials
         run: |
           echo "DEMO_PASSWORD=synthetic-review-$(openssl rand -hex 16)" >> "$GITHUB_ENV"
@@ -44,10 +51,8 @@ jobs:
         run: npm run seed -- --target=local
       - name: Build production-mode Next application
         run: npm run build
-      - name: Install isolated browser runner
-        run: |
-          npm install --prefix /tmp/credit-desk-review-browser --no-save --package-lock=false playwright@1.56.1
-          /tmp/credit-desk-review-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Install lockfile-pinned browser runner
+        run: npx playwright install --with-deps chromium
       - name: Start production-mode application and verify login responds
         run: |
           npm run start -- -p 3100 > /tmp/credit-desk-review-server.log 2>&1 &
@@ -64,7 +69,7 @@ jobs:
         run: node scripts/review-ui-smoke.mjs
       - name: Upload authentic synthetic UI evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: credit-desk-ui-review-${{ github.run_id }}
           path: |
