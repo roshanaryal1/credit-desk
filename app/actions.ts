@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { cookies } from "next/headers";
 
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { providerFromEnv } from "@/lib/agent/config";
@@ -71,7 +71,20 @@ export async function decideAction(
     };
   }
   const analyst = await currentAnalyst();
-  if (!(await takeWriteBudget(analyst.sessionId)))
+  // An exact retry of this session's earlier submission writes nothing new,
+  // so it must still reach saveDecision to report the original success.
+  const [retry] = await (
+    await getDb()
+  )
+    .select({ id: t.decisions.id })
+    .from(t.decisions)
+    .where(
+      and(
+        eq(t.decisions.idempotencyKey, parsed.data.idempotencyKey),
+        eq(t.decisions.analystSessionId, analyst.sessionId),
+      ),
+    );
+  if (!retry && !(await takeWriteBudget(analyst.sessionId)))
     return { status: "error", message: WRITE_LIMITED };
   const result = await saveDecision(await getDb(), parsed.data, analyst, {
     codeSha: CODE_SHA,
