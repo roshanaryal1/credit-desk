@@ -174,6 +174,8 @@ describe("complete NZD monetary literals (#186)", () => {
     "The balance is $1.00 - 999999.",
     "The balance is $1**2**.",
     "The balance is $1,000,$1.",
+    "The balance is $1*2*.",
+    "The balance is $1 * 2.",
   ])("grounds amounts after hyphenated labels and grouping: %s", (text) => {
     for (const field of ["claim", "summary", "question"] as const)
       expect(validateOutput(output(text, field), registry()).ok).toBe(false);
@@ -199,6 +201,13 @@ describe("complete NZD monetary literals (#186)", () => {
     ["The amount is **$1.00**.", [100]],
     ["The amount is __NZD 1.00__.", [100]],
     ["Amounts are $1.00,$1.00.", [100, 100]],
+    ["Amounts:\n1. $1.00\n2. $1.00", [100, 100]],
+    ["Amounts:\n- 1.00 NZD\n- 1.00 NZD", [100, 100]],
+    ["Invoice INV-40229 NZD $1.00 is open.", [100]],
+    ["Amounts:\n2. NZD $1.00", [100]],
+    ["The balance is *$1.00*.", [100]],
+    ["The balance is _$1.00_.", [100]],
+    ["Check inv_0001 and inv_0002 for $1.00.", [100]],
   ] as [string, number[]][])(
     "ends literals at sentence and list boundaries: %s",
     (text, expected) => {

@@ -19,6 +19,10 @@ const PREFIX_OPERATOR = /^[\p{Sm}\p{Pd}\p{Pc}\p{Cf}\p{M}*/%\\·∙⁄＊]+$/u;
 const NUMERIC =
   /^(?:[+−-]?(?:\p{N}|\.\p{N})|[^\p{L}\p{N}]*\p{N}|NaN\b|Infinity\b|∞)/iu;
 
+// Markdown list item markers: "- ", "* ", "+ ", "1. ", "2) ".
+const LIST_ITEM = /^[ \t]*(?:[-*+]|\d{1,3}[.)])[ \t]+/u;
+const LIST_PREFIX = /^[ \t]*(?:[-*+]|\d{1,3}[.)])[ \t]+$/u;
+
 interface Candidate {
   raw: string;
   start: number;
@@ -29,6 +33,12 @@ interface Candidate {
 
 function following(text: string, start: number): Candidate | null {
   const space = /^\s*/u.exec(text.slice(start))![0].length;
+  // A literal never continues into the next list item.
+  if (
+    /[\r\n]/u.test(text.slice(start, start + space)) &&
+    LIST_ITEM.test(text.slice(start + space))
+  )
+    return null;
   start += space;
   let first = WORD.exec(text.slice(start))?.[0];
   // "$1.00,$2.00": a comma or semicolon before another marker ends the list item.
@@ -55,7 +65,7 @@ function following(text: string, start: number): Candidate | null {
     const gap = /^\s+/u.exec(text.slice(end))?.[0];
     if (!gap) break;
     const nextText = text.slice(end + gap.length);
-    if (/[\r\n]/u.test(gap) && /^[-*+][ \t]+/u.test(nextText)) break;
+    if (/[\r\n]/u.test(gap) && LIST_ITEM.test(nextText)) break;
     const next = WORD.exec(nextText)?.[0];
     if (next && /[.,:]$/u.test(raw) && /^\d{4}-\d{2}-\d{2}[.,:]?$/u.test(next))
       break;
@@ -117,8 +127,7 @@ function preceding(text: string, end: number): Candidate | null {
     const prefix = text.slice(0, start);
     const gap = /\s+$/u.exec(prefix)?.[0];
     if (!gap) break;
-    if (/^[ \t]*[-*+][ \t]+$/u.test(prefix.slice(prefix.lastIndexOf("\n") + 1)))
-      break;
+    if (LIST_PREFIX.test(prefix.slice(prefix.lastIndexOf("\n") + 1))) break;
     const previous = LAST_WORD.exec(prefix.slice(0, -gap.length))?.[0];
     if (!previous || (!NUMERIC.test(previous) && !OPERATOR.test(previous)))
       break;
@@ -163,7 +172,7 @@ export function currencyTokens(input: string): CurrencyToken[] {
   // Paired Markdown emphasis ("**$1.00**") is formatting, not arithmetic.
   // Replace the delimiters with equal-length spaces so offsets still match.
   const text = input.replace(
-    /(\*\*|__)(?=\S)([^*_\n]+?)(?<=\S)\1/gu,
+    /(?<![\p{L}\p{N}_*])(\*\*|__|\*|_)(?=\S)([^*_\n]+?)(?<=\S)\1(?![\p{L}\p{N}_*])/gu,
     (_match, delimiter: string, inner: string) =>
       " ".repeat(delimiter.length) + inner + " ".repeat(delimiter.length),
   );
@@ -186,6 +195,8 @@ export function currencyTokens(input: string): CurrencyToken[] {
       if (/^(?:[-_]?\p{L}[\p{L}\p{N}_-]*|[-_]\d+)$/u.test(run)) continue;
       sign = "";
     }
+    // "NZD $1.00": the code labels the dollar literal that follows it.
+    if (isCode && /^\s*(?:NZ)?\$/iu.test(text.slice(end))) continue;
     let before = isCode ? preceding(text, start) : null;
     let after = following(text, end);
     if (before?.labelled && after) before = null;
@@ -219,7 +230,7 @@ export function currencyTokens(input: string): CurrencyToken[] {
     const line = prefix.slice(prefix.lastIndexOf("\n") + 1);
     // Preserve ordinary Markdown bullets, but never discard a sign/operator
     // inside a monetary assertion just because whitespace separates it.
-    const bullet = /^[ \t]*[-*+][ \t]+$/u.test(line);
+    const bullet = LIST_PREFIX.test(line);
     const scaled = TRAILING_MAGNITUDE.test(text.slice(to));
     const badPrefix =
       !before &&
