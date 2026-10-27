@@ -1,0 +1,4 @@
+{
+  "installCommand": "npx --yes npm@12.2.1 ci --include=dev",
+  "buildCommand": "node --version && npx --yes npm@12.2.1 --version && npx --yes npm@12.2.1 run build && npx --yes npm@12.2.1 run check:bundle"
+}
