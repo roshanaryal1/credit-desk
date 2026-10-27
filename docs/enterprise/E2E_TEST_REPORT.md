@@ -100,8 +100,8 @@ Limits: the database is in-process PGlite with a 251-invoice dataset. These numb
 | PR #201 (fix/189) | 474 pass | Pass | same | Pass | Pass | (CI) | (CI) |
 | PR #202 (fix/199) | 478 pass | Pass | same | Pass | Pass | Pass | (CI) |
 | PR #205 (fix/203) | 481 pass | Pass | same | Pass | Pass | Pass | (CI) |
-| fix/186 (pre-PR) | 612 pass | Pass | same | Pass | Pass | Pass | Pass |
-| fix/204 (pre-PR) | 478 pass | Pass | same | Pass | Pass | Pass | Pass |
+| PR #208 (fix/186) | 624 pass | Pass | same | Pass | Pass | Pass | Pass |
+| PR #206 (fix/204) | 478 pass | Pass | same | Pass | Pass | Pass | Pass |
 
 GitHub CI (`verify` plus `visual-review` browser smoke) passed on PRs #195, #196, #198, #200, #201 and #202. PR #205 was pending at the time of writing.
 

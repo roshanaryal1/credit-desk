@@ -18,8 +18,8 @@ Credit Desk handles **synthetic data only** and is protected by a shared demo pa
 | Token integrity | HMAC-SHA256, expiry, persona allow-list | n/a | Verified: tampered, expired, unknown persona and wrong key rejected (probe A) |
 | Security headers | No CSP, frame-ancestors, XFO, Referrer-Policy or Permissions-Policy on the hosted site (HSTS present) | P2 | Fixed in PR #200 (#197) |
 | Denied action UX | Expired or wrong-persona form submit ends in a client error screen | P2 | Fixed in PR #202 (#199) |
-| Prompt injection | Source-record text reaches the model; no prompt rule; no tests | P2 | PR pending (#204); validator remains the guarantee |
-| AI money grounding | Unsupported monetary forms could pass the citation validator | P1 | PR pending (#186), six independent review rounds |
+| Prompt injection | Source-record text reaches the model; no prompt rule; no tests | P2 | Fixed in PR #206 (#204); validator remains the guarantee |
+| AI money grounding | Unsupported monetary forms could pass the citation validator | P1 | Fixed in PR #208 (#186), six independent review rounds |
 | Stale approvals | Decisions could be recorded after reviewed financial facts changed | P1 | Fixed in PR #198 (#182, #185) |
 | Provider diagnostics | Raw provider errors could reach logs and outcomes | P1 | Fixed in PR #195 (#188) |
 | Navigation disclosure | Fallback nav showed analyst links to every persona (no data) | P3 | Fixed in PR #205 (#203) |

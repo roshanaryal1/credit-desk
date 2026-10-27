@@ -43,7 +43,7 @@ Count: 7 met, 4 partially met, 4 not met, 1 unverified.
 | AI reliability | Validator with bypasses | Bypasses fixed (PR #208); injection rule and tests (PR #206) | Structured amounts; live-model testing |
 | External integrations | Fixtures only | Unchanged, classified | Provider apps and credentials (#106) |
 | Security | No headers; provider leak | Headers (PR #200); diagnostics (PR #195) | #109, privacy assessment |
-| Test coverage | 474 tests on `main` | Up to 619 on the #186 branch; new probe and oracle | Firefox, devices, load |
+| Test coverage | 474 tests on `main` | Up to 624 on PR #208; new probe and oracle | Firefox, devices, load |
 | Performance | Not measured | Local baseline measured | Hosted load test, agreed targets |
 | Operational readiness | Logs only | Unchanged | Alerts, runbooks, restore drill |
 

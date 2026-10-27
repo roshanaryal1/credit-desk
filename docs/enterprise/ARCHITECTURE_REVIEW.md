@@ -40,7 +40,7 @@ Integrations: the only live external call is the optional LLM provider. Xero, Ak
 | Idempotency | Decisions keyed by full UUID (PR #198); watch runs idempotent by design; incidents serialised by advisory lock | Tests in `tests/trust`, `tests/watch` |
 | Concurrency ceiling | All decisions serialise on one global chain lock. Fine for a pilot team, a bottleneck at scale | Design note in ADR 0018 (PR #198) |
 | Rate limiting | Postgres-backed counters with advisory locks; no extra infrastructure | `lib/rate-limit.ts` |
-| AI boundary | The validator is authoritative; the agent has read-only tools scoped by client and as-of date | `lib/agent/tools.ts`, `validator.ts`, PR #186 and #204 |
+| AI boundary | The validator is authoritative; the agent has read-only tools scoped by client and as-of date | `lib/agent/tools.ts`, `validator.ts`, PRs #208 and #206 |
 | Rendering | PPR plus streaming; static shell must not carry per-user data (the nav fallback fixed in PR #205 was the one leak of persona-shaped content) | PR #205 |
 | Observability | JSON `console.log` events for watch runs and agent outcomes; no metrics, tracing or alerting | `app/api/watch/run/route.ts`, `lib/agent/runner.ts` |
 | Configuration | Thresholds in config with comments; secrets in environment; production refuses PGlite | `lib/checks/config.ts`, `lib/db/backend.ts` |
@@ -61,7 +61,7 @@ None is reachable or advertised as live, so nothing is removed. Removing them wo
 
 Other debt:
 
-- The monetary tokenizer (`lib/agent/money.ts` in PR #186) is regex-based. Six review rounds kept finding edge cases. A grammar-based tokenizer, or a stricter output contract (amounts only as structured fields that cite cents), would be easier to prove. Recommended follow-up.
+- The monetary tokenizer (`lib/agent/money.ts` in PR #208) is regex-based. Six review rounds kept finding edge cases. A grammar-based tokenizer, or a stricter output contract (amounts only as structured fields that cite cents), would be easier to prove. Recommended follow-up.
 - Seven existing ESLint warnings.
 - `scripts/review-ui-smoke.mjs` (928 lines) is a single long script; split by journey as it grows.
 
