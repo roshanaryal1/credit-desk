@@ -106,6 +106,11 @@ function following(text: string, start: number): Candidate | null {
 function preceding(text: string, end: number): Candidate | null {
   end -= /\s*$/u.exec(text.slice(0, end))![0].length;
   const word = LAST_WORD.exec(text.slice(0, end))?.[0];
+  // A list number ("2. NZD $1.00") is a marker, not an amount.
+  if (
+    LIST_PREFIX.test(text.slice(text.lastIndexOf("\n", end - 1) + 1, end) + " ")
+  )
+    return null;
   const first = word?.replace(/^[\p{L}_][\p{L}\p{N}_-]*[:=]/u, "");
   if (
     word &&
@@ -211,8 +216,15 @@ export function currencyTokens(input: string): CurrencyToken[] {
       sign = "";
     }
     // "NZD $1.00": the code labels the dollar literal that follows it.
-    if (isCode && /^\s*[-+−]?(?:NZ)?\$/iu.test(text.slice(end))) continue;
     let before = isCode ? preceding(text, start) : null;
+    // Unless an amount precedes the code ("999999 NZD $1"), which must still
+    // be grounded rather than discarded.
+    if (
+      isCode &&
+      (!before || before.labelled) &&
+      /^\s*[-+−]?(?:NZ)?\$/iu.test(text.slice(end))
+    )
+      continue;
     let after = following(text, end);
     if (before?.labelled && after) before = null;
     // Once a suffix currency code closes a literal, sentence/list punctuation

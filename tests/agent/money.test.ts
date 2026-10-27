@@ -180,6 +180,8 @@ describe("complete NZD monetary literals (#186)", () => {
     "The balance is $1.00 k-dollar.",
     "The balance is Balance-NZD-1 000.",
     "The balance is Balance-NZD-1 million.",
+    "The amounts are 999999 NZD -NZ$1.00.",
+    "The amounts are 999999 NZD $1.00.",
   ])("grounds amounts after hyphenated labels and grouping: %s", (text) => {
     for (const field of ["claim", "summary", "question"] as const)
       expect(validateOutput(output(text, field), registry()).ok).toBe(false);
