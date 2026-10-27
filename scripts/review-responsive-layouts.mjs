@@ -159,7 +159,7 @@ try {
   await loaded(page, "/login");
   await page.getByLabel("Your name").fill("Synthetic responsive reviewer");
   await page.getByLabel("Password").fill(process.env.DEMO_PASSWORD);
-  await page.getByRole("button", { name: "Sign in as reviewer" }).click();
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL((url) => url.pathname === "/");
   const routes = [
     "/",
