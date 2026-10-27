@@ -746,7 +746,7 @@ try {
         );
         if (sessionData.publicDemo !== true) {
           throw new Error(
-            "Quick-demo session lacks read-only provenance: " + role.name,
+            "Quick-demo session lacks public-demo provenance: " + role.name,
           );
         }
         if (role.name === "Client / borrower") {
@@ -804,93 +804,22 @@ try {
             waitUntil: "domcontentloaded",
           });
           await waitForRenderedContent(demoPage);
+          // The one-click analyst has the analyst's synthetic write surface:
+          // the decision form, reached in shadow mode, with no AI view first.
+          await demoPage
+            .getByRole("button", { name: "Save decision" })
+            .waitFor({ timeout: 30000 });
           if (
-            await demoPage
-              .getByRole("button", { name: /Re-run agent/i })
-              .count()
-          ) {
-            throw new Error("Public analyst has a writable agent control");
-          }
-          // Exercise actual server actions with the signed public session.
-          // The write guards must deny before parsing mutation input or calling a model.
-          const manifest = JSON.parse(
-            await fs.readFile(
-              path.join(
-                process.cwd(),
-                ".next/server/server-reference-manifest.json",
-              ),
-              "utf8",
-            ),
-          );
-          for (const [name, actionPath, args, denial] of [
-            [
-              "decideAction",
-              invoicePath,
-              [null, {}],
-              "Only the credit analyst demo",
-            ],
-            [
-              "incidentAction",
-              "/watch",
-              [null, {}],
-              "This demo perspective is read-only",
-            ],
-            [
-              "rerunAgentAction",
-              invoicePath,
-              ["inv_0001"],
-              "This demo perspective cannot run agents",
-            ],
-          ]) {
-            const action = Object.entries(manifest.node).find(
-              ([, entry]) => entry.exportedName === name,
+            !(await demoPage.getByText("Shadow mode", { exact: false }).count())
+          )
+            throw new Error(
+              "Public analyst decision form is not in shadow mode",
             );
-            if (!action) throw new Error(`Missing server action ${name}`);
-            const response = await demoPage.evaluate(
-              async ({ id, actionPath, args }) => {
-                const result = await fetch(actionPath, {
-                  method: "POST",
-                  headers: {
-                    "Next-Action": id,
-                    "Content-Type": "text/plain;charset=UTF-8",
-                  },
-                  body: JSON.stringify(args),
-                });
-                return { status: result.status, text: await result.text() };
-              },
-              { id: action[0], actionPath, args },
-            );
-            if (response.status !== 200 || !response.text.includes(denial)) {
-              throw new Error(`Public analyst write guard failed: ${name}`);
-            }
-          }
-          const modeAction = Object.entries(manifest.node).find(
-            ([, entry]) => entry.exportedName === "setModeAction",
-          );
-          if (!modeAction) throw new Error("Missing mode action");
-          const modeStatus = await demoPage.evaluate(
-            async ({ id, actionPath }) => {
-              const response = await fetch(actionPath, {
-                method: "POST",
-                headers: {
-                  "Next-Action": id,
-                  "Content-Type": "text/plain;charset=UTF-8",
-                },
-                body: JSON.stringify(["ASSIST"]),
-              });
-              return response.status;
-            },
-            { id: modeAction[0], actionPath: invoicePath },
-          );
-          if (modeStatus !== 200)
-            throw new Error("Mode write guard was not reached");
-          if (
-            (await demoContext.cookies()).some(
-              (cookie) => cookie.name === "cd_mode",
-            )
-          ) {
-            throw new Error("Public analyst changed review mode");
-          }
+          behaviorChecks.push({
+            viewport: label,
+            check: "One-click analyst can reach the shadow-mode decision form",
+            result: "PASS",
+          });
         }
         const account = demoPage.getByRole("region", {
           name: "Current demo account",

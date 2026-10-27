@@ -192,9 +192,10 @@ export function LoginForm({
             </p>
           )}
           <p className="mt-3 text-[11px] leading-4 text-slate-500">
-            Demo addresses are examples, not email inboxes. Public access is
-            read-only and uses fictional data; roles do not verify identity or
-            grant approval authority.
+            Demo addresses are examples, not email inboxes. The credit analyst
+            account can record fictional decisions and incident notes; other
+            perspectives are read-only. All data is fictional and roles do not
+            verify identity.
           </p>
         </div>
       </section>

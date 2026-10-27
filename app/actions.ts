@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { cookies } from "next/headers";
 
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { providerFromEnv } from "@/lib/agent/config";
@@ -25,6 +25,23 @@ export interface DecideState {
 }
 
 const CODE_SHA = process.env.VERCEL_GIT_COMMIT_SHA ?? "local";
+const HOUR = 60 * 60 * 1000;
+
+/**
+ * Persistent write budget for synthetic decisions and incident notes (#217):
+ * public analyst sessions can write, so each write is counted per session,
+ * per address and across the app before anything is saved.
+ */
+async function takeWriteBudget(sessionId: string): Promise<boolean> {
+  const ip = clientIp(await headers());
+  return takeAll(await getDb(), [
+    { key: `write:session:${sessionId}`, max: 60, windowMs: HOUR },
+    { key: `write:ip:${ip}`, max: 120, windowMs: HOUR },
+    { key: "write:global", max: 2000, windowMs: 24 * HOUR },
+  ]);
+}
+const WRITE_LIMITED =
+  "Write limit reached for this demo session. Try again later.";
 
 export async function decideAction(
   _prev: DecideState,
@@ -54,6 +71,21 @@ export async function decideAction(
     };
   }
   const analyst = await currentAnalyst();
+  // An exact retry of this session's earlier submission writes nothing new,
+  // so it must still reach saveDecision to report the original success.
+  const [retry] = await (
+    await getDb()
+  )
+    .select({ id: t.decisions.id })
+    .from(t.decisions)
+    .where(
+      and(
+        eq(t.decisions.idempotencyKey, parsed.data.idempotencyKey),
+        eq(t.decisions.analystSessionId, analyst.sessionId),
+      ),
+    );
+  if (!retry && !(await takeWriteBudget(analyst.sessionId)))
+    return { status: "error", message: WRITE_LIMITED };
   const result = await saveDecision(await getDb(), parsed.data, analyst, {
     codeSha: CODE_SHA,
   });
@@ -110,6 +142,8 @@ export async function incidentAction(
     };
   }
   const analyst = await currentAnalyst();
+  if (!(await takeWriteBudget(analyst.sessionId)))
+    return { status: "error", message: WRITE_LIMITED };
   const db = await getDb();
   const ok = await db.transaction(async (tx) => {
     // Serialise competing transitions on the same incident.
@@ -168,8 +202,6 @@ export async function incidentAction(
     message: parsed.data.action === "RESOLVED" ? "Resolved." : "Acknowledged.",
   };
 }
-
-const HOUR = 60 * 60 * 1000;
 
 /**
  * Re-runs the agent for one invoice (SPEC 11): 10 per hour per session, 10

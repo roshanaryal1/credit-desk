@@ -98,8 +98,9 @@ export async function loginAction(
 }
 
 /**
- * One-click public sessions: opt-in, synthetic-only, signed, short-lived and
- * always read-only. The shared reviewer password is never sent to the browser.
+ * One-click public sessions: opt-in, synthetic-only, signed and short-lived.
+ * They carry the same synthetic permissions as their perspective; the shared
+ * reviewer password is never sent to the browser.
  */
 export async function quickDemoAction(
   _prev: LoginState,
@@ -127,6 +128,7 @@ export async function quickDemoAction(
       name: "Public " + DEMO_PERSONAS[persona].label + " demo",
       persona,
       publicDemo: true,
+      publicWrites: true,
       exp: Math.floor(Date.now() / 1000) + PUBLIC_DEMO_TTL_SECONDS,
     },
     gate.secret,

@@ -17,8 +17,13 @@ export interface SessionPayload {
   name: string;
   /** Self-selected display role; never authoritative authentication. */
   persona?: DemoPersona;
-  /** Public one-click visitors never receive write privileges. */
+  /** Issued by a public one-click sign-in. */
   publicDemo?: true;
+  /**
+   * Public sessions issued after one-click write access (#217). Older public
+   * cookies were read-only and saw the AI view first, so they stay read-only.
+   */
+  publicWrites?: true;
   /** Expiry, epoch seconds. */
   exp: number;
 }
@@ -94,7 +99,8 @@ export async function verifySession(
       typeof payload.exp !== "number" ||
       payload.exp <= nowSeconds ||
       (payload.persona !== undefined && !parseDemoPersona(payload.persona)) ||
-      (payload.publicDemo !== undefined && payload.publicDemo !== true)
+      (payload.publicDemo !== undefined && payload.publicDemo !== true) ||
+      (payload.publicWrites !== undefined && payload.publicWrites !== true)
     )
       return null;
     return payload;
