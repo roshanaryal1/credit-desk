@@ -12,12 +12,12 @@ Assessed 2026-10-27 against the sixteen enterprise acceptance gates. "Met" requi
 | # | Gate | Status | Evidence or blocker |
 | --- | --- | --- | --- |
 | 1 | Critical business workflows complete end to end | Met (synthetic scope) | CI browser smoke; probe W decision persistence; E2E report |
-| 2 | No unresolved P0 or P1 defects | **Not met** | P0 for real data: #109 (identity), #105 (maker-checker). P1 fixes open in PRs #195, #198 and the #186 PR, not merged |
+| 2 | No unresolved P0 or P1 defects | **Not met** | P0 for real data: #109 (identity), #105 (maker-checker). P1 fixes open in PRs #195, #198 and PR #208, not merged |
 | 3 | No unauthorized access or cross-tenant exposure | **Not met** for real data | Route and write boundaries verified for personas (probe R, W). There is no tenant model, and token replay after sign-out is accepted (probe S2) |
 | 4 | Financial calculations pass independent tests | Met (calculation) | 20,000-case BigInt oracle; unit tests. Policy values still need a policy owner |
 | 5 | All supported roles have verified journeys | Partially met | Five personas verified for routes and writes; no Administrator role; CHECKER has no workflow |
 | 6 | Every visible action has meaningful function | Met | No fake actions found; library-only modules are not exposed |
-| 7 | CI passes for proposed changes | Partially met | Green on PRs #195, #196, #198, #200, #201, #202; pending on #205, #206 and the #186 PR at the time of writing |
+| 7 | CI passes for proposed changes | Partially met | Green on PRs #195, #196, #198, #200, #201, #202; pending on #205, #206 and PR #208 at the time of writing |
 | 8 | Database migrations tested | Met for existing migrations | Real PostgreSQL verifier ran official migrations; no new migrations in this audit |
 | 9 | Integrations accurately classified | Met (classification) | Xero and Akahu are fixtures only (#106) and labelled so; only the LLM provider is live |
 | 10 | Useful observability for critical operations | **Not met** | Structured logs only; no alerts or SLOs |
@@ -40,7 +40,7 @@ Count: 7 met, 4 partially met, 4 not met, 1 unverified.
 | Backend / APIs | Sound layering | Unchanged, verified | Observability |
 | Database integrity | Append-only, chain | Plus serializable decisions (PR #198) | Restore drill |
 | Authentication / RBAC | Demo gate | Boundaries verified; gaps documented | #109 IdP decision |
-| AI reliability | Validator with bypasses | Bypasses fixed (#186 PR); injection rule and tests (PR #206) | Structured amounts; live-model testing |
+| AI reliability | Validator with bypasses | Bypasses fixed (PR #208); injection rule and tests (PR #206) | Structured amounts; live-model testing |
 | External integrations | Fixtures only | Unchanged, classified | Provider apps and credentials (#106) |
 | Security | No headers; provider leak | Headers (PR #200); diagnostics (PR #195) | #109, privacy assessment |
 | Test coverage | 474 tests on `main` | Up to 619 on the #186 branch; new probe and oracle | Firefox, devices, load |

@@ -36,7 +36,7 @@ Severity: P0 critical, P1 serious, P2 important, P3 minor.
 | --- | --- | --- | --- | --- | --- | --- |
 | F1 | No real identity, tenant isolation or session revocation | P0 for real data | Demo gate by design (`lib/auth.ts`, `lib/session.ts`) | Probe S2: replay a token after sign-out, get 200 | #109 | Needs IdP decision |
 | F2 | Approvals could be recorded after reviewed financial facts changed; truncated idempotency entropy | P1 | Review version omitted cash and evidence facts; non-serializable read | Real PostgreSQL verifier (six checks) | #182, #185 | PR #198 |
-| F3 | Unsupported monetary text could pass the AI citation validator | P1 | Prefix-only tokenizer, then regex edge cases (13 found over six review rounds) | `tests/agent/money.test.ts` cases, e.g. `Balance=999999.00 NZD.` with $1 evidence | #186 | PR for #186 |
+| F3 | Unsupported monetary text could pass the AI citation validator | P1 | Prefix-only tokenizer, then regex edge cases (13 found over six review rounds) | `tests/agent/money.test.ts` cases, e.g. `Balance=999999.00 NZD.` with $1 evidence | #186 | PR #208 |
 | F4 | Raw provider failures in logs and outcomes | P1 | Exception text propagated | Unit tests in PR | #188 | PR #195 |
 | F5 | Missing security headers on the hosted site | P2 | No `headers()` config | `curl -sD- https://creditdesk.roshanaryal.com/login` shows only HSTS | #197 | PR #200 |
 | F6 | Expired or wrong-persona form submit shows an error screen and loses input | P2 | Proxy 307 to HTML for fetch-based server actions | E2E report section 2 | #199 | PR #202 |

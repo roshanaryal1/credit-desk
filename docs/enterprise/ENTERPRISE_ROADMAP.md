@@ -10,7 +10,7 @@ Recommended review and merge order. Each PR targets `main` independently; later 
 | --- | --- | --- | --- | --- |
 | 1 | #198 | #182, #185 | P1 | Financial integrity of approvals; largest change, so merge first |
 | 2 | #195 | #188 | P1 | Provider diagnostics redaction; independent |
-| 3 | PR for #186 | #186 | P1 | AI money grounding; touches `lib/agent` (rebase after #195) |
+| 3 | PR #208 | #186 | P1 | AI money grounding; touches `lib/agent` (rebase after #195) |
 | 4 | PR for #204 | #204 | P2 | Prompt-injection rule and tests; `lib/agent/prompts` (rebase after #186) |
 | 5 | #200 | #197 | P2 | Security headers |
 | 6 | #202 | #199 | P2 | Action-aware redirects in `proxy.ts` |
