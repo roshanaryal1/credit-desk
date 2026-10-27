@@ -30,13 +30,16 @@ const GROUPS = [
   },
 ] as const;
 
-export function Nav({ persona }: { persona: DemoPersona }) {
+export function Nav({ persona }: { persona: DemoPersona | null }) {
   return <NavList pathname={usePathname()} persona={persona} />;
 }
 
-/** Static navigation fallback while the browser pathname is loading. */
+/**
+ * Static fallback while the session streams in. It names no persona, so the
+ * prerendered shell never shows (or prefetches) links a persona cannot open.
+ */
 export function NavFallback() {
-  return <NavList pathname={null} persona="ANALYST" />;
+  return <NavList pathname={null} persona={null} />;
 }
 
 function NavList({
@@ -44,29 +47,36 @@ function NavList({
   persona,
 }: {
   pathname: string | null;
-  persona: DemoPersona;
+  persona: DemoPersona | null;
 }) {
   const active = (href: string) =>
     pathname !== null &&
     (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   const groups =
-    persona === "CLIENT"
+    persona === null
       ? [
           {
-            heading: "Borrower demo",
-            items: [
-              { href: "/demo/client", label: "My fictional facility" },
-              { href: "/about", label: "About" },
-            ],
+            heading: "Credit Desk",
+            items: [{ href: "/about", label: "About" }],
           },
         ]
-      : GROUPS.map((group) => ({
-          heading: group.heading,
-          items: group.items.filter((item) =>
-            demoRouteAllowed(persona, item.href),
-          ),
-        })).filter((group) => group.items.length > 0);
+      : persona === "CLIENT"
+        ? [
+            {
+              heading: "Borrower demo",
+              items: [
+                { href: "/demo/client", label: "My fictional facility" },
+                { href: "/about", label: "About" },
+              ],
+            },
+          ]
+        : GROUPS.map((group) => ({
+            heading: group.heading,
+            items: group.items.filter((item) =>
+              demoRouteAllowed(persona, item.href),
+            ),
+          })).filter((group) => group.items.length > 0);
 
   return (
     <nav
