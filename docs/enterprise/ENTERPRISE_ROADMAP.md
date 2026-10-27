@@ -4,6 +4,8 @@ Prepared 2026-10-27. Priorities: P0 security, financial correctness or data inte
 
 ## Stage 1: merge open fixes (no new decisions needed)
 
+**Status 2026-10-28:** complete except PR #208, which was closed in favour of structured figures (#212). The toolchain upgrade merged as PR #209.
+
 Recommended review and merge order. Each PR targets `main` independently; later PRs may need a rebase.
 
 | Order | PR | Issues | Priority | Why this order |
@@ -25,7 +27,7 @@ Acceptance: CI `verify` and `visual-review` green on each final head; no unresol
 
 | Decision | Blocks | Options |
 | --- | --- | --- |
-| Identity provider | #109, #105, tenant isolation | Neon Auth with MFA, or existing company SSO (OIDC) |
+| Identity provider | Enabling #219 in production; #105 | Decided 2026-10-27: provider-neutral OIDC (PR #219). Remaining: which IdP and its client registration |
 | Lending policy values | #101, #102 | Advance rate, concentration cap, ineligibility ageing, reserves: approval by a credit policy owner. Code defaults are illustrative |
 | Recommendation constraint | #204 follow-up | Whether AI `recommendation: APPROVE` is allowed when HIGH-severity findings exist |
 | Data scope | Privacy, retention | Whether any real borrower data will be processed; triggers a privacy impact assessment |

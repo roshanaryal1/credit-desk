@@ -202,8 +202,13 @@ figures match the cited records; it does not prove the reasoning is right.
 - Thresholds are the specification's defaults, not calibrated on real losses.
 - Simulated analyst decisions are derived from the evaluation labels. They
   exist to show the agreement view and are kept in a separate cohort.
-- Sign-in is a shared password with a self-declared name, so attribution in
-  the audit log is not authenticated.
+- The live demo signs in with a shared password or one-click accounts and a
+  self-declared name, so attribution in its audit log is not authenticated.
+  Verified OIDC sign-in with MFA and client grants exists
+  ([ADR 0019](docs/adr/0019-verified-oidc-identity.md)) but is off until an
+  identity provider is configured.
+- The citation validator does not yet ground amounts written in words, non-ISO
+  dates, percentages or day counts (#212).
 - Snapshot checksums detect accidental or casual changes. They do not stop
   someone with full database access.
 - The LLM runs on Groq's free tier, which is acceptable only because the data
@@ -211,7 +216,8 @@ figures match the cited records; it does not prove the reasoning is right.
 
 ## What production would need
 
-- Real authentication with roles and maker-checker approval.
+- An identity provider for the existing OIDC sign-in, and maker-checker
+  approval.
 - Xero and Akahu integrations under the relevant accreditation.
 - Immutable audit storage with snapshot hashes anchored outside the database.
 - Data retention and access under the Privacy Act 2020, and AML/CFT

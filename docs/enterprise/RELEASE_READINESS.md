@@ -2,6 +2,10 @@
 
 Assessed 2026-10-27 against the sixteen enterprise acceptance gates. "Met" requires evidence from this audit or recorded CI; anything else is "Partially met", "Not met" or "Unverified".
 
+## Status update, 2026-10-28
+
+Since this assessment, PRs #195, #196, #198, #200, #201, #202, #205, #206, #209, #211, #216, #218, #219, #221, #223 and #224 have merged, each with green CI and independent review. #109 (verified identity) is implemented by PR #219 and is off until an identity provider is configured. PR #208 was closed without merging; the validator gaps it targeted remain and are replaced by structured figures (#212). `main` runs 609 tests; the OIDC browser journey passes 19 of 19. The [launch audit](LAUNCH_AUDIT_2026-10-27.md) supersedes the open-item lists below.
+
 ## Verdict
 
 - **Synthetic demonstration (current deployment):** suitable once the open fix PRs merge. Core flows work and are evidenced on fictional data.
@@ -39,11 +43,11 @@ Count: 7 met, 4 partially met, 4 not met, 1 unverified.
 | Frontend / UX | Overflow and focus defects; error screen on expiry; misleading nav | Fixed in PRs #201, #202, #205 | Merge; devices; checker UX |
 | Backend / APIs | Sound layering | Unchanged, verified | Observability |
 | Database integrity | Append-only, chain | Plus serializable decisions (PR #198) | Restore drill |
-| Authentication / RBAC | Demo gate | Boundaries verified; gaps documented | #109 IdP decision |
-| AI reliability | Validator with bypasses | Bypasses fixed (PR #208); injection rule and tests (PR #206) | Structured amounts; live-model testing |
+| Authentication / RBAC | Demo gate | Verified OIDC identity, MFA, client grants and revocable sessions (PR #219), off until an IdP is configured | IdP configuration; per-grant list filtering |
+| AI reliability | Validator with bypasses | Injection rule and tests (PR #206). Free-text money bypasses remain: PR #208 closed in favour of #212 | Structured figures (#212); live-model testing |
 | External integrations | Fixtures only | Unchanged, classified | Provider apps and credentials (#106) |
 | Security | No headers; provider leak | Headers (PR #200); diagnostics (PR #195) | #109, privacy assessment |
-| Test coverage | 474 tests on `main` | Up to 624 on PR #208; new probe and oracle | Firefox, devices, load |
+| Test coverage | 474 tests on `main` | 609 tests on `main`; probe, oracle and OIDC journey (19/19) | Firefox, devices, load |
 | Performance | Not measured | Local baseline measured | Hosted load test, agreed targets |
 | Operational readiness | Logs only | Unchanged | Alerts, runbooks, restore drill |
 
