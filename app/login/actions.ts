@@ -22,6 +22,9 @@ import { parseDemoPersona } from "@/lib/demo-personas";
 import { publicDemoEnabled, PUBLIC_DEMO_TTL_SECONDS } from "@/lib/public-demo";
 import { takeAll } from "@/lib/rate-limit";
 import { clientIp, safeNext } from "@/lib/request";
+import { authMode, oidcConfig } from "@/lib/identity/config";
+import { resolveSession, revokeSessions } from "@/lib/identity/store";
+import { SESSION_COOKIE } from "@/lib/identity/tokens";
 
 const LoginSchema = z.object({
   password: z.string().min(1).max(200),
@@ -149,6 +152,32 @@ export async function quickDemoAction(
  */
 export async function logoutAction(formData?: FormData) {
   const jar = await cookies();
+  if (authMode() === "oidc") {
+    // Revoke server-side so a copied cookie stops working immediately (#109).
+    const db = await getDb();
+    const now = new Date();
+    const oidc = oidcConfig();
+    const session = await resolveSession(
+      db,
+      jar.get(SESSION_COOKIE)?.value,
+      now,
+      {
+        tenantId: oidc.tenantId,
+        issuer: oidc.issuer.href,
+      },
+    );
+    if (session)
+      await revokeSessions(
+        db,
+        { sessionId: session.sessionId },
+        "SIGN_OUT",
+        `user:${session.userId}`,
+        now,
+      );
+    jar.delete(SESSION_COOKIE);
+    jar.delete(MODE_COOKIE);
+    redirect("/login");
+  }
   jar.delete(AUTH_COOKIE);
   jar.delete(MODE_COOKIE);
   if (formData?.get("intent") === "switch") redirect("/login#quick-demo-title");

@@ -562,6 +562,8 @@ does not automatically create a payment or loan disbursement.
 
 ### 14.6 Authentication, access controls and operations (#109)
 
+**Implemented (ADR-0019):** `AUTH_MODE=oidc` provides provider-neutral OIDC sign-in with mandatory MFA, provisioned users, revocable database sessions, role routes, per-client grants on client-scoped paths and actions, an audited administrator page, and portfolio-wide pages restricted to users granted every client. The synthetic deployment keeps `AUTH_MODE=demo`. Remaining items below are still open.
+
 Before multi-user or real-data use, replace self-declared analyst names and
 the shared password with verified OIDC-backed identities, MFA for privileged
 roles, deny-by-default RBAC, tenant/client boundary checks, key rotation,

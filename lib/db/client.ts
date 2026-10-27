@@ -23,14 +23,18 @@ export async function createMemoryDb(): Promise<Db> {
   return db;
 }
 
-let cached: Promise<Db> | undefined;
-let closeCached: (() => Promise<void>) | undefined;
+// Shared on globalThis: proxy.ts and the app are bundled separately but run
+// in one Node process, and a local PGlite directory must be opened only once.
+const shared = globalThis as typeof globalThis & {
+  __creditDeskDb?: { db?: Promise<Db>; close?: () => Promise<void> };
+};
+const holder = (shared.__creditDeskDb ??= {});
 
 /** Closes the application database so scripts can exit cleanly. */
 export async function closeDb(): Promise<void> {
-  await closeCached?.();
-  cached = undefined;
-  closeCached = undefined;
+  await holder.close?.();
+  holder.db = undefined;
+  holder.close = undefined;
 }
 
 /**
@@ -39,8 +43,8 @@ export async function closeDb(): Promise<void> {
  * persisted in .pglite/ for local development.
  */
 export function getDb(): Promise<Db> {
-  cached ??= open();
-  return cached;
+  holder.db ??= open();
+  return holder.db;
 }
 
 async function open(): Promise<Db> {
@@ -50,14 +54,14 @@ async function open(): Promise<Db> {
     neonConfig.webSocketConstructor = ws;
     // Both drivers expose the same Drizzle PgDatabase query API.
     const pool = new Pool({ connectionString: url });
-    closeCached = () => pool.end();
+    holder.close = () => pool.end();
     return drizzleNeon({ client: pool, schema }) as unknown as Db;
   }
   const client = new PGlite(path.join(process.cwd(), ".pglite"), {
     // Local development only: flush asynchronously; seeding is many small writes.
     relaxedDurability: true,
   });
-  closeCached = () => client.close();
+  holder.close = () => client.close();
   const db = drizzlePglite({ client, schema });
   await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
   return db;

@@ -683,3 +683,83 @@ export type NewFunding = typeof fundings.$inferInsert;
 export type NewFundingAdjustment = typeof fundingAdjustments.$inferInsert;
 export type NewLabel = typeof labels.$inferInsert;
 export type NewWatchLabel = typeof watchLabels.$inferInsert;
+
+// Verified identity (#109). Users are provisioned by an administrator and
+// bound to an OIDC issuer and subject on first sign-in. Role and client grant
+// changes are audited in audit_events. Sessions store only a SHA-256 hash of
+// the browser token and are revoked by timestamp, never deleted.
+
+export const userRole = pgEnum("user_role", [
+  "ANALYST",
+  "CHECKER",
+  "RISK_MANAGER",
+  "AUDITOR",
+  "ADMIN",
+]);
+
+export const users = pgTable(
+  "users",
+  {
+    id: text("id").primaryKey(),
+    tenantId: text("tenant_id").notNull(),
+    email: text("email").notNull(),
+    displayName: text("display_name").notNull(),
+    oidcIssuer: text("oidc_issuer"),
+    oidcSubject: text("oidc_subject"),
+    active: boolean("active").notNull().default(true),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("users_tenant_email_uq").on(t.tenantId, t.email),
+    uniqueIndex("users_oidc_identity_uq").on(t.oidcIssuer, t.oidcSubject),
+    check(
+      "users_oidc_bound_together",
+      sql`(${t.oidcIssuer} IS NULL) = (${t.oidcSubject} IS NULL)`,
+    ),
+  ],
+);
+
+export const userRoles = pgTable(
+  "user_roles",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    role: userRole("role").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.role] })],
+);
+
+export const userClientGrants = pgTable(
+  "user_client_grants",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.clientId] })],
+);
+
+export const authSessions = pgTable(
+  "auth_sessions",
+  {
+    id: text("id").primaryKey(),
+    tokenSha256: text("token_sha256").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    mfa: boolean("mfa").notNull(),
+    createdAt: instant("created_at").notNull(),
+    expiresAt: instant("expires_at").notNull(),
+    revokedAt: instant("revoked_at"),
+    revokedReason: text("revoked_reason"),
+  },
+  (t) => [
+    uniqueIndex("auth_sessions_token_uq").on(t.tokenSha256),
+    index("auth_sessions_user_idx").on(t.userId, t.expiresAt),
+    check("auth_sessions_window", sql`${t.expiresAt} > ${t.createdAt}`),
+  ],
+);

@@ -30,8 +30,30 @@ const GROUPS = [
   },
 ] as const;
 
-export function Nav({ persona }: { persona: DemoPersona | null }) {
-  return <NavList pathname={usePathname()} persona={persona} />;
+export interface NavGroup {
+  heading: string;
+  items: { href: string; label: string }[];
+}
+
+export function Nav({
+  persona,
+  allowed,
+  extra = [],
+}: {
+  persona: DemoPersona | null;
+  /** Verified-identity mode: the exact routes this user may open. */
+  allowed?: string[];
+  /** Verified-identity mode: per-user links, such as granted clients. */
+  extra?: NavGroup[];
+}) {
+  return (
+    <NavList
+      pathname={usePathname()}
+      persona={persona}
+      allowed={allowed}
+      extra={extra}
+    />
+  );
 }
 
 /**
@@ -45,16 +67,36 @@ export function NavFallback() {
 function NavList({
   pathname,
   persona,
+  allowed,
+  extra = [],
 }: {
   pathname: string | null;
   persona: DemoPersona | null;
+  allowed?: string[];
+  extra?: NavGroup[];
 }) {
   const active = (href: string) =>
     pathname !== null &&
     (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
-  const groups =
-    persona === null
+  const groups = allowed
+    ? [
+        // Extra groups are already scoped on the server (granted clients).
+        ...extra,
+        ...[
+          ...GROUPS,
+          {
+            heading: "Administration",
+            items: [{ href: "/admin/users", label: "Users and access" }],
+          },
+        ]
+          .map((group) => ({
+            heading: group.heading,
+            items: group.items.filter((item) => allowed.includes(item.href)),
+          }))
+          .filter((group) => group.items.length > 0),
+      ]
+    : persona === null
       ? [
           {
             heading: "Credit Desk",

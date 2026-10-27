@@ -14,8 +14,9 @@ import { getDb } from "@/lib/db/client";
 import { takeAll } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
 import * as t from "@/lib/db/schema";
-import { MODE_COOKIE, currentAnalyst } from "@/lib/session";
+import { MODE_COOKIE, writingAnalyst } from "@/lib/session";
 import { canPerformDemoWrite } from "@/lib/demo-session";
+import { analystMayWriteForClient } from "@/lib/identity/current";
 import { DecisionInputSchema, saveDecision } from "@/lib/trust/decide";
 
 export interface DecideState {
@@ -25,6 +26,22 @@ export interface DecideState {
 }
 
 const CODE_SHA = process.env.VERCEL_GIT_COMMIT_SHA ?? "local";
+const SIGNED_OUT = {
+  status: "error" as const,
+  ok: false,
+  message: "Your session has ended. Sign in again; nothing was saved.",
+};
+
+/** Client grants scope every write in OIDC mode (#109). */
+async function invoiceWritable(invoiceId: string): Promise<boolean> {
+  const [invoice] = await (
+    await getDb()
+  )
+    .select({ clientId: t.invoices.clientId })
+    .from(t.invoices)
+    .where(eq(t.invoices.id, invoiceId));
+  return !!invoice && (await analystMayWriteForClient(invoice.clientId));
+}
 
 export async function decideAction(
   _prev: DecideState,
@@ -53,7 +70,10 @@ export async function decideAction(
       fieldErrors,
     };
   }
-  const analyst = await currentAnalyst();
+  if (!(await invoiceWritable(parsed.data.invoiceId)))
+    return { status: "error", message: "Invoice not found." };
+  const analyst = await writingAnalyst();
+  if (!analyst) return SIGNED_OUT;
   const result = await saveDecision(await getDb(), parsed.data, analyst, {
     codeSha: CODE_SHA,
   });
@@ -109,8 +129,17 @@ export async function incidentAction(
       message: "Add a note of at least 5 characters to resolve.",
     };
   }
-  const analyst = await currentAnalyst();
+  const analyst = await writingAnalyst();
+  if (!analyst) return SIGNED_OUT;
   const db = await getDb();
+  // Authorise before the transaction: the session lookup uses the shared
+  // connection, which a single-connection database cannot serve mid-transaction.
+  const [scope] = await db
+    .select({ clientId: t.incidents.clientId })
+    .from(t.incidents)
+    .where(eq(t.incidents.id, parsed.data.incidentId));
+  if (!scope || !(await analystMayWriteForClient(scope.clientId)))
+    return { status: "error", message: "Incident not found." };
   const ok = await db.transaction(async (tx) => {
     // Serialise competing transitions on the same incident.
     await tx.execute(
@@ -120,7 +149,7 @@ export async function incidentAction(
       .select()
       .from(t.incidents)
       .where(eq(t.incidents.id, parsed.data.incidentId));
-    if (!incident) return false;
+    if (!incident || incident.clientId !== scope.clientId) return false;
     const [latest] = await tx
       .select({ status: t.incidentEvents.status })
       .from(t.incidentEvents)
@@ -187,7 +216,10 @@ export async function rerunAgentAction(
   ) {
     return { ok: false, message: "That invoice id is not valid." };
   }
-  const analyst = await currentAnalyst();
+  if (!(await invoiceWritable(invoiceId)))
+    return { ok: false, message: "That invoice id is not valid." };
+  const analyst = await writingAnalyst();
+  if (!analyst) return SIGNED_OUT;
   const ip = clientIp(await headers());
   const db = await getDb();
   const allowed = await takeAll(db, [
