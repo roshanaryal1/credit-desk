@@ -13,8 +13,8 @@ There are two different launches, and they have different bars.
 
 | Launch target | Verdict | What blocks it |
 | --- | --- | --- |
-| **A. Public synthetic demo** (portfolio piece, one-click accounts) | **Not yet.** About one to two weeks of focused work | L1 to L8 below |
-| **B. Real borrower or lender data** | **No.** Multi-month programme | Everything in A, plus R1 to R10 |
+| **A. Public synthetic demo** (portfolio piece, one-click accounts) | **Not yet.** About one to two weeks of focused work | The eight "must do" items in section 4A |
+| **B. Real borrower or lender data** | **No.** Multi-month programme | Everything in A, plus section 4B |
 
 The domain core (checks, watch rules, money in cents, as-of semantics, serializable
 decision transaction, OIDC flow) is well built and well tested. The problems are
