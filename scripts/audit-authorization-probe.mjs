@@ -426,10 +426,7 @@ async function decisionAttempt(label, intruderClaims) {
 await decisionAttempt("CLIENT", { persona: "CLIENT" });
 await decisionAttempt("CHECKER", { persona: "CHECKER" });
 await decisionAttempt("AUDITOR", { persona: "AUDITOR" });
-await decisionAttempt("public ANALYST", {
-  persona: "ANALYST",
-  publicDemo: true,
-});
+// One-click public analysts are authorized analysts (#217); not a denial case.
 
 await browser.close();
 const summary = {

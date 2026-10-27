@@ -35,5 +35,5 @@ export async function canPerformDemoWrite(): Promise<boolean> {
   );
   if (!session) return false;
   const persona = parseDemoPersona(session.persona) ?? "ANALYST";
-  return demoCanWrite(persona, session.publicDemo === true);
+  return demoCanWrite(persona);
 }
