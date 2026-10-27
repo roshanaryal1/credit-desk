@@ -12,6 +12,7 @@ export type Action =
   | "POLICY_EDIT"
   | "AUDIT_READ"
   | "CONNECTION_MANAGE"
+  | "USER_ADMIN"
   | "FUNDING_EXECUTE";
 
 export interface IdentityContext {
@@ -51,6 +52,7 @@ const ACTION_ROLES: Record<Action, readonly Role[]> = {
   POLICY_EDIT: ["RISK_MANAGER"],
   AUDIT_READ: ["AUDITOR", "RISK_MANAGER"],
   CONNECTION_MANAGE: ["ADMIN"],
+  USER_ADMIN: ["ADMIN"],
   FUNDING_EXECUTE: [],
 };
 const MFA_ACTIONS = new Set<Action>([
@@ -58,6 +60,7 @@ const MFA_ACTIONS = new Set<Action>([
   "POLICY_EDIT",
   "AUDIT_READ",
   "CONNECTION_MANAGE",
+  "USER_ADMIN",
 ]);
 
 /**

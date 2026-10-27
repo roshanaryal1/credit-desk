@@ -100,9 +100,11 @@ export function demoRouteAllowed(persona: DemoPersona, path: string): boolean {
   );
 }
 
-export function demoCanWrite(
-  persona: DemoPersona,
-  publicDemo = false,
-): boolean {
-  return persona === "ANALYST" && !publicDemo;
+/**
+ * Synthetic writes belong to the analyst perspective, whether reached by the
+ * reviewer password or a one-click public account. Other perspectives have no
+ * write workflow (there is no checker sign-off yet), so they stay read-only.
+ */
+export function demoCanWrite(persona: DemoPersona): boolean {
+  return persona === "ANALYST";
 }

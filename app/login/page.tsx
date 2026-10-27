@@ -8,10 +8,25 @@ import {
 } from "lucide-react";
 
 import { gateConfig } from "@/lib/auth";
+import { authMode } from "@/lib/identity/config";
+import { safeNext } from "@/lib/request";
 import { publicDemoEnabled } from "@/lib/public-demo";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Sign in" };
+
+const SIGN_IN_ERRORS: Record<string, string> = {
+  expired: "The sign-in attempt expired. Please try again.",
+  sign_in_failed: "Sign-in could not be completed. Please try again.",
+  mfa_required:
+    "Your organisation sign-in did not include multi-factor authentication.",
+  not_provisioned:
+    "Your account has not been given access to Credit Desk. Contact an administrator.",
+  disabled: "Your Credit Desk access has been disabled.",
+  identity_conflict:
+    "This sign-in is linked to a different Credit Desk account. Contact an administrator.",
+  rate_limited: "Too many sign-in attempts. Please wait and try again.",
+};
 
 const features = [
   {
@@ -108,10 +123,6 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
             <h2 className="text-3xl font-bold tracking-tight text-slate-950">
               Welcome back
             </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Sign in with your reviewer password, or explore a fictional demo
-              account below.
-            </p>
           </div>
           <Suspense>
             <Form searchParams={searchParams} />
@@ -128,10 +139,51 @@ async function Form({
   searchParams: PageProps<"/login">["searchParams"];
 }) {
   const sp = await searchParams;
+  // Rendered per request (after searchParams), never in the static shell, so
+  // the sign-in mode always reflects the running configuration.
+  const intro = (text: string) => (
+    <p className="-mt-4 mb-6 text-sm leading-6 text-slate-600">{text}</p>
+  );
+  if (authMode() === "oidc") {
+    const next = safeNext(typeof sp.next === "string" ? sp.next : "/");
+    // Only this page's own keys: "__proto__" and friends must not resolve.
+    const error =
+      typeof sp.error === "string" && Object.hasOwn(SIGN_IN_ERRORS, sp.error)
+        ? SIGN_IN_ERRORS[sp.error]
+        : undefined;
+    return (
+      <div className="space-y-4">
+        {intro("Sign in with your organisation account.")}
+        {error ? (
+          <p
+            role="alert"
+            className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+          >
+            {error}
+          </p>
+        ) : null}
+        <a
+          href={`/auth/login?next=${encodeURIComponent(next)}`}
+          className="flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none"
+        >
+          Sign in with your organisation
+        </a>
+        <p className="text-sm text-slate-600">
+          Access is limited to users an administrator has provisioned.
+          Multi-factor authentication is required.
+        </p>
+      </div>
+    );
+  }
   return (
-    <LoginForm
-      next={typeof sp.next === "string" ? sp.next : "/"}
-      quickEnabled={publicDemoEnabled() && gateConfig().configured}
-    />
+    <>
+      {intro(
+        "Sign in with your reviewer password, or explore a fictional demo account below.",
+      )}
+      <LoginForm
+        next={typeof sp.next === "string" ? sp.next : "/"}
+        quickEnabled={publicDemoEnabled() && gateConfig().configured}
+      />
+    </>
   );
 }

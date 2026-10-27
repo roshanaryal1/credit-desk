@@ -17,7 +17,7 @@ export function AppFrame({
       <main
         id="main"
         tabIndex={-1}
-        className="credit-desk-content flex-1 px-4 py-6 md:px-8 md:py-8"
+        className="credit-desk-content min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8"
       >
         <div className="credit-desk-content-inner mx-auto flex max-w-7xl flex-col gap-8">
           {children}

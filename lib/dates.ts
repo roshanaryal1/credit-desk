@@ -1,6 +1,17 @@
 // Calendar-day arithmetic on YYYY-MM-DD business dates (SPEC 4.1).
 const DAY_MS = 86_400_000;
 
+/** Validate an untrusted calendar label before converting it to an ISO string. */
+export function isBusinessDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
+    return false;
+  const millis = Date.parse(`${value}T00:00:00Z`);
+  return (
+    Number.isFinite(millis) &&
+    new Date(millis).toISOString().slice(0, 10) === value
+  );
+}
+
 function utcDate(value: string): Date {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     throw new Error(`Invalid business date: ${value}`);

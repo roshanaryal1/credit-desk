@@ -394,7 +394,7 @@ it("freezes the verified original capture after current invoice data changes", a
     .from(t.decisionSnapshots)
     .where(eq(t.decisionSnapshots.decisionId, saved.decisionId));
   const frozen = JSON.parse(snapshot.canonicalJson);
-  expect(frozen.schemaVersion).toBe(3);
+  expect(frozen.schemaVersion).toBe(4);
   expect(frozen.explanation.run.id).toBe(done.runId);
   expect(frozen.agentEvidenceSource).toBe("CAPTURED");
   expect(frozen.agentEvidenceManifest.canonicalJson).toBe(
