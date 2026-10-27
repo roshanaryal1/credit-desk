@@ -12,10 +12,13 @@ import { businessDate, instant, money } from "@/lib/format";
 import { incidentDetail, incidentsAsOf } from "@/lib/queries/watch";
 import { WATCH_LABELS, type WatchRuleId } from "@/lib/watch/config";
 import { cn } from "@/lib/utils";
+import {
+  clampWatchDate,
+  WATCH_HISTORY_START as START,
+} from "@/lib/watch/date-filter";
 
 export const metadata = { title: "Portfolio Watch" };
 
-const START = addDays(DEMO_TODAY, -HISTORY_DAYS);
 const STATUS: Record<string, { tone: Tone; label: string }> = {
   OPEN: { tone: "high", label: "Open" },
   REOPENED: { tone: "high", label: "Reopened" },
@@ -45,17 +48,6 @@ export default function WatchPage({ searchParams }: PageProps<"/watch">) {
   );
 }
 
-function clampDate(value: unknown): string {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
-    return DEMO_TODAY;
-  // Reject impossible dates such as 2026-09-31 rather than letting them reach the database.
-  if (new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) !== value)
-    return DEMO_TODAY;
-  if (value < START) return START;
-  if (value > DEMO_TODAY) return DEMO_TODAY;
-  return value;
-}
-
 async function Watch({
   searchParams,
 }: {
@@ -63,12 +55,12 @@ async function Watch({
 }) {
   await connection();
   const sp = await searchParams;
-  const asOf = clampDate(sp.asOf);
+  const asOf = clampWatchDate(sp.asOf);
   const selected = typeof sp.incident === "string" ? sp.incident : null;
   const incidents = await incidentsAsOf(asOf);
   const open = incidents.filter((i) => i.status !== "RESOLVED");
   const href = (date: string, incident?: string | null) =>
-    `/watch?asOf=${clampDate(date)}${incident ? `&incident=${encodeURIComponent(incident)}` : ""}`;
+    `/watch?asOf=${clampWatchDate(date)}${incident ? `&incident=${encodeURIComponent(incident)}` : ""}`;
   const clients = [
     ...new Map(incidents.map((i) => [i.clientId, i.clientName])).entries(),
   ];
