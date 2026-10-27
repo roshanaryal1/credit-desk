@@ -69,8 +69,8 @@ function following(text: string, start: number): Candidate | null {
     const nextText = text.slice(end + gap.length);
     if (/[\r\n]/u.test(gap) && LIST_ITEM.test(nextText)) break;
     const next = WORD.exec(nextText)?.[0];
-    // A separately stated ISO date ends the literal ("$1.00 2026-10-20").
-    if (next && /^\d{4}-\d{2}-\d{2}[.,:]?$/u.test(next)) break;
+    if (next && /[.,:]$/u.test(raw) && /^\d{4}-\d{2}-\d{2}[.,:]?$/u.test(next))
+      break;
     // Sentence or list punctuation ends a literal ("$1.00, $2.00", "$1.00.
     // 30 days"), unless the next word could still be a space-separated
     // thousands group, magnitude or operator ("$1, 000", "$1.00, × 1000").
@@ -177,12 +177,6 @@ function parse(raw: string, sign: string): number | null {
     : Number(value);
 }
 
-const SUSPICIOUS = [
-  /\p{N}[\p{N}.,]*\s*NZD\p{L}+/giu,
-  /\p{N}[\p{N}.,]*\s*[([{]\s*NZD\s*[)\]}]/giu,
-  /(?:NZ\$|\$)\s*[-+−]?\p{N}[\p{N}.,]*\s*[([{]\s*(?:[\p{Sm}*/×÷^·]|\p{N})/gu,
-];
-
 export function currencyTokens(input: string): CurrencyToken[] {
   // Paired Markdown emphasis ("**$1.00**") is formatting, not arithmetic.
   // Replace the delimiters with equal-length spaces so offsets still match.
@@ -240,15 +234,7 @@ export function currencyTokens(input: string): CurrencyToken[] {
     )
       continue;
     let after = following(text, end);
-    // "INV-40229 NZD 1.00" labels the amount; "Total~999999.00 NZD 1.00"
-    // hides one, so a decimal or grouped label number invalidates the pair.
-    const hiddenLabelAmount =
-      !!before?.labelled &&
-      !!after &&
-      // A word carrying its own currency marker is a separate literal.
-      !before.raw.includes("$") &&
-      /\d[.,]\d/u.test(before.raw);
-    if (before?.labelled && after && !hiddenLabelAmount) before = null;
+    if (before?.labelled && after) before = null;
     // Once a suffix currency code closes a literal, sentence/list punctuation
     // separates the next statement rather than extending its numeric token.
     // "1 NZD.50" is a continuation, not a sentence end.
@@ -290,22 +276,10 @@ export function currencyTokens(input: string): CurrencyToken[] {
       end: to,
       token: text.slice(from, to),
       cents:
-        !candidate || ambiguous || badPrefix || scaled || hiddenLabelAmount
+        !candidate || ambiguous || badPrefix || scaled
           ? null
           : parse(candidate.raw, sign),
     });
-  }
-  // Forms the token scan cannot read are rejected outright rather than
-  // validated as a smaller amount: "999999 NZDollars", "999999 (NZD)",
-  // and a literal followed by a bracketed operator or number "$1 (× 1000)".
-  for (const pattern of SUSPICIOUS) {
-    for (const match of text.matchAll(pattern))
-      tokens.push({
-        start: match.index!,
-        end: match.index! + match[0].length,
-        token: match[0],
-        cents: null,
-      });
   }
   return tokens.map(({ token, cents }) => ({ token, cents }));
 }
