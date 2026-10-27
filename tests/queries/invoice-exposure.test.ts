@@ -173,7 +173,7 @@ describe("SHADOW revision exposure (#166)", () => {
     expect(await sessionExposures(analyst.sessionId)).toHaveLength(0);
 
     // Even if output is shown to a public/read-only persona, the session
-    // cannot make a decision and must not acquire a writable exposure record.
+    // cannot make a decision now, but its exposure is still recorded.
     const publicAnalyst: Analyst = {
       ...analyst,
       sessionId: "public-read-only",
@@ -187,7 +187,9 @@ describe("SHADOW revision exposure (#166)", () => {
     expect(publicReview?.explanation?.explanation.id).toBe(
       "exp_exposure_valid",
     );
-    expect(await sessionExposures(publicAnalyst.sessionId)).toHaveLength(0);
+    // Read-only delivery is recorded: if this session later gains write
+    // access, its decision must not count as blind (#222).
+    expect(await sessionExposures(publicAnalyst.sessionId)).toHaveLength(1);
 
     // Private ASSIST mode still records delivery before any first decision.
     const assist: Analyst = {
@@ -255,8 +257,8 @@ describe("SHADOW revision exposure (#166)", () => {
     ).toBeNull();
     expect(await sessionExposures(failedAnalyst.sessionId)).toHaveLength(0);
 
-    // Read-only delivery remains excluded even after an existing decision.
+    // Repeated read-only delivery keeps a single exposure record.
     await getInvoiceReview(invoiceId, publicAnalyst, batchId, true);
-    expect(await sessionExposures(publicAnalyst.sessionId)).toHaveLength(0);
+    expect(await sessionExposures(publicAnalyst.sessionId)).toHaveLength(1);
   }, 60_000);
 });

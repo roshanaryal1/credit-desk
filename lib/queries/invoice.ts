@@ -10,8 +10,9 @@ import { presentReviewEvidence, resolveCapturedEvidence } from "./evidence";
 /**
  * Everything the invoice panel shows. In SHADOW mode the agent's output is
  * withheld on the server until a decision exists for the invoice (SPEC 9.1).
- * Every delivery of validated agent output to a writable reviewer records
- * an exposure, including deliveries before a decision revision.
+ * Every delivery of validated agent output records an exposure for the
+ * session, including read-only views: a verified user's roles can change
+ * mid-session, so a later decision must still count as exposed (#222).
  */
 export async function getInvoiceReview(
   invoiceId: string,
@@ -29,7 +30,7 @@ export async function getInvoiceReview(
       const decided = reviewed.decisions.length > 0;
       const showAgent = readOnly || analyst.mode === "ASSIST" || decided;
       const explanation = showAgent ? state.explanation : null;
-      if (explanation && !readOnly) {
+      if (explanation) {
         await tx
           .insert(t.exposures)
           .values({ sessionId: analyst.sessionId, invoiceId })
