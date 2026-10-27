@@ -1,6 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import {
   storedExplanationUsable,
@@ -125,6 +133,8 @@ let sequence = 0;
 async function stored(
   input: {
     question?: string;
+    summary?: string;
+    claim?: string;
     citedId?: string;
     status?: "PASSED" | "FAILED";
     runStatus?: "PASSED" | "ERROR";
@@ -160,13 +170,15 @@ async function stored(
     .values({
       id: `stored-exp-${n}`,
       agentRunId: run.id,
-      summary: "Review the cited evidence.",
+      summary: input.summary ?? "Review the cited evidence.",
       riskLevel: "HIGH",
       recommendation: "HOLD",
       questionsForClient: input.question
         ? [input.question]
         : ["Please provide the supporting records."],
-      claims: [{ text: "This record needs review.", evidenceIds: [id] }],
+      claims: [
+        { text: input.claim ?? "This record needs review.", evidenceIds: [id] },
+      ],
       citedEvidenceIds: [id],
       validationStatus: input.status ?? "PASSED",
       validationErrors: [],
@@ -313,4 +325,71 @@ it("shows original captured agent evidence separately from current invoice input
   expect(panel?.agentEvidence.get("inv_stored")?.facts).not.toContain(
     "amount: 7047.5",
   );
+});
+
+afterAll(async () => {
+  await db?.$client.close();
+}, 30_000);
+
+describe("complete monetary tokens in stored explanations (#186)", () => {
+  beforeEach(async () => {
+    await db
+      .update(t.invoices)
+      .set({ amountCents: 604750 })
+      .where(eq(t.invoices.id, "inv_stored"));
+  });
+  it.each([
+    "The amount is $6,047.50_000.",
+    "The amount is $6,047.50×10^9.",
+    "The amount is $6,047.50 000.",
+    "The amount is $6,047.50\u202f000.",
+    "The amount is 999999.00 NZD.",
+    "The balance is − $6,047.50.",
+    "The amount is 999999 × $6,047.50.",
+  ])(
+    "rejects legacy and captured unsupported amounts: %s",
+    async (text) => {
+      const { ToolExecutor } = await import("@/lib/agent/tools");
+      const { buildRunEvidenceManifest } = await import("@/lib/agent/manifest");
+      for (const captured of [false, true])
+        for (const field of ["summary", "claim", "question"] as const) {
+          const row = await stored({ legacy: !captured, [field]: text });
+          if (captured) {
+            const tools = new ToolExecutor(db, {
+              clientId: "stored-client",
+              asOf: "2026-10-20",
+            });
+            const response = await tools.getInvoice("inv_stored");
+            const capture = buildRunEvidenceManifest({
+              runId: row.run.id,
+              clientId: "stored-client",
+              asOf: "2026-10-20",
+              toolResponses: [{ sequence: 1, tool: "get_invoice", response }],
+              records: tools.evidence.recordsAtRun(),
+            });
+            await db.insert(t.agentEvidenceManifests).values({
+              runId: row.run.id,
+              clientId: "stored-client",
+              asOfDate: "2026-10-20",
+              validatorVersion: capture.body.validatorVersion,
+              canonicalJson: capture.canonicalText,
+              sha256: capture.digest,
+            });
+          }
+          expect(await storedExplanationUsable(db, row)).toBe(false);
+          const [original] = await db
+            .select()
+            .from(t.explanations)
+            .where(eq(t.explanations.id, row.explanation.id));
+          expect(original).toEqual(row.explanation);
+        }
+    },
+    30_000,
+  );
+  it("continues to accept a grounded suffix amount with ordinary IDs and dates", async () => {
+    const row = await stored({
+      question: "Can you reconcile 6,047.50 NZD for inv_stored on 2026-10-01?",
+    });
+    expect(await storedExplanationUsable(db, row)).toBe(true);
+  });
 });

@@ -1,3 +1,5 @@
+import { currencyTokens, moneyMentions } from "./money";
+export { moneyMentions } from "./money";
 import { AgentOutputSchema, type AgentOutput } from "./schema";
 import type { EvidenceRegistry } from "./evidence";
 
@@ -11,14 +13,8 @@ export type ValidationResult =
   | { ok: true; value: AgentOutput }
   | { ok: false; errors: string[]; value?: AgentOutput };
 
-// Recognize explicit NZD and NZ$ alongside the prototype's implicit NZD $.
-// Read the whole numeric token; unsupported notation must not match a prefix.
-const CURRENCY_MARKER = /-?(?:NZ\$|\$|\bNZD(?=\s|[+\-\d.]))\s*/gi;
-const CURRENCY_NUMBER = /^[+-]?[\d,.]+(?:e[+-]?\d+)?[kmb]?/i;
-const VALID_CURRENCY_NUMBER = /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/;
-const MAGNITUDE = /^\s*(?:hundred|thousand|million|billion|trillion|[kmb])\b/i;
 const OTHER_CURRENCY =
-  /(?:\b(?:USD|AUD|CAD|EUR|GBP|JPY|CHF|CNY|RMB|HKD|SGD)\s*|\b(?:US|AU|CA|HK|SG)\$\s*|[€£¥]\s*)[+\-]?[\d.]/i;
+  /(?:(?:\b(?:USD|AUD|CAD|EUR|GBP|JPY|CHF|CNY|RMB|HKD|SGD)\s*|\b(?:US|AU|CA|HK|SG)\$\s*|(?!\$)\p{Sc}\s*)[+\-]?[\p{N}.]|[\p{N}.,]+\s*(?:USD|AUD|CAD|EUR|GBP|JPY|CHF|CNY|RMB|HKD|SGD)\b|[\p{N}.,]+\s*(?!\$)\p{Sc})/iu;
 // Record fields that hold money in dollars; fields ending in Cents hold cents.
 // Other numbers (days to pay, counts, basis points) are never money evidence.
 const DOLLAR_FIELDS = new Set(["amount", "advance", "outstanding"]);
@@ -26,48 +22,6 @@ const ISO_DATE = /\b\d{4}-\d{2}-\d{2}\b/g;
 // Wording the agent must never use: it does not approve or fund anything.
 const FORBIDDEN =
   /\b(approved|has been funded|is funded|will be funded|we will fund)\b/i;
-
-function currencyTokens(
-  text: string,
-): { token: string; cents: number | null }[] {
-  const out: { token: string; cents: number | null }[] = [];
-  for (const marker of text.matchAll(CURRENCY_MARKER)) {
-    const after = text.slice(marker.index! + marker[0].length);
-    const numeric = CURRENCY_NUMBER.exec(after)?.[0];
-    // A standalone NZD label is not itself a numeric assertion.
-    if (!numeric && /NZD/i.test(marker[0])) continue;
-    const remainder = after.slice(numeric?.length ?? 0);
-    // Terminal comma/full stop can be sentence punctuation, not decimal data.
-    const number = (numeric ?? "").replace(/[,.]+$/, "");
-    const token = marker[0] + (numeric ?? "");
-    const negativeBefore = marker[0].startsWith("-");
-    const malformed =
-      !VALID_CURRENCY_NUMBER.test(number) ||
-      (negativeBefore && number.startsWith("-")) ||
-      MAGNITUDE.test(remainder) ||
-      /^[a-z]/i.test(remainder);
-    if (malformed) {
-      out.push({ token, cents: null });
-      continue;
-    }
-    const [whole, fraction = ""] = number
-      .replace(/^-/, "")
-      .replaceAll(",", "")
-      .split(".");
-    const cents =
-      (negativeBefore || number.startsWith("-") ? -1 : 1) *
-      (Number(whole) * 100 + Number(fraction.padEnd(2, "0")));
-    out.push({ token, cents: Number.isSafeInteger(cents) ? cents : null });
-  }
-  return out;
-}
-
-/** Supported NZD money in text, as integer cents; validation rejects bad tokens. */
-export function moneyMentions(text: string): number[] {
-  return currencyTokens(text).flatMap((mention) =>
-    mention.cents === null ? [] : [mention.cents],
-  );
-}
 
 export function dateMentions(text: string): string[] {
   return [...text.matchAll(ISO_DATE)].map((m) => m[0]);
@@ -83,8 +37,13 @@ function recordFacts(
   const visit = (v: unknown, key: string) => {
     if (typeof v === "number") {
       // Tool records state dollars; finding details use *Cents integers.
-      if (/cents$/i.test(key)) cents.add(Math.round(v));
-      else if (DOLLAR_FIELDS.has(key)) cents.add(Math.round(v * 100));
+      if (/cents$/i.test(key)) {
+        if (Number.isSafeInteger(v)) cents.add(v);
+      } else if (DOLLAR_FIELDS.has(key)) {
+        const amount = Math.round(v * 100);
+        if (Number.isSafeInteger(amount) && v === amount / 100)
+          cents.add(amount);
+      }
     } else if (typeof v === "string") {
       if (/^\d{4}-\d{2}-\d{2}$/.test(v)) dates.add(v);
     } else if (Array.isArray(v)) {
