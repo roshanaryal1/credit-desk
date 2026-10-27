@@ -178,9 +178,13 @@ function parse(raw: string, sign: string): number | null {
 }
 
 const SUSPICIOUS = [
-  /\p{N}[\p{N}.,]*\s*NZD\p{L}+/giu,
-  /\p{N}[\p{N}.,]*\s*[([{]\s*NZD\s*[)\]}]/giu,
-  /(?:NZ\$|\$)\s*[-+−]?\p{N}[\p{N}.,]*\s*[([{]\s*(?:[\p{Sm}*/×÷^·]|\p{N})/gu,
+  // A standalone number (never the tail of a record ID) before NZD+letters.
+  /(?<![\p{L}\p{N}_-])\p{N}[\p{N}.,]*\s*NZD\p{L}+/giu,
+  // A standalone number before a bracketed code: "999999 (NZD)".
+  /(?<![\p{L}\p{N}_-])\p{N}[\p{N}.,]*\s*[([{]\s*NZD\s*[)\]}]/giu,
+  // A literal followed by a bracketed operator or bare number. Bracketed ISO
+  // dates and counts with a unit ("(30 days overdue)") are annotations.
+  /(?:NZ\$|\$)\s*[-+−]?\p{N}[\p{N}.,]*\s*[([{]\s*(?:[\p{Sm}*/×÷^·]|(?!\d{4}-\d{2}-\d{2})(?![\p{N}.,]+\s*\p{L})\p{N})/gu,
 ];
 
 export function currencyTokens(input: string): CurrencyToken[] {

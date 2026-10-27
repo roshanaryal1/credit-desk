@@ -223,6 +223,9 @@ describe("complete NZD monetary literals (#186)", () => {
     ["Check inv_0001 and inv_0002 for $1.00.", [100]],
     ["The amount is **$1.00 [inv_0001]**.", [100]],
     ["Paid $1.00 2026-10-20 per the bank record.", [100]],
+    ["The amount is $1.00 (2026-10-20).", [100]],
+    ["The amount is $1.00 (30 days overdue).", [100]],
+    ["Invoice INV-NZD-A1 (NZD); the amount is $1.00.", [100]],
     ["The amount is *$1.00 (inv_0001)*.", [100]],
     ["The amount is $1.00 NZD (30 days overdue).", [100]],
   ] as [string, number[]][])(
