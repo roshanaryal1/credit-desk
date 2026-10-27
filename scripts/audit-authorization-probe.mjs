@@ -206,11 +206,12 @@ for (const [persona, paths] of Object.entries(denied)) {
 const browser = await chromium.launch({ headless: true });
 
 // The local server has no proxy, so x-real-ip selects a rate-limit bucket.
+let nextAddress = 1 + Math.floor(Math.random() * 200); // fresh per run
+// Each context gets its own documentation-range address, never reused, so
+// the lockout check cannot exhaust another check's bucket.
 const ipContext = () =>
   browser.newContext({
-    extraHTTPHeaders: {
-      "x-real-ip": `198.51.100.${Math.floor(Math.random() * 250) + 1}`,
-    },
+    extraHTTPHeaders: { "x-real-ip": `198.51.100.${nextAddress++}` },
   });
 
 // L: password attempts are limited per client address.
@@ -367,11 +368,15 @@ async function decisionAttempt(label, intruderClaims) {
   );
   await form.getByRole("button", { name: "Save decision" }).click();
   const response = await actionResponse;
+  // Before #199 the proxy answered with a 307; after it, server actions get
+  // Next.js's x-action-redirect contract. Either way the action never runs.
+  const actionRedirect = response.headers()["x-action-redirect"];
   let denial;
-  if (response.status() === 307) {
-    // Proxy refuses before the action runs (#199 covers the client error).
+  if (response.status() === 307 || actionRedirect) {
     await page.waitForTimeout(1500);
-    denial = `proxy 307 to ${new URL(response.headers().location, origin).pathname}`;
+    denial = actionRedirect
+      ? `action redirect to ${actionRedirect.split(";")[0]}`
+      : `proxy 307 to ${new URL(response.headers().location, origin).pathname}`;
   } else {
     await form
       .locator("p[role=status]")
@@ -385,7 +390,7 @@ async function decisionAttempt(label, intruderClaims) {
     await page.goto(origin + href);
     // The invoice panel streams in after the shell; read it once present.
     await page
-      .getByText("A new decision is a revision.")
+      .getByText("Your decision", { exact: true })
       .waitFor({ timeout: 20000 });
     return page.locator("main").innerText();
   };
@@ -408,15 +413,14 @@ async function decisionAttempt(label, intruderClaims) {
     !intruderPersisted && analystPersisted,
     { invoice: href },
   );
-  if (pageErrors.length)
-    record(
-      `U ${label}`,
-      `${label} denied submission is handled without a client error`,
-      "message, no error",
-      pageErrors[0],
-      false,
-      { knownGap: true, issue: 199 },
-    );
+  record(
+    `U ${label}`,
+    `${label} denied submission is handled without a client error`,
+    "message or navigation, no error",
+    pageErrors[0] ?? "no client error",
+    pageErrors.length === 0,
+    pageErrors.length ? { knownGap: true, issue: 199 } : {},
+  );
   await context.close();
 }
 await decisionAttempt("CLIENT", { persona: "CLIENT" });
