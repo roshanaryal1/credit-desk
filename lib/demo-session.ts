@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import { connection } from "next/server";
 
 import { AUTH_COOKIE, gateConfig, verifySession } from "@/lib/auth";
+import { authMode } from "@/lib/identity/config";
+import { currentSession } from "@/lib/identity/current";
 import {
   demoCanWrite,
   parseDemoPersona,
@@ -13,6 +15,8 @@ import {
 /** Demo perspectives are self-selected; they never grant real tenant rights. */
 export async function currentDemoPersona(): Promise<DemoPersona | null> {
   await connection();
+  // Verified identities use roles, never self-selected demo perspectives.
+  if (authMode() === "oidc") return null;
   const gate = gateConfig();
   if (!gate.enforce) return "ANALYST";
   if (!gate.configured) return null;
@@ -26,6 +30,10 @@ export async function currentDemoPersona(): Promise<DemoPersona | null> {
 /** Every write action checks signed session provenance, not only role labels. */
 export async function canPerformDemoWrite(): Promise<boolean> {
   await connection();
+  if (authMode() === "oidc") {
+    const session = await currentSession();
+    return !!session && session.identity.roles.includes("ANALYST");
+  }
   const gate = gateConfig();
   if (!gate.enforce) return true; // Local development without a password gate.
   if (!gate.configured) return false;
@@ -35,5 +43,8 @@ export async function canPerformDemoWrite(): Promise<boolean> {
   );
   if (!session) return false;
   const persona = parseDemoPersona(session.persona) ?? "ANALYST";
-  return demoCanWrite(persona, session.publicDemo === true);
+  // A public cookie issued before #217 never gains write access.
+  if (session.publicDemo === true && session.publicWrites !== true)
+    return false;
+  return demoCanWrite(persona);
 }

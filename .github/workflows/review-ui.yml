@@ -44,8 +44,13 @@ jobs:
         run: npm install --global npm@12.2.1
       - name: Generate disposable CI-only login credentials
         run: |
-          echo "DEMO_PASSWORD=synthetic-review-$(openssl rand -hex 16)" >> "$GITHUB_ENV"
-          echo "SESSION_SECRET=$(openssl rand -hex 48)" >> "$GITHUB_ENV"
+          # Mask before export: the repository and its Actions logs are public.
+          password="synthetic-review-$(openssl rand -hex 16)"
+          secret="$(openssl rand -hex 48)"
+          echo "::add-mask::$password"
+          echo "::add-mask::$secret"
+          echo "DEMO_PASSWORD=$password" >> "$GITHUB_ENV"
+          echo "SESSION_SECRET=$secret" >> "$GITHUB_ENV"
       - run: npm ci
       - name: Seed offline synthetic ledger and incident history
         run: npm run seed -- --target=local

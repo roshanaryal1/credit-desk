@@ -30,43 +30,95 @@ const GROUPS = [
   },
 ] as const;
 
-export function Nav({ persona }: { persona: DemoPersona }) {
-  return <NavList pathname={usePathname()} persona={persona} />;
+export interface NavGroup {
+  heading: string;
+  items: { href: string; label: string }[];
 }
 
-/** Static navigation fallback while the browser pathname is loading. */
+export function Nav({
+  persona,
+  allowed,
+  extra = [],
+}: {
+  persona: DemoPersona | null;
+  /** Verified-identity mode: the exact routes this user may open. */
+  allowed?: string[];
+  /** Verified-identity mode: per-user links, such as granted clients. */
+  extra?: NavGroup[];
+}) {
+  return (
+    <NavList
+      pathname={usePathname()}
+      persona={persona}
+      allowed={allowed}
+      extra={extra}
+    />
+  );
+}
+
+/**
+ * Static fallback while the session streams in. It names no persona, so the
+ * prerendered shell never shows (or prefetches) links a persona cannot open.
+ */
 export function NavFallback() {
-  return <NavList pathname={null} persona="ANALYST" />;
+  return <NavList pathname={null} persona={null} />;
 }
 
 function NavList({
   pathname,
   persona,
+  allowed,
+  extra = [],
 }: {
   pathname: string | null;
-  persona: DemoPersona;
+  persona: DemoPersona | null;
+  allowed?: string[];
+  extra?: NavGroup[];
 }) {
   const active = (href: string) =>
     pathname !== null &&
     (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
-  const groups =
-    persona === "CLIENT"
-      ? [
+  const groups = allowed
+    ? [
+        // Extra groups are already scoped on the server (granted clients).
+        ...extra,
+        ...[
+          ...GROUPS,
           {
-            heading: "Borrower demo",
-            items: [
-              { href: "/demo/client", label: "My fictional facility" },
-              { href: "/about", label: "About" },
-            ],
+            heading: "Administration",
+            items: [{ href: "/admin/users", label: "Users and access" }],
           },
         ]
-      : GROUPS.map((group) => ({
-          heading: group.heading,
-          items: group.items.filter((item) =>
-            demoRouteAllowed(persona, item.href),
-          ),
-        })).filter((group) => group.items.length > 0);
+          .map((group) => ({
+            heading: group.heading,
+            items: group.items.filter((item) => allowed.includes(item.href)),
+          }))
+          .filter((group) => group.items.length > 0),
+      ]
+    : persona === null
+      ? [
+          {
+            heading: "Credit Desk",
+            items: [{ href: "/about", label: "About" }],
+          },
+        ]
+      : persona === "CLIENT"
+        ? [
+            {
+              heading: "Borrower demo",
+              items: [
+                { href: "/demo/client", label: "My fictional facility" },
+                { href: "/about", label: "About" },
+              ],
+            },
+          ]
+        : GROUPS.map((group) => ({
+            heading: group.heading,
+            items: group.items.filter((item) =>
+              demoRouteAllowed(persona, item.href),
+            ),
+          })).filter((group) => group.items.length > 0);
 
   return (
     <nav
@@ -87,8 +139,14 @@ function NavList({
               key={item.href}
               href={item.href}
               aria-current={active(item.href) ? "page" : undefined}
+              onFocus={(event) => {
+                event.currentTarget.scrollIntoView({
+                  block: "nearest",
+                  inline: "nearest",
+                });
+              }}
               className={cn(
-                "text-muted-foreground rounded-sm border-l-2 border-transparent px-3 py-2 text-sm whitespace-nowrap transition-colors",
+                "text-muted-foreground scroll-mx-1 rounded-sm border-l-2 border-transparent px-3 py-2 text-sm whitespace-nowrap transition-colors",
                 "hover:bg-accent hover:text-foreground focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
                 active(item.href) &&
                   "border-primary bg-accent/60 text-foreground font-semibold",

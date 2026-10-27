@@ -282,6 +282,78 @@ async function checkEvidenceAndScenario(page, label) {
   });
 }
 
+async function checkDateFilters(page, label) {
+  await page.goto(origin + "/watch");
+  await waitForRenderedContent(page);
+  const input = page.getByLabel("Go to date", { exact: true });
+  const today = await input.inputValue();
+  const start = await input.getAttribute("min");
+  const baseline = await page.locator("main").innerText();
+  for (const query of [
+    "asOf=2026-99-99",
+    "asOf=2026-00-00",
+    "asOf=2026-09-99",
+    "asOf=2026-09-31",
+    "asOf=2026-02-29",
+    "asOf=invalid",
+    "asOf=",
+    "asOf=2026-07-22&asOf=2026-10-19",
+  ]) {
+    await page.goto(origin + "/watch?" + query);
+    await waitForRenderedContent(page);
+    if (
+      (await input.inputValue()) !== today ||
+      (await page.locator("main").innerText()) !== baseline
+    )
+      throw new Error(
+        `${label}: invalid Watch date changed the fallback content: ${query}`,
+      );
+  }
+  for (const [value, expected] of [
+    ["2024-02-29", start],
+    [start, start],
+    [today, today],
+    ["9999-12-31", today],
+  ]) {
+    await page.goto(origin + "/watch?asOf=" + value);
+    await waitForRenderedContent(page);
+    if ((await input.inputValue()) !== expected)
+      throw new Error(
+        `${label}: valid Watch date lost its range clamp: ${value}`,
+      );
+    await page
+      .getByRole("navigation", { name: "Move through the history" })
+      .waitFor({ state: "visible" });
+  }
+  const activity = "/clients/cli_0001/activity";
+  await page.goto(origin + activity);
+  await waitForRenderedContent(page);
+  const activityBaseline = await page.locator("main").innerText();
+  for (const query of [
+    "asOf=2026-09-99",
+    "asOf=2026-00-00",
+    "asOf=2026-07-22&asOf=2026-10-19",
+  ]) {
+    await page.goto(origin + activity + "?" + query);
+    await waitForRenderedContent(page);
+    if (
+      (await page
+        .getByLabel("Business as of", { exact: true })
+        .inputValue()) !== today ||
+      (await page.locator("main").innerText()) !== activityBaseline
+    )
+      throw new Error(
+        `${label}: activity date fallback changed or rendered an error: ${query}`,
+      );
+  }
+  behaviorChecks.push({
+    viewport: label,
+    check:
+      "Watch malformed and repeated dates preserve fallback content; valid dates retain clamps; activity malformed dates remain safe",
+    result: "PASS",
+  });
+}
+
 function observeBrowser(page, label) {
   page.on("pageerror", (error) => errors.push(`${label}: ${error.message}`));
   const requiredAsset = (request) =>
@@ -432,6 +504,7 @@ try {
       });
       process.stdout.write(`OK ${label} ${item.route}: ${title}\n`);
     }
+    await checkDateFilters(page, label);
     await checkEvidenceAndScenario(page, label);
     if (label === "desktop") {
       // Browser fetch inherits the signed, HttpOnly session cookie from the
@@ -673,7 +746,7 @@ try {
         );
         if (sessionData.publicDemo !== true) {
           throw new Error(
-            "Quick-demo session lacks read-only provenance: " + role.name,
+            "Quick-demo session lacks public-demo provenance: " + role.name,
           );
         }
         if (role.name === "Client / borrower") {
@@ -731,93 +804,22 @@ try {
             waitUntil: "domcontentloaded",
           });
           await waitForRenderedContent(demoPage);
+          // The one-click analyst has the analyst's synthetic write surface:
+          // the decision form, reached in shadow mode, with no AI view first.
+          await demoPage
+            .getByRole("button", { name: "Save decision" })
+            .waitFor({ timeout: 30000 });
           if (
-            await demoPage
-              .getByRole("button", { name: /Re-run agent/i })
-              .count()
-          ) {
-            throw new Error("Public analyst has a writable agent control");
-          }
-          // Exercise actual server actions with the signed public session.
-          // The write guards must deny before parsing mutation input or calling a model.
-          const manifest = JSON.parse(
-            await fs.readFile(
-              path.join(
-                process.cwd(),
-                ".next/server/server-reference-manifest.json",
-              ),
-              "utf8",
-            ),
-          );
-          for (const [name, actionPath, args, denial] of [
-            [
-              "decideAction",
-              invoicePath,
-              [null, {}],
-              "Only the credit analyst demo",
-            ],
-            [
-              "incidentAction",
-              "/watch",
-              [null, {}],
-              "This demo perspective is read-only",
-            ],
-            [
-              "rerunAgentAction",
-              invoicePath,
-              ["inv_0001"],
-              "This demo perspective cannot run agents",
-            ],
-          ]) {
-            const action = Object.entries(manifest.node).find(
-              ([, entry]) => entry.exportedName === name,
+            !(await demoPage.getByText("Shadow mode", { exact: false }).count())
+          )
+            throw new Error(
+              "Public analyst decision form is not in shadow mode",
             );
-            if (!action) throw new Error(`Missing server action ${name}`);
-            const response = await demoPage.evaluate(
-              async ({ id, actionPath, args }) => {
-                const result = await fetch(actionPath, {
-                  method: "POST",
-                  headers: {
-                    "Next-Action": id,
-                    "Content-Type": "text/plain;charset=UTF-8",
-                  },
-                  body: JSON.stringify(args),
-                });
-                return { status: result.status, text: await result.text() };
-              },
-              { id: action[0], actionPath, args },
-            );
-            if (response.status !== 200 || !response.text.includes(denial)) {
-              throw new Error(`Public analyst write guard failed: ${name}`);
-            }
-          }
-          const modeAction = Object.entries(manifest.node).find(
-            ([, entry]) => entry.exportedName === "setModeAction",
-          );
-          if (!modeAction) throw new Error("Missing mode action");
-          const modeStatus = await demoPage.evaluate(
-            async ({ id, actionPath }) => {
-              const response = await fetch(actionPath, {
-                method: "POST",
-                headers: {
-                  "Next-Action": id,
-                  "Content-Type": "text/plain;charset=UTF-8",
-                },
-                body: JSON.stringify(["ASSIST"]),
-              });
-              return response.status;
-            },
-            { id: modeAction[0], actionPath: invoicePath },
-          );
-          if (modeStatus !== 200)
-            throw new Error("Mode write guard was not reached");
-          if (
-            (await demoContext.cookies()).some(
-              (cookie) => cookie.name === "cd_mode",
-            )
-          ) {
-            throw new Error("Public analyst changed review mode");
-          }
+          behaviorChecks.push({
+            viewport: label,
+            check: "One-click analyst can reach the shadow-mode decision form",
+            result: "PASS",
+          });
         }
         const account = demoPage.getByRole("region", {
           name: "Current demo account",

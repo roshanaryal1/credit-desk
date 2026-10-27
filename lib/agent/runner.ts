@@ -49,6 +49,30 @@ export interface RunOptions {
 const defaultLog = (line: Record<string, unknown>) =>
   console.log(JSON.stringify(line));
 
+function serviceFailure(error: unknown) {
+  if (error instanceof DeadlineExceeded) {
+    return {
+      code: "BUDGET_EXCEEDED",
+      message: "run budget exceeded",
+      schemaRejected: false,
+    };
+  }
+  // Classify privately. Upstream text must never be logged, persisted as a
+  // diagnostic, returned to the caller or copied into another model request.
+  const schemaRejected =
+    error instanceof Error &&
+    /tool call validation failed|parsing failed|did not match schema/i.test(
+      error.message,
+    );
+  return {
+    code: schemaRejected ? "PROVIDER_OUTPUT_REJECTED" : "RUN_FAILED",
+    message: schemaRejected
+      ? "The agent service rejected its output. Try the run again."
+      : "The agent service is temporarily unavailable. Try the run again.",
+    schemaRejected,
+  };
+}
+
 interface Subject {
   type: "INVOICE" | "INCIDENT";
   id: string;
@@ -195,6 +219,8 @@ async function runAgentLoop(
     ),
   );
 
+  let failureCode: string | undefined;
+  let providerSchemaRejected = false;
   try {
     for (;;) {
       if (now() >= deadline) throw new DeadlineExceeded();
@@ -280,26 +306,19 @@ async function runAgentLoop(
     }
   } catch (err) {
     status = "ERROR";
-    errors = [
-      err instanceof DeadlineExceeded
-        ? "run budget exceeded"
-        : (err as Error).message,
-    ];
+    const failure = serviceFailure(err);
+    errors = [failure.message];
+    failureCode = failure.code;
+    providerSchemaRejected = failure.schemaRejected;
   }
   // A provider-side rejection of malformed model output (an undeclared tool,
   // arguments that do not match the schema, or unparseable output) counts as
   // a failed attempt and is retried once.
-  if (
-    status === "ERROR" &&
-    attempts < 2 &&
-    /tool call validation failed|parsing failed|did not match schema/i.test(
-      errors[0] ?? "",
-    )
-  ) {
+  if (status === "ERROR" && attempts < 2 && providerSchemaRejected) {
     attempts++;
     messages.push({
       role: "user",
-      content: `That tool call was rejected: ${errors[0]}. Call ${SUBMIT_TOOL_NAME} now with your answer.`,
+      content: `The previous tool response was rejected. Call ${SUBMIT_TOOL_NAME} now with your answer.`,
     });
     try {
       const res = await llm.complete({
@@ -321,7 +340,10 @@ async function runAgentLoop(
       status = result.ok ? "PASSED" : "FAILED";
       errors = result.ok ? [] : result.errors;
     } catch (err) {
-      errors = [...errors, (err as Error).message];
+      const failure = serviceFailure(err);
+      status = "ERROR";
+      failureCode = failure.code;
+      errors = [...errors, failure.message];
     }
   }
 
@@ -385,9 +407,6 @@ async function runAgentLoop(
     event: "agent_run",
     runId,
     subjectType: subject.type,
-    subjectId: subject.id,
-    provider: llm.provider,
-    model: llm.model,
     promptVersion: PROMPT_VERSION,
     status,
     attempts,
@@ -395,7 +414,13 @@ async function runAgentLoop(
     tokensIn,
     tokensOut,
     latencyMs,
-    errors,
+    errorCode:
+      status === "ERROR"
+        ? failureCode
+        : status === "FAILED"
+          ? "VALIDATION_FAILED"
+          : null,
+    errorCount: errors.length,
   });
   return {
     runId,

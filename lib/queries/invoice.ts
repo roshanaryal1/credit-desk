@@ -1,15 +1,11 @@
 import "server-only";
 
-import { asc, eq } from "drizzle-orm";
-
-import { getDb } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
+import { getDb, type Db } from "@/lib/db/client";
 import type { Analyst } from "@/lib/trust/decide";
-import { reviewState } from "@/lib/trust/review";
-
-import { readCapturedRunEvidence } from "@/lib/agent/manifest";
-
-import { resolveCapturedEvidence, resolveEvidence } from "./evidence";
+import { loadReviewedState, ReviewNotFound } from "@/lib/trust/review";
+import { withSerializableRetry } from "@/lib/trust/review-transaction";
+import { presentReviewEvidence, resolveCapturedEvidence } from "./evidence";
 
 /**
  * Everything the invoice panel shows. In SHADOW mode the agent's output is
@@ -22,89 +18,45 @@ export async function getInvoiceReview(
   analyst: Analyst,
   batchId: string,
   readOnly = false,
+  providedDb?: Db,
 ) {
-  const db = await getDb();
-  const [row] = await db
-    .select({ invoice: t.invoices, debtor: t.debtors, batch: t.batches })
-    .from(t.invoices)
-    .innerJoin(t.debtors, eq(t.invoices.debtorId, t.debtors.id))
-    .innerJoin(t.batches, eq(t.invoices.batchId, t.batches.id))
-    .where(eq(t.invoices.id, invoiceId));
-  // The panel only reviews invoices of the batch on screen.
-  if (!row || row.invoice.batchId !== batchId) return null;
-
-  const state = await reviewState(db, invoiceId);
-  const findings = await db
-    .select()
-    .from(t.findings)
-    .where(eq(t.findings.invoiceId, invoiceId))
-    .orderBy(asc(t.findings.checkId));
-  const current = findings.filter((f) =>
-    state.findings.some((s) => s.id === f.id),
-  );
-  const decisions = await db
-    .select()
-    .from(t.decisions)
-    .where(eq(t.decisions.invoiceId, invoiceId))
-    .orderBy(asc(t.decisions.decidedAt));
-
-  const decided = decisions.length > 0;
-  // Agreement is judged against the explanation the first decision was bound to.
-  const boundId = decisions[0]?.explanationIdAtDecision ?? null;
-  const [bound] = boundId
-    ? await db
-        .select({
-          recommendation: t.explanations.recommendation,
-          validationStatus: t.explanations.validationStatus,
-        })
-        .from(t.explanations)
-        .where(eq(t.explanations.id, boundId))
-    : [];
-  const showAgent = readOnly || analyst.mode === "ASSIST" || decided;
-  const explanation = showAgent ? state.explanation : null;
-  // Log delivery to a writable session even after the first decision.
-  // A revision must not be classified as blind after displaying AI output.
-  if (explanation && !readOnly) {
-    await db
-      .insert(t.exposures)
-      .values({ sessionId: analyst.sessionId, invoiceId })
-      .onConflictDoNothing();
+  const db = providedDb ?? (await getDb());
+  try {
+    return await withSerializableRetry(db, async (tx) => {
+      const state = await loadReviewedState(tx, invoiceId);
+      const reviewed = state.reviewed;
+      if (reviewed.panel.batch.id !== batchId) return null;
+      const decided = reviewed.decisions.length > 0;
+      const showAgent = readOnly || analyst.mode === "ASSIST" || decided;
+      const explanation = showAgent ? state.explanation : null;
+      if (explanation && !readOnly) {
+        await tx
+          .insert(t.exposures)
+          .values({ sessionId: analyst.sessionId, invoiceId })
+          .onConflictDoNothing();
+      }
+      const evidence = presentReviewEvidence(reviewed.evidence);
+      return {
+        ...reviewed.panel,
+        findings: reviewed.findings,
+        decisions: reviewed.decisions,
+        reviewVersion: state.version,
+        hasExplanation: state.explanation !== null,
+        withheld: !showAgent && state.explanation !== null,
+        explanation,
+        evidence,
+        agentEvidence:
+          explanation && reviewed.agentEvidenceRecords
+            ? resolveCapturedEvidence(reviewed.agentEvidenceRecords)
+            : evidence,
+        agentEvidenceSource: reviewed.agentEvidenceManifest
+          ? "CAPTURED"
+          : "LEGACY_RECONSTRUCTION",
+        boundExplanation: reviewed.boundExplanation,
+      };
+    });
+  } catch (error) {
+    if (error instanceof ReviewNotFound) return null;
+    throw error;
   }
-
-  const findingEvidenceIds = current.flatMap(
-    (f) => (f.details as { evidenceIds?: string[] }).evidenceIds ?? [],
-  );
-  const capture = explanation
-    ? await readCapturedRunEvidence(db, explanation)
-    : null;
-  // The initial guard already checked this output. A concurrent loss still fails closed.
-  if (capture?.status === "FAILED") return null;
-  const evidence = await resolveEvidence([
-    ...findingEvidenceIds,
-    ...(capture?.status === "PASSED"
-      ? []
-      : (explanation?.explanation.claims.flatMap((c) => c.evidenceIds) ?? [])),
-  ]);
-  const agentEvidence =
-    capture?.status === "PASSED"
-      ? resolveCapturedEvidence(capture.body.records)
-      : evidence;
-  const agentEvidenceSource =
-    capture?.status === "PASSED" ? "CAPTURED" : "LEGACY_RECONSTRUCTION";
-
-  return {
-    invoice: row.invoice,
-    debtor: row.debtor,
-    batch: row.batch,
-    findings: current,
-    decisions,
-    reviewVersion: state.version,
-    hasExplanation: state.explanation !== null,
-    withheld: !showAgent && state.explanation !== null,
-    explanation,
-    evidence,
-    agentEvidence,
-    agentEvidenceSource,
-    boundExplanation: bound ?? null,
-  };
 }

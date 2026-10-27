@@ -103,12 +103,17 @@ async function BatchData({ params, searchParams }: PageProps<"/batches/[id]">) {
         </ul>
       </Section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <Section
           title="Invoices"
           description="Select an invoice to see its checks, the evidence and the decision."
         >
-          <div className="bg-card overflow-x-auto rounded-md border">
+          <div
+            role="region"
+            aria-label="Batch invoices"
+            tabIndex={0}
+            className="bg-card overflow-x-auto rounded-md border focus-visible:ring-2"
+          >
             <table className="w-full text-sm">
               <caption className="sr-only">Invoices in this batch</caption>
               <thead className="text-muted-foreground border-b text-left">

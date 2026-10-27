@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addDays, daysBetween } from "@/lib/dates";
+import { addDays, daysBetween, isBusinessDate } from "@/lib/dates";
 
 describe("business calendar dates", () => {
   it("counts days across Auckland daylight-saving changes", () => {
@@ -24,4 +24,30 @@ describe("business calendar dates", () => {
   );
   it("rejects fractional day arithmetic", () =>
     expect(() => addDays("2026-10-23", 0.5)).toThrow("integer"));
+});
+
+describe("untrusted business-date labels", () => {
+  it.each(["2024-02-29", "2000-02-29", "2026-10-20", "0099-12-31"])(
+    "accepts real date %s",
+    (value) => expect(isBusinessDate(value)).toBe(true),
+  );
+  it.each([
+    "2026-99-99",
+    "2026-00-00",
+    "2026-09-99",
+    "2026-09-31",
+    "2026-02-29",
+    "1900-02-29",
+    "2026-2-01",
+    "2026-10-20T00:00:00Z",
+    "",
+    "invalid",
+    null,
+    undefined,
+    20261020,
+    ["2026-10-20"],
+    {},
+  ])("rejects malformed or impossible date %j without throwing", (value) => {
+    expect(isBusinessDate(value)).toBe(false);
+  });
 });

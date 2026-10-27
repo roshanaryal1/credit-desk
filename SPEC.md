@@ -315,9 +315,21 @@ $CRON_SECRET` (C13).
 
 ### 9.3 Decision replay (C1, C2, X10, X11, X12)
 
-- The decision form carries a `review_version` (hash of the findings and
-  explanation the analyst saw) and an idempotency key. The server recomputes
-  the version in the transaction and rejects stale or duplicate submissions.
+- The decision form carries a `review_version`: the SHA-256 of the complete
+  canonical reviewed bundle, including panel invoice/debtor/batch/client rows,
+  dated check inputs, full findings/details, resolved evidence, usable agent
+  output and original capture, check configuration and decision history. The
+  server renders the panel from that bundle in one consistent transaction.
+- Saving uses a serializable transaction with at most three attempts for
+  recognised database conflicts. It reloads and compares the complete bundle,
+  rejects stale submissions, and freezes that already-validated object without
+  re-fetching source rows. A concurrent change either rejects/retries the
+  submission or serializes after a coherent reviewed state; it must never
+  produce a mixed snapshot.
+- Exact idempotent retries return their original decision ID and immutable
+  history; conflicting key reuse is rejected. New decision IDs retain the full
+  submission UUID rather than its first eight characters. Historical IDs and
+  snapshots are never rewritten.
 - In one transaction: insert the decision, its snapshot and an audit event.
 - The snapshot freezes everything needed to show the decision as made: the
   invoice, ledger entry, credit notes, allocated bank lines, the full inputs
@@ -325,6 +337,8 @@ $CRON_SECRET` (C13).
   CONCENTRATION, payment rows for SLOW_PAYER), findings, the config and
   `CONFIG_VERSION`, the explanation with its run metadata and prompt text, the
   mode, exposure flag and the decision. Plus `schema_version` and git SHA.
+  New schema-4 snapshots also preserve the canonical `reviewedState` and its
+  SHA-256 binding. Historical schema-1/2/3 replay remains factual and unchanged.
 - Serialisation: canonical JSON (sorted keys, no insignificant whitespace),
   stored as `text`. SHA-256 is over that exact string. Each snapshot stores the
   previous snapshot's hash, forming a chain.
@@ -547,6 +561,8 @@ idempotency and compare-and-swap transaction concurrency. A case approval
 does not automatically create a payment or loan disbursement.
 
 ### 14.6 Authentication, access controls and operations (#109)
+
+**Implemented (ADR-0019):** `AUTH_MODE=oidc` provides provider-neutral OIDC sign-in with mandatory MFA, provisioned users, revocable database sessions, role routes, per-client grants on client-scoped paths and actions, an audited administrator page, and portfolio-wide pages restricted to users granted every client. The synthetic deployment keeps `AUTH_MODE=demo`. Remaining items below are still open.
 
 Before multi-user or real-data use, replace self-declared analyst names and
 the shared password with verified OIDC-backed identities, MFA for privileged

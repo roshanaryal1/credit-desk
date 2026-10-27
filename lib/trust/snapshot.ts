@@ -1,17 +1,13 @@
-import type { StoredExplanation } from "@/lib/agent/stored-validation";
-import { readCapturedRunEvidence } from "@/lib/agent/manifest";
+import { and, desc, eq, lt, or } from "drizzle-orm";
 
-import { and, desc, eq, inArray, lt, or } from "drizzle-orm";
-
-import { buildCheckContext } from "@/lib/checks/context";
-import { CHECK_CONFIG, CONFIG_VERSION } from "@/lib/checks/config";
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import { PROMPT_VERSION, SYSTEM_PROMPT } from "@/lib/agent/prompts";
-
+import type { ReviewedState } from "./review";
+import { evidenceSubset } from "./review-evidence";
 import { canonicalJson, sha256 } from "./canonical";
 
-export const SNAPSHOT_SCHEMA_VERSION = 3;
+export const SNAPSHOT_SCHEMA_VERSION = 4;
 
 export interface SnapshotInput {
   invoiceId: string;
@@ -19,84 +15,65 @@ export interface SnapshotInput {
   codeSha: string;
 }
 
-/**
- * Everything needed to show a decision exactly as it was made (SPEC 9.3): the
- * full check inputs, findings, config, explanation with run metadata and
- * prompt text, the mode and exposure flag, and the decision itself.
- */
-export async function buildSnapshot(db: Db, input: SnapshotInput) {
-  const context = await buildCheckContext(db, input.invoiceId);
-  const findings = await db
-    .select()
-    .from(t.findings)
-    .where(
-      and(
-        eq(t.findings.invoiceId, input.invoiceId),
-        eq(t.findings.configVersion, CONFIG_VERSION),
-      ),
-    )
-    .orderBy(t.findings.checkId);
-  let explanation: (StoredExplanation & { prompt: string | null }) | null =
-    null;
-  if (input.decision.explanationIdAtDecision) {
-    const [row] = await db
-      .select({ explanation: t.explanations, run: t.agentRuns })
-      .from(t.explanations)
-      .innerJoin(t.agentRuns, eq(t.explanations.agentRunId, t.agentRuns.id))
-      .where(eq(t.explanations.id, input.decision.explanationIdAtDecision));
-    explanation = row
-      ? {
-          ...row,
-          prompt:
-            row.run.promptVersion === PROMPT_VERSION ? SYSTEM_PROMPT : null,
-        }
-      : null;
-  }
-  const capture = explanation
-    ? await readCapturedRunEvidence(db, explanation)
+/** Pure freezing: never re-fetch sources after the reviewed version is checked. */
+export function buildSnapshot(state: ReviewedState, input: SnapshotInput) {
+  const reviewed = state.reviewed;
+  if (
+    reviewed.panel.invoice.id !== input.invoiceId ||
+    input.decision.invoiceId !== input.invoiceId ||
+    input.decision.reviewVersion !== state.version ||
+    input.decision.explanationIdAtDecision !==
+      (state.explanation?.explanation.id ?? null)
+  )
+    throw Error("Decision does not match reviewed state");
+  const explanation = reviewed.explanation
+    ? {
+        ...reviewed.explanation,
+        prompt:
+          reviewed.explanation.run.promptVersion === PROMPT_VERSION
+            ? SYSTEM_PROMPT
+            : null,
+      }
     : null;
-  if (capture?.status === "FAILED")
-    throw Error("Bound explanation capture is invalid");
-  const originalManifest = capture?.status === "PASSED" ? capture.saved : null;
-  const citedIds = [
+  const ids = [
     ...new Set([
       ...(explanation?.explanation.citedEvidenceIds ?? []),
-      ...(explanation?.explanation.claims.flatMap((c) => c.evidenceIds) ?? []),
+      ...(explanation?.explanation.claims.flatMap(
+        (claim) => claim.evidenceIds,
+      ) ?? []),
     ]),
   ];
-  const frozenCitedRecords =
-    capture?.status === "PASSED"
-      ? Object.fromEntries(
-          capture.body.records
-            .filter((r) => citedIds.includes(r.id))
-            .map((r) => [r.id, r]),
-        )
-      : await citedRecords(db, citedIds);
-  const allocations = context.receiptAllocations;
-  const bankIds = allocations.map((a) => a.bankTransactionId);
-  const bankLines = bankIds.length
-    ? await db
-        .select()
-        .from(t.bankTransactions)
-        .where(inArray(t.bankTransactions.id, bankIds))
-    : [];
   return {
     schemaVersion: SNAPSHOT_SCHEMA_VERSION,
     codeSha: input.codeSha,
-    configVersion: CONFIG_VERSION,
-    config: CHECK_CONFIG,
-    checkContext: context,
-    findings,
-    bankLines,
+    configVersion: reviewed.configVersion,
+    config: reviewed.config,
+    checkContext: reviewed.context,
+    findings: reviewed.findings,
+    bankLines: [
+      ...new Map(
+        reviewed.context.receiptAllocations.map((allocation) => [
+          allocation.bankTransaction.id,
+          allocation.bankTransaction,
+        ]),
+      ).values(),
+    ].sort((a, b) => a.id.localeCompare(b.id)),
     explanation,
-    // Original agent capture stays distinct from the decision-time check inputs.
-    agentEvidenceManifest: originalManifest,
-    agentEvidenceSource: originalManifest
+    agentEvidenceManifest: reviewed.agentEvidenceManifest,
+    agentEvidenceSource: reviewed.agentEvidenceManifest
       ? "CAPTURED"
       : explanation
         ? "LEGACY_RECONSTRUCTION"
         : null,
-    citedRecords: frozenCitedRecords,
+    citedRecords: reviewed.agentEvidenceRecords
+      ? Object.fromEntries(
+          reviewed.agentEvidenceRecords
+            .filter((record) => ids.includes(record.id))
+            .map((record) => [record.id, record]),
+        )
+      : evidenceSubset(reviewed.evidence, ids),
+    reviewedState: reviewed,
+    reviewedStateSha256: state.version,
     decision: input.decision,
   };
 }
@@ -156,40 +133,4 @@ export async function verifySnapshot(
 export function hashSnapshot(snapshot: unknown) {
   const text = canonicalJson(snapshot);
   return { text, sha256: sha256(text) };
-}
-
-/** Raw rows for cited ids, from every table the agent's tools can return. */
-async function citedRecords(db: Db, ids: string[]) {
-  if (ids.length === 0) return {};
-  const out: Record<string, unknown> = {};
-  const tables = [
-    t.invoices,
-    t.ledgerEntries,
-    t.creditNotes,
-    t.bankTransactions,
-    t.debtorPayments,
-    t.debtors,
-    t.findings,
-    t.fundings,
-    t.fundingAdjustments,
-    t.incidents,
-  ] as const;
-  for (const table of tables) {
-    const rows = (await db
-      .select()
-      .from(table)
-      .where(inArray(table.id, ids))) as { id: string }[];
-    for (const r of rows) out[r.id] = r;
-  }
-  const bankIds = ids.filter(
-    (id) =>
-      out[id] && (out[id] as { reference?: unknown }).reference !== undefined,
-  );
-  if (bankIds.length > 0) {
-    out.allocations = await db
-      .select()
-      .from(t.receiptAllocations)
-      .where(inArray(t.receiptAllocations.bankTransactionId, bankIds));
-  }
-  return out;
 }
