@@ -624,7 +624,7 @@ try {
   });
   if (!clientLogin?.ok()) throw new Error("Client demo sign-in unavailable");
   await waitForRenderedContent(clientPage);
-  await clientPage.getByLabel("Explore Credit Desk as").selectOption("CLIENT");
+  await clientPage.getByLabel("Role", { exact: true }).selectOption("CLIENT");
   await clientPage.getByLabel("Your name").fill("Fictional client reviewer");
   await clientPage.getByLabel("Password").fill(password);
   await clientPage.getByRole("button", { name: "Sign in" }).click();
@@ -842,7 +842,7 @@ try {
         });
         await exitDemoAccount(demoPage, demoContext, "switch");
         const chooser = demoPage.getByRole("heading", {
-          name: "Try a demo account",
+          name: "Explore the demo",
           exact: true,
         });
         const chooserBounds = await chooser.boundingBox();
