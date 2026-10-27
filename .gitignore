@@ -32,3 +32,6 @@ npm-debug.log*
 !.vscode/extensions.json
 .pglite/
 .playwright-mcp/
+
+# Local browser-check output (screenshots, results); CI uploads its own artifacts.
+evidence/

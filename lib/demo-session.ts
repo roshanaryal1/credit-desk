@@ -35,5 +35,8 @@ export async function canPerformDemoWrite(): Promise<boolean> {
   );
   if (!session) return false;
   const persona = parseDemoPersona(session.persona) ?? "ANALYST";
+  // A public cookie issued before #217 never gains write access.
+  if (session.publicDemo === true && session.publicWrites !== true)
+    return false;
   return demoCanWrite(persona);
 }

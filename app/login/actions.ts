@@ -128,6 +128,7 @@ export async function quickDemoAction(
       name: "Public " + DEMO_PERSONAS[persona].label + " demo",
       persona,
       publicDemo: true,
+      publicWrites: true,
       exp: Math.floor(Date.now() / 1000) + PUBLIC_DEMO_TTL_SECONDS,
     },
     gate.secret,
