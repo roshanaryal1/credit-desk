@@ -55,10 +55,14 @@ let flagged: {
   issueDate: string;
 };
 
+let clearInvoiceId: string;
+
 beforeAll(async () => {
   db = await createMemoryDb();
   await writeDataset(db, generate(DEV_PARAMS));
+  // Run every check once here; tests reuse the results (#210).
   const results = await runAllBatches(db);
+  clearInvoiceId = results.find((r) => r.findings.length === 0)!.invoiceId;
   const id = results.find((r) => r.findings.length > 0)!.invoiceId;
   const [row] = await db.select().from(t.invoices).where(eq(t.invoices.id, id));
   flagged = row!;
@@ -237,10 +241,8 @@ describe("agent runner", () => {
   });
 
   it("skips clear invoices without calling the model", async () => {
-    const results = await runAllBatches(db);
-    const clear = results.find((r) => r.findings.length === 0)!.invoiceId;
     const llm = new ScriptedLlm([]);
-    const out = await runAgentForInvoice(db, llm, clear, {
+    const out = await runAgentForInvoice(db, llm, clearInvoiceId, {
       codeSha: "test",
       log: () => {},
     });
