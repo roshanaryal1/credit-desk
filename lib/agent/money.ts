@@ -180,11 +180,19 @@ function parse(raw: string, sign: string): number | null {
 export function currencyTokens(input: string): CurrencyToken[] {
   // Paired Markdown emphasis ("**$1.00**") is formatting, not arithmetic.
   // Replace the delimiters with equal-length spaces so offsets still match.
-  const text = input.replace(
-    /(?<![\p{L}\p{N}_*])(\*\*|__|\*|_)(?=\S)([^*_\n]+?)(?<=\S)\1(?![\p{L}\p{N}_*])/gu,
-    (_match, delimiter: string, inner: string) =>
-      " ".repeat(delimiter.length) + inner + " ".repeat(delimiter.length),
-  );
+  const blank = (_match: string, delimiter: string, inner: string) =>
+    " ".repeat(delimiter.length) + inner + " ".repeat(delimiter.length);
+  // Asterisk spans may contain underscore IDs ("**$1.00 [inv_0001]**");
+  // underscore spans may not, so identifiers are never read as emphasis.
+  const text = input
+    .replace(
+      /(?<![\p{L}\p{N}_*])(\*\*|\*)(?=\S)([^*\n]+?)(?<=\S)\1(?![\p{L}\p{N}_*])/gu,
+      blank,
+    )
+    .replace(
+      /(?<![\p{L}\p{N}_*])(__|_)(?=\S)([^*_\n]+?)(?<=\S)\1(?![\p{L}\p{N}_*])/gu,
+      blank,
+    );
   const tokens: (CurrencyToken & { start: number; end: number })[] = [];
   for (const marker of text.matchAll(MARKER)) {
     const start = marker.index!;

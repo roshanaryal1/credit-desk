@@ -214,6 +214,8 @@ describe("complete NZD monetary literals (#186)", () => {
     ["The balance is *$1.00*.", [100]],
     ["The balance is _$1.00_.", [100]],
     ["Check inv_0001 and inv_0002 for $1.00.", [100]],
+    ["The amount is **$1.00 [inv_0001]**.", [100]],
+    ["The amount is *$1.00 (inv_0001)*.", [100]],
     ["The amount is $1.00 NZD (30 days overdue).", [100]],
   ] as [string, number[]][])(
     "ends literals at sentence and list boundaries: %s",
