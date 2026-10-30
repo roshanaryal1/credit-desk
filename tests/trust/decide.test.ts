@@ -318,6 +318,61 @@ describe("saving a decision", () => {
     });
   });
 
+  it("requires a recorded override reason before approving a HIGH finding", async () => {
+    const [high] = await db
+      .select({ invoiceId: t.findings.invoiceId })
+      .from(t.findings)
+      .where(eq(t.findings.severity, "HIGH"))
+      .limit(1);
+    expect(high).toBeDefined();
+    const invoiceId = high!.invoiceId;
+    const reviewVersion = (await reviewState(db, invoiceId)).version;
+    const key = randomUUID();
+    const input = {
+      invoiceId,
+      decision: "APPROVE" as const,
+      reason: "   ",
+      reviewVersion,
+      idempotencyKey: key,
+    };
+    const before = await db
+      .select()
+      .from(t.decisions)
+      .where(eq(t.decisions.idempotencyKey, key));
+    expect(before).toHaveLength(0);
+
+    const denied = await saveDecision(db, input, shadow, { codeSha: "test" });
+    expect(denied).toMatchObject({ ok: false, reason: "REASON_REQUIRED" });
+    expect(
+      await db
+        .select()
+        .from(t.decisions)
+        .where(eq(t.decisions.idempotencyKey, key)),
+    ).toHaveLength(0);
+
+    const accepted = await saveDecision(
+      db,
+      { ...input, reason: "Verified manual exception with supporting rationale" },
+      shadow,
+      { codeSha: "test" },
+    );
+    expect(accepted.ok).toBe(true);
+    if (!accepted.ok) return;
+    const [snapshot] = await db
+      .select()
+      .from(t.decisionSnapshots)
+      .where(eq(t.decisionSnapshots.decisionId, accepted.decisionId));
+    expect(JSON.parse(snapshot!.canonicalJson).highRiskOverride).toBe(true);
+    expect(JSON.parse(snapshot!.canonicalJson).decision.reason).toBe(
+      "Verified manual exception with supporting rationale",
+    );
+    const [audit] = await db
+      .select()
+      .from(t.auditEvents)
+      .where(eq(t.auditEvents.id, `aud_${accepted.decisionId}`));
+    expect(audit?.payload).toMatchObject({ highRiskOverride: true });
+  });
+
   it("requires a reason to hold or reject", async () => {
     const { DecisionInputSchema } = await import("@/lib/trust/decide");
     const base = {

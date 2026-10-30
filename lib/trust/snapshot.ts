@@ -75,6 +75,10 @@ export function buildSnapshot(state: ReviewedState, input: SnapshotInput) {
     reviewedState: reviewed,
     reviewedStateSha256: state.version,
     decision: input.decision,
+    // An explicit marker makes exceptional approvals discoverable in replay.
+    highRiskOverride:
+      input.decision.decision === "APPROVE" &&
+      state.findings.some((finding) => finding.severity === "HIGH"),
   };
 }
 

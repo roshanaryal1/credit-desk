@@ -73,7 +73,9 @@ async function main() {
         decision,
         reason:
           decision === "APPROVE"
-            ? ""
+            ? state.findings.some((finding) => finding.severity === "HIGH")
+              ? "Simulated override: test analyst accepted a flagged invoice"
+              : ""
             : labels.length
               ? `Simulated: ${labels.join(", ").toLowerCase()}`
               : "Simulated: analyst judgement",

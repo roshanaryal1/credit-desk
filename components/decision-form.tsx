@@ -14,9 +14,11 @@ const OPTIONS = [
 export function DecisionForm({
   invoiceId,
   reviewVersion,
+  hasHighRiskFindings,
 }: {
   invoiceId: string;
   reviewVersion: string;
+  hasHighRiskFindings: boolean;
 }) {
   const [state, action, pending] = useActionState<DecideState, FormData>(
     decideAction,
@@ -26,7 +28,8 @@ export function DecisionForm({
   // One key per form render: a double submit is saved once (SPEC 9.3).
   const [key] = useState(() => crypto.randomUUID());
   const reasonId = useId();
-  const needsReason = choice === "HOLD" || choice === "REJECT";
+  const isHighRiskOverride = choice === "APPROVE" && hasHighRiskFindings;
+  const needsReason = choice === "HOLD" || choice === "REJECT" || isHighRiskOverride;
 
   return (
     <form action={action} className="flex flex-col gap-3">
@@ -62,7 +65,7 @@ export function DecisionForm({
       </fieldset>
       <div className="flex flex-col gap-1">
         <label htmlFor={reasonId} className="text-sm font-medium">
-          Reason {needsReason ? "(required)" : "(optional)"}
+          Reason {isHighRiskOverride ? "(required — HIGH-risk override)" : needsReason ? "(required)" : "(optional)"}
         </label>
         <textarea
           id={reasonId}
@@ -77,7 +80,9 @@ export function DecisionForm({
           className="bg-background focus-visible:ring-ring rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
           placeholder={
             needsReason
-              ? "What would change your mind?"
+              ? isHighRiskOverride
+                ? "Why is approval justified despite the HIGH-risk findings?"
+                : "What would change your mind?"
               : "Anything worth noting for the record"
           }
         />

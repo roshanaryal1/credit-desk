@@ -229,6 +229,7 @@ export async function InvoicePanel({
               key={data.reviewVersion}
               invoiceId={invoice.id}
               reviewVersion={data.reviewVersion}
+              hasHighRiskFindings={findings.some((f) => f.severity === "HIGH")}
             />
           </>
         )}
