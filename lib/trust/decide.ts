@@ -42,7 +42,7 @@ export interface Analyst {
 
 export type DecideResult =
   | { ok: true; decisionId: string; duplicate: boolean }
-  | { ok: false; reason: "STALE" | "NOT_FOUND" | "CONFLICT"; message: string };
+  | { ok: false; reason: "STALE" | "NOT_FOUND" | "CONFLICT" | "REASON_REQUIRED"; message: string };
 
 // Serialises snapshot-chain appends across sessions.
 const CHAIN_LOCK = 4_242_001;
@@ -105,6 +105,19 @@ export async function saveDecision(
         };
       }
 
+      // Evaluate against the same reviewed findings and version that are frozen
+      // in the snapshot. A client-side required field is never sufficient.
+      const highRiskOverride =
+        input.decision === "APPROVE" &&
+        state.findings.some((finding) => finding.severity === "HIGH");
+      if (highRiskOverride && input.reason.trim().length < 5)
+        return {
+          ok: false,
+          reason: "REASON_REQUIRED",
+          message:
+            "Explain why you are approving an invoice with a HIGH finding (at least 5 characters).",
+        };
+
       const [exposure] = await tx
         .select({ at: t.exposures.exposedAt })
         .from(t.exposures)
@@ -160,6 +173,7 @@ export async function saveDecision(
           simulated: opts.simulated ?? false,
           exposedBeforeDecision: exposed,
           reason: input.reason,
+          highRiskOverride,
           findings: state.findings.map((f) => f.id),
           explanationId: state.explanation?.explanation.id ?? null,
           model: state.explanation?.run.model ?? null,
