@@ -670,11 +670,12 @@ export const watchLabels = pgTable(
   (t) => [primaryKey({ columns: [t.ruleId, t.incidentKey] })],
 );
 
-/** Tables that must never be updated or deleted (SPEC 4.2). */
+/** Tables protected by row mutation and statement-level truncate triggers. */
 export const APPEND_ONLY_TABLES = [
   "agent_runs",
   "agent_evidence_manifests",
   "explanations",
+  "decisions",
   "decision_snapshots",
   "audit_events",
   "incident_events",

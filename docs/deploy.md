@@ -18,8 +18,48 @@ A READY Vercel build is not evidence of migrated tables or functioning login.
 1. On vercel.com, import the `credit-desk` repository. Framework: Next.js.
    Node version: 24.
 2. Connect the dedicated Neon database with an encrypted production
-   `DATABASE_URL`. A Marketplace integration is optional. Give previews their
-   own database branch so they never touch production data (SPEC 11).
+   `DATABASE_URL` for the app role below. A Marketplace integration is optional.
+   Give previews their own database branch so they never touch production data
+   (SPEC 11).
+
+### Database owner and runtime role
+
+Run `npm run db:migrate` and authorized `npm run seed` jobs with the role that
+owns the public tables. Supply its `DATABASE_URL` only to the operator job.
+The seed temporarily disables each named truncate trigger in the same
+transaction as the reset. PostgreSQL requires ownership to alter these
+triggers and rolls back the changes if the transaction fails.
+
+After migration, use psql 15 or later to connect to the database as its owner.
+Create a fresh login with SQL so it receives ordinary PostgreSQL privileges.
+Neon grants elevated `neon_superuser` membership to roles created in its
+Console by default. Keep the runtime role outside the owner and admin roles.
+[Neon role management](https://neon.com/docs/manage/roles)
+
+Supply a generated password in the operator environment variable
+`CREDIT_DESK_APP_PASSWORD`. Run psql from the repository root.
+
+```sql
+\set ON_ERROR_STOP on
+\getenv app_password CREDIT_DESK_APP_PASSWORD
+CREATE ROLE credit_desk_app LOGIN PASSWORD :'app_password';
+\i scripts/db/runtime-grants.sql
+```
+
+The versioned [runtime grants](../scripts/db/runtime-grants.sql) are exercised
+by [the runtime role test](../tests/db/runtime-role.test.ts) using application
+write functions under `SET ROLE credit_desk_app`. Reapply the file after each
+migration and review it when adding a write path. It includes the case,
+findings and ingestion domain primitives, which currently have script or
+test callers. The current schema uses application-generated IDs and requires
+no sequence grants.
+
+Set Vercel's `DATABASE_URL` to the connection string for `credit_desk_app`
+on each deployment's branch and redeploy. For an existing owner-connected
+deployment, remove the owner credential from the runtime environment, rotate
+the owner's password in Neon and update the operator secret. Reserve
+`TRUNCATE`, trigger management and schema changes for the owner. Review grants
+when a migration adds a table or an application feature adds a write path.
 
 ## 2. Environment variables (Production)
 
