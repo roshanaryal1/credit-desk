@@ -70,6 +70,9 @@
   "overrides": {
     "@esbuild-kit/core-utils": {
       "esbuild": "0.28.2"
+    },
+    "@typescript-eslint/typescript-estree@8.72.0": {
+      "minimatch": "^11.0.1"
     }
   },
   "allowScripts": {
