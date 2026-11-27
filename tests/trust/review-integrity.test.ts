@@ -266,7 +266,7 @@ describe("reviewed financial state (#182)", () => {
     if (!result.ok) throw Error(result.message);
     const [snapshot] = await db.select().from(t.decisionSnapshots);
     const frozen = JSON.parse(snapshot.canonicalJson);
-    expect(frozen.schemaVersion).toBe(4);
+    expect(frozen.schemaVersion).toBe(5);
     expect(sha256(canonicalJson(frozen.reviewedState))).toBe(
       panel?.reviewVersion,
     );

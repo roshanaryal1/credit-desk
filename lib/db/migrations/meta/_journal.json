@@ -57,6 +57,13 @@
       "when": 1793073348109,
       "tag": "0007_verified_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795762240665,
+      "tag": "0008_chain_link_integrity",
+      "breakpoints": true
     }
   ]
 }

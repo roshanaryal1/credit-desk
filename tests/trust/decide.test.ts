@@ -11,7 +11,7 @@ import { writeDataset } from "@/lib/seed/write";
 import { canonicalJson, sha256 } from "@/lib/trust/canonical";
 import { saveDecision, type Analyst } from "@/lib/trust/decide";
 import { reviewState } from "@/lib/trust/review";
-import { verifySnapshot } from "@/lib/trust/snapshot";
+import { snapshotDigest, verifySnapshot } from "@/lib/trust/snapshot";
 
 let db: Db;
 let flagged: string[];
@@ -79,7 +79,9 @@ describe("saving a decision", () => {
       .select()
       .from(t.decisionSnapshots)
       .where(eq(t.decisionSnapshots.decisionId, res.decisionId));
-    expect(snap?.sha256).toBe(sha256(snap!.canonicalJson));
+    expect(snap?.sha256).toBe(
+      snapshotDigest(snap!.prevSha256, snap!.canonicalJson),
+    );
     expect(await verifySnapshot(db, res.decisionId)).toEqual({
       checksumMatches: true,
       chainMatches: true,
@@ -105,16 +107,25 @@ describe("saving a decision", () => {
     await db.execute(
       sql`alter table decision_snapshots disable trigger decision_snapshots_append_only`,
     );
-    await db.execute(
-      sql`update decision_snapshots set prev_sha256 = null where decision_id = ${c.decisionId}`,
-    );
-    expect((await verifySnapshot(db, c.decisionId))?.chainMatches).toBe(false);
+    // Severing (a second genesis) or redirecting to a hash that already has a
+    // successor would fork the chain; the database refuses both (#233).
+    await expect(
+      db.execute(
+        sql`update decision_snapshots set prev_sha256 = null where decision_id = ${c.decisionId}`,
+      ),
+    ).rejects.toThrow();
     const [sa] = await db
       .select()
       .from(t.decisionSnapshots)
       .where(eq(t.decisionSnapshots.decisionId, a.decisionId));
+    await expect(
+      db.execute(
+        sql`update decision_snapshots set prev_sha256 = ${sa!.sha256} where decision_id = ${c.decisionId}`,
+      ),
+    ).rejects.toThrow();
+    // A link to a hash that is not the previous snapshot is still caught.
     await db.execute(
-      sql`update decision_snapshots set prev_sha256 = ${sa!.sha256} where decision_id = ${c.decisionId}`,
+      sql`update decision_snapshots set prev_sha256 = ${"f".repeat(64)} where decision_id = ${c.decisionId}`,
     );
     expect((await verifySnapshot(db, c.decisionId))?.chainMatches).toBe(false);
     await db.execute(
@@ -311,7 +322,7 @@ describe("saving a decision", () => {
       .from(t.decisionSnapshots)
       .where(eq(t.decisionSnapshots.decisionId, res.decisionId));
     const frozen = JSON.parse(snap!.canonicalJson);
-    expect(frozen.schemaVersion).toBe(4);
+    expect(frozen.schemaVersion).toBe(5);
     expect(frozen.citedRecords[bank!.id]).toMatchObject({
       id: bank!.id,
       amountCents: bank!.amountCents,

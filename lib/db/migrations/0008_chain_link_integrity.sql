@@ -1,0 +1,2 @@
+CREATE INDEX "decision_snapshots_chain_order_idx" ON "decision_snapshots" USING btree ("created_at","decision_id");--> statement-breakpoint
+ALTER TABLE "decision_snapshots" ADD CONSTRAINT "decision_snapshots_prev_sha256_uq" UNIQUE NULLS NOT DISTINCT("prev_sha256");

@@ -138,12 +138,15 @@ export async function saveDecision(
         decision: decision!,
         codeSha: opts.codeSha,
       });
-      const { text, sha256 } = hashSnapshot(snapshot);
+      // Read the head inside the chain lock and hash it into this snapshot's
+      // digest, so rewriting the previous snapshot breaks this one (#233).
+      const prevSha256 = await chainHead(tx);
+      const { text, sha256 } = hashSnapshot(snapshot, prevSha256);
       await tx.insert(t.decisionSnapshots).values({
         decisionId: id,
         canonicalJson: text,
         sha256,
-        prevSha256: await chainHead(tx),
+        prevSha256,
         schemaVersion: SNAPSHOT_SCHEMA_VERSION,
         // Wall-clock time inside the lock keeps chain order and insertion order equal.
         createdAt: sql`clock_timestamp()`,
