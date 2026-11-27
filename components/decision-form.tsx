@@ -3,6 +3,11 @@
 import { useActionState, useId, useState } from "react";
 
 import { decideAction, type DecideState } from "@/app/actions";
+import {
+  HIGH_RISK_REASON_MESSAGE,
+  MIN_REASON_CHARACTERS,
+  meetsReasonMinimum,
+} from "@/lib/trust/reason";
 import { cn } from "@/lib/utils";
 
 const OPTIONS = [
@@ -31,6 +36,15 @@ export function DecisionForm({
   const isHighRiskOverride = choice === "APPROVE" && hasHighRiskFindings;
   const needsReason =
     choice === "HOLD" || choice === "REJECT" || isHighRiskOverride;
+
+  // Recheck the current value when the decision changes or the analyst types.
+  function validateReason(field: HTMLTextAreaElement | null) {
+    field?.setCustomValidity(
+      isHighRiskOverride && !meetsReasonMinimum(field.value)
+        ? HIGH_RISK_REASON_MESSAGE
+        : "",
+    );
+  }
 
   return (
     <form action={action} className="flex flex-col gap-3">
@@ -68,17 +82,19 @@ export function DecisionForm({
         <label htmlFor={reasonId} className="text-sm font-medium">
           Reason{" "}
           {isHighRiskOverride
-            ? "(required — HIGH-risk override)"
+            ? "(required, HIGH-risk override)"
             : needsReason
               ? "(required)"
               : "(optional)"}
         </label>
         <textarea
+          ref={validateReason}
+          onInput={(event) => validateReason(event.currentTarget)}
           id={reasonId}
           name="reason"
           rows={3}
           required={needsReason}
-          minLength={needsReason ? 5 : undefined}
+          minLength={needsReason ? MIN_REASON_CHARACTERS : undefined}
           aria-invalid={state.fieldErrors?.reason ? true : undefined}
           aria-describedby={
             state.fieldErrors?.reason ? `${reasonId}-error` : undefined
@@ -87,7 +103,7 @@ export function DecisionForm({
           placeholder={
             needsReason
               ? isHighRiskOverride
-                ? "Why is approval justified despite the HIGH-risk findings?"
+                ? HIGH_RISK_REASON_MESSAGE
                 : "What would change your mind?"
               : "Anything worth noting for the record"
           }

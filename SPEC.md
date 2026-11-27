@@ -37,7 +37,10 @@ User: a credit analyst at the lender.
 - **Invoice Check:** open a batch, see each invoice's status (Clear, Flagged,
   High risk), open an invoice to see the checks that fired and, mode allowing,
   the explanation with cited evidence inline. Approve, Hold or Reject with a
-  reason (required for Hold and Reject). Batch summary: face value, flagged
+  reason (required for Hold and Reject). Approving an invoice with an active
+  HIGH finding requires a reason of at least five characters, not counting
+  white space, control, format or default-ignorable code points; the snapshot
+  and audit event record the override. Batch summary: face value, flagged
   value, fundable amount (section 4.3).
 - **Portfolio Watch:** move an "as of" date through the 90-day history and see
   incidents appear. Each shows what changed, the evidence, and Acknowledge or

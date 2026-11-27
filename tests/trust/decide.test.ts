@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, lte, sql } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { CONFIG_VERSION } from "@/lib/checks/config";
 import { runAllBatches } from "@/lib/checks/runner";
 import { createMemoryDb, type Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -15,6 +16,8 @@ import { verifySnapshot } from "@/lib/trust/snapshot";
 
 let db: Db;
 let flagged: string[];
+let highInvoiceId: string;
+let clearInvoiceId: string;
 
 const shadow: Analyst = {
   sessionId: "sess-a",
@@ -25,7 +28,14 @@ const shadow: Analyst = {
 beforeAll(async () => {
   db = await createMemoryDb();
   await writeDataset(db, generate(DEV_PARAMS));
-  flagged = (await runAllBatches(db))
+  const results = await runAllBatches(db);
+  highInvoiceId = results.find((result) =>
+    result.findings.some((finding) => finding.severity === "HIGH"),
+  )!.invoiceId;
+  clearInvoiceId = results.find(
+    (result) => result.findings.length === 0,
+  )!.invoiceId;
+  flagged = results
     .filter((r) => r.findings.length > 0)
     .map((r) => r.invoiceId);
 }, 60_000);
@@ -35,6 +45,7 @@ async function decide(
   analyst = shadow,
   extra: Partial<{
     decision: "APPROVE" | "HOLD" | "REJECT";
+    reason: string;
     key: string;
     version: string;
   }> = {},
@@ -45,7 +56,7 @@ async function decide(
     {
       invoiceId,
       decision: extra.decision ?? "HOLD",
-      reason: "Waiting for the ledger export",
+      reason: extra.reason ?? "Waiting for the ledger export",
       reviewVersion: version,
       idempotencyKey: extra.key ?? randomUUID(),
     },
@@ -276,7 +287,6 @@ describe("saving a decision", () => {
         ),
       )
       .limit(1);
-    const { CONFIG_VERSION } = await import("@/lib/checks/config");
     await db.insert(t.agentRuns).values({
       id: "run_test_cited",
       subjectType: "INVOICE",
@@ -318,62 +328,95 @@ describe("saving a decision", () => {
     });
   });
 
-  it("requires a recorded override reason before approving a HIGH finding", async () => {
-    const [high] = await db
-      .select({ invoiceId: t.findings.invoiceId })
-      .from(t.findings)
-      .where(eq(t.findings.severity, "HIGH"))
-      .limit(1);
-    expect(high).toBeDefined();
-    const invoiceId = high!.invoiceId;
-    const reviewVersion = (await reviewState(db, invoiceId)).version;
-    const key = randomUUID();
-    const input = {
-      invoiceId,
-      decision: "APPROVE" as const,
-      reason: "   ",
-      reviewVersion,
-      idempotencyKey: key,
-    };
-    const before = await db
-      .select()
-      .from(t.decisions)
-      .where(eq(t.decisions.idempotencyKey, key));
-    expect(before).toHaveLength(0);
+  async function historyCounts() {
+    return Promise.all([
+      db.$count(t.decisions),
+      db.$count(t.decisionSnapshots),
+      db.$count(t.auditEvents),
+    ]);
+  }
 
-    const denied = await saveDecision(db, input, shadow, { codeSha: "test" });
-    expect(denied).toMatchObject({ ok: false, reason: "REASON_REQUIRED" });
-    expect(
-      await db
+  it.each([
+    ["an empty reason", ""],
+    ["eight spaces", " ".repeat(8)],
+    ["four characters padded with spaces", "  abcd  "],
+    ["zero-width spaces only", "\u200B".repeat(5)],
+    [
+      "four characters padded with invisible code points",
+      "a\u034Fb\uFFF9c\u0007d",
+    ],
+  ])(
+    "rejects a HIGH approval with %s before writing history",
+    async (_, reason) => {
+      const before = await historyCounts();
+      expect(
+        await decide(highInvoiceId, shadow, { decision: "APPROVE", reason }),
+      ).toMatchObject({ ok: false, reason: "REASON_REQUIRED" });
+      expect(await historyCounts()).toEqual(before);
+    },
+  );
+
+  it("requires a fresh review and a reason when a HIGH finding appears", async () => {
+    const invoiceId = clearInvoiceId;
+    const approve = (version: string, reason: string) =>
+      decide(invoiceId, shadow, { decision: "APPROVE", version, reason });
+
+    async function expectOverride(
+      decisionId: string,
+      highRiskOverride: boolean,
+      reason: string,
+    ) {
+      const [snapshot] = await db
         .select()
-        .from(t.decisions)
-        .where(eq(t.decisions.idempotencyKey, key)),
-    ).toHaveLength(0);
+        .from(t.decisionSnapshots)
+        .where(eq(t.decisionSnapshots.decisionId, decisionId));
+      const [audit] = await db
+        .select()
+        .from(t.auditEvents)
+        .where(eq(t.auditEvents.id, `aud_${decisionId}`));
+      expect(JSON.parse(snapshot.canonicalJson)).toMatchObject({
+        highRiskOverride,
+        decision: { reason },
+      });
+      expect(audit.payload).toMatchObject({ highRiskOverride, reason });
+    }
 
-    const accepted = await saveDecision(
-      db,
-      {
-        ...input,
-        reason: "Verified manual exception with supporting rationale",
-      },
-      shadow,
-      { codeSha: "test" },
+    const ordinary = await approve(
+      (await reviewState(db, invoiceId)).version,
+      "",
     );
-    expect(accepted.ok).toBe(true);
-    if (!accepted.ok) return;
-    const [snapshot] = await db
-      .select()
-      .from(t.decisionSnapshots)
-      .where(eq(t.decisionSnapshots.decisionId, accepted.decisionId));
-    expect(JSON.parse(snapshot!.canonicalJson).highRiskOverride).toBe(true);
-    expect(JSON.parse(snapshot!.canonicalJson).decision.reason).toBe(
-      "Verified manual exception with supporting rationale",
-    );
-    const [audit] = await db
-      .select()
-      .from(t.auditEvents)
-      .where(eq(t.auditEvents.id, `aud_${accepted.decisionId}`));
-    expect(audit?.payload).toMatchObject({ highRiskOverride: true });
+    if (!ordinary.ok) throw Error(ordinary.message);
+    await expectOverride(ordinary.decisionId, false, "");
+
+    // Capture the version after approval so only the new finding makes it stale.
+    const beforeHigh = (await reviewState(db, invoiceId)).version;
+    await db.insert(t.findings).values({
+      id: "finding_transition_high",
+      invoiceId,
+      checkId: "VOIDED",
+      severity: "HIGH",
+      details: { evidenceIds: [invoiceId] },
+      configVersion: CONFIG_VERSION,
+    });
+    const withHigh = (await reviewState(db, invoiceId)).version;
+    expect(withHigh).not.toBe(beforeHigh);
+    const before = await historyCounts();
+    const reason = "Ledger correction confirmed";
+    for (const staleReason of ["", reason]) {
+      expect(await approve(beforeHigh, staleReason)).toMatchObject({
+        ok: false,
+        reason: "STALE",
+      });
+    }
+    expect(await approve(withHigh, "")).toMatchObject({
+      ok: false,
+      reason: "REASON_REQUIRED",
+    });
+    expect(await historyCounts()).toEqual(before);
+
+    const override = await approve(withHigh, reason);
+    if (!override.ok) throw Error(override.message);
+    await expectOverride(override.decisionId, true, reason);
   });
 
   it("requires a reason to hold or reject", async () => {

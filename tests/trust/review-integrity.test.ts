@@ -1,18 +1,23 @@
 import { randomUUID } from "node:crypto";
 
 import { eq, sql } from "drizzle-orm";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CONFIG_VERSION } from "@/lib/checks/config";
 import { createMemoryDb, type Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 import { getInvoiceReview } from "@/lib/queries/invoice";
+import { loadReplay } from "@/lib/queries/trust";
 import { canonicalJson, sha256 } from "@/lib/trust/canonical";
 import { saveDecision, type DecisionInput } from "@/lib/trust/decide";
 import { reviewState } from "@/lib/trust/review";
 import { buildSnapshot, verifySnapshot } from "@/lib/trust/snapshot";
 
 let db: Db;
+vi.mock("@/lib/db/client", async (original) => ({
+  ...(await original<typeof import("@/lib/db/client")>()),
+  getDb: () => Promise.resolve(db),
+}));
 const invoiceId = "inv_review_integrity";
 const analyst = {
   sessionId: "review-integrity",
@@ -104,7 +109,7 @@ async function input(key = randomUUID()): Promise<DecisionInput> {
   return {
     invoiceId,
     decision: "APPROVE",
-    reason: "",
+    reason: "Ledger variance independently verified",
     reviewVersion: (await reviewState(db, invoiceId)).version,
     idempotencyKey: key,
   };
@@ -238,9 +243,13 @@ describe("reviewed financial state (#182)", () => {
       expect((await reviewState(db, invoiceId)).version).not.toBe(
         submitted.reviewVersion,
       );
-      expect(
-        await saveDecision(db, submitted, analyst, { codeSha: "test" }),
-      ).toMatchObject({ ok: false, reason: "STALE" });
+      // A missing override reason must not mask the stale review.
+      for (const reason of [submitted.reason, ""])
+        expect(
+          await saveDecision(db, { ...submitted, reason }, analyst, {
+            codeSha: "test",
+          }),
+        ).toMatchObject({ ok: false, reason: "STALE" });
       await expectNoHistory();
     },
     90000,
@@ -316,6 +325,56 @@ describe("reviewed financial state (#182)", () => {
   }, 90000);
 });
 
+it("replays a schema-4 snapshot recorded before the override marker", async () => {
+  // #250 adds highRiskOverride without bumping the schema version, so a
+  // schema-4 snapshot may lack it. Replay and verification must accept that.
+  const submitted = { ...(await input()), reason: "" };
+  const state = await reviewState(db, invoiceId);
+  const [decision] = await db
+    .insert(t.decisions)
+    .values({
+      id: `dec_${submitted.idempotencyKey}_${invoiceId}`,
+      invoiceId,
+      decision: submitted.decision,
+      reason: submitted.reason,
+      analystSessionId: analyst.sessionId,
+      analystDisplayName: analyst.displayName,
+      mode: analyst.mode,
+      explanationIdAtDecision: null,
+      aiContentExposedBeforeDecision: false,
+      reviewVersion: submitted.reviewVersion,
+      idempotencyKey: submitted.idempotencyKey,
+      simulated: false,
+      decidedAt: new Date(),
+    })
+    .returning();
+  const beforeMarker = Object.fromEntries(
+    Object.entries(
+      buildSnapshot(state, {
+        invoiceId,
+        decision,
+        codeSha: "before-override-marker",
+      }),
+    ).filter(([key]) => key !== "highRiskOverride"),
+  );
+  const canonical = canonicalJson({ ...beforeMarker, schemaVersion: 4 });
+  await db.insert(t.decisionSnapshots).values({
+    decisionId: decision.id,
+    canonicalJson: canonical,
+    sha256: sha256(canonical),
+    prevSha256: null,
+    schemaVersion: 4,
+  });
+  const replay = await loadReplay(decision.id);
+  expect(replay?.frozen.schemaVersion).toBe(4);
+  expect(replay?.frozen.highRiskOverride).toBeUndefined();
+  expect(replay?.frozen.decision.reason).toBe("");
+  expect(replay?.verification).toEqual({
+    checksumMatches: true,
+    chainMatches: true,
+  });
+}, 90000);
+
 describe("full submission UUID decision IDs (#185)", () => {
   it("saves different full UUIDs with the same prefix and preserves exact retries", async () => {
     const first = await input("decafbad-0000-4000-8000-000000000001");
@@ -355,7 +414,7 @@ describe("full submission UUID decision IDs (#185)", () => {
   }, 90000);
 
   it("returns historical shortened IDs without rewriting an existing snapshot", async () => {
-    const submitted = await input();
+    const submitted = { ...(await input()), reason: "" };
     const state = await reviewState(db, invoiceId);
     const historicalId = `dec_${submitted.idempotencyKey.slice(0, 8)}_${invoiceId}`;
     const [decision] = await db
@@ -380,7 +439,12 @@ describe("full submission UUID decision IDs (#185)", () => {
       Object.entries(
         buildSnapshot(state, { invoiceId, decision, codeSha: "old-version" }),
       ).filter(
-        ([key]) => !["reviewedState", "reviewedStateSha256"].includes(key),
+        ([key]) =>
+          ![
+            "reviewedState",
+            "reviewedStateSha256",
+            "highRiskOverride",
+          ].includes(key),
       ),
     );
     const canonical = canonicalJson({ ...oldShape, schemaVersion: 3 });
@@ -394,9 +458,13 @@ describe("full submission UUID decision IDs (#185)", () => {
     expect(
       await saveDecision(db, submitted, analyst, { codeSha: "test" }),
     ).toEqual({ ok: true, duplicate: true, decisionId: historicalId });
-    expect((await db.select().from(t.decisionSnapshots))[0].canonicalJson).toBe(
-      canonical,
-    );
+    const replay = await loadReplay(historicalId);
+    expect(replay?.snap.canonicalJson).toBe(canonical);
+    expect(replay?.frozen).not.toHaveProperty("highRiskOverride");
+    expect(replay?.verification).toEqual({
+      checksumMatches: true,
+      chainMatches: true,
+    });
   }, 90000);
 });
 

@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 
+import { HIGH_RISK_REASON_MESSAGE, meetsReasonMinimum } from "./reason";
 import { loadReviewedState } from "./review";
 import {
   ReviewTransactionConflict,
@@ -99,6 +100,8 @@ export async function saveDecision(
           message: "Invoice not found.",
         };
 
+      // Staleness comes before the override reason: a stale review always
+      // returns STALE, so the analyst reloads before anything else.
       const state = await loadReviewedState(tx, input.invoiceId);
       if (state.version !== input.reviewVersion) {
         return {
@@ -114,12 +117,11 @@ export async function saveDecision(
       const highRiskOverride =
         input.decision === "APPROVE" &&
         state.findings.some((finding) => finding.severity === "HIGH");
-      if (highRiskOverride && input.reason.trim().length < 5)
+      if (highRiskOverride && !meetsReasonMinimum(input.reason))
         return {
           ok: false,
           reason: "REASON_REQUIRED",
-          message:
-            "Explain why you are approving an invoice with a HIGH finding (at least 5 characters).",
+          message: HIGH_RISK_REASON_MESSAGE,
         };
 
       const [exposure] = await tx
