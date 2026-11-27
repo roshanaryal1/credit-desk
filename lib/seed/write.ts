@@ -76,6 +76,13 @@ export async function replaceDataset(
   force = false,
 ): Promise<void> {
   await db.transaction(async (tx) => {
+    // Owner-only DDL. The locks also prevent concurrent decision inserts
+    // between the live count and reset. An abort restores the trigger state.
+    for (const table of t.APPEND_ONLY_TABLES) {
+      await tx.execute(
+        sql`ALTER TABLE public.${sql.identifier(table)} DISABLE TRIGGER reject_truncate`,
+      );
+    }
     const live = await liveDecisionCount(tx);
     if (live > 0 && !force) {
       throw new Error(
@@ -90,7 +97,7 @@ export async function replaceDataset(
     // Identity state (#109) is not portfolio data and survives a reseed.
     const names = tables.rows
       .filter((row) => !IDENTITY_TABLES.has(row.tablename))
-      .map((row) => `"${row.tablename.replaceAll('"', '""')}"`)
+      .map((row) => `public."${row.tablename.replaceAll('"', '""')}"`)
       .join(", ");
     // Client grants reference clients, so the cascade would clear them; keep
     // them and restore those whose client still exists after the reseed.
@@ -102,6 +109,11 @@ export async function replaceDataset(
       .where(inArray(t.auditEvents.action, IDENTITY_AUDIT_ACTIONS));
     // TRUNCATE and every insert are committed together or not at all.
     if (names) await tx.execute(sql.raw(`TRUNCATE ${names} CASCADE`));
+    for (const table of t.APPEND_ONLY_TABLES) {
+      await tx.execute(
+        sql`ALTER TABLE public.${sql.identifier(table)} ENABLE TRIGGER reject_truncate`,
+      );
+    }
     await writeDataset(tx, ds);
     const clientIds = new Set(ds.clients.map((c) => c.id));
     const kept = grants.filter((g) => clientIds.has(g.clientId));

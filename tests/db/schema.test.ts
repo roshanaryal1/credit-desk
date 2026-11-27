@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { createMemoryDb, type Db } from "@/lib/db/client";
@@ -61,6 +61,7 @@ describe("schema", () => {
         "agent_runs",
         "agent_evidence_manifests",
         "audit_events",
+        "decisions",
         "decision_snapshots",
         "explanations",
         "incident_events",
@@ -68,6 +69,38 @@ describe("schema", () => {
         "credit_case_events",
       ].sort(),
     );
+  });
+
+  it.each(APPEND_ONLY_TABLES)("rejects TRUNCATE on %s", async (table) => {
+    // CASCADE reaches the trigger even when another table has an inbound FK.
+    await expect(
+      db.execute(sql`TRUNCATE public.${sql.identifier(table)} CASCADE`),
+    ).rejects.toMatchObject({
+      cause: { code: "P0001", message: `table ${table} is append-only` },
+    });
+  });
+
+  it("keeps the guard effective for a non-owner granted TRUNCATE", async () => {
+    await db.execute(sql`CREATE ROLE truncate_writer`);
+    await db.execute(
+      sql`GRANT TRUNCATE ON public.audit_events TO truncate_writer`,
+    );
+    await expect(
+      db.transaction(async (tx) => {
+        await tx.execute(sql`SET LOCAL ROLE truncate_writer`);
+        await tx.execute(sql`TRUNCATE public.audit_events`);
+      }),
+    ).rejects.toMatchObject({
+      cause: { code: "P0001", message: "table audit_events is append-only" },
+    });
+    await expect(
+      db.transaction(async (tx) => {
+        await tx.execute(sql`SET LOCAL ROLE truncate_writer`);
+        await tx.execute(
+          sql`ALTER TABLE public.audit_events DISABLE TRIGGER reject_truncate`,
+        );
+      }),
+    ).rejects.toMatchObject({ cause: { code: "42501" } });
   });
 
   it("rejects UPDATE and DELETE on append-only tables", async () => {

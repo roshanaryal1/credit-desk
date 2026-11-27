@@ -1,4 +1,4 @@
-import { count } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { addDays, daysBetween } from "@/lib/dates";
@@ -158,6 +158,52 @@ describe("synthetic data generator", () => {
     }
   });
 
+  it("protects a live decision until the owner forces a reseed", async () => {
+    const db = await createMemoryDb();
+    await writeDataset(db, dev);
+    const [decision] = await db
+      .insert(t.decisions)
+      .values({
+        id: "live-decision",
+        invoiceId: dev.invoices[0]!.id,
+        decision: "HOLD",
+        reason: "Pending review",
+        analystSessionId: "session",
+        analystDisplayName: "Analyst",
+        mode: "SHADOW",
+        aiContentExposedBeforeDecision: false,
+        reviewVersion: "version",
+        idempotencyKey: "submission",
+        simulated: false,
+        decidedAt: new Date(),
+      })
+      .returning();
+
+    const target = eq(t.decisions.id, "live-decision");
+    const appendOnly = {
+      cause: { code: "P0001", message: "table decisions is append-only" },
+    };
+    await expect(
+      db.update(t.decisions).set({ decision: "APPROVE" }).where(target),
+    ).rejects.toMatchObject(appendOnly);
+    await expect(db.delete(t.decisions).where(target)).rejects.toMatchObject(
+      appendOnly,
+    );
+    await expect(replaceDataset(db, dev)).rejects.toThrow(
+      "1 live decisions exist",
+    );
+    await expect(
+      db.execute(sql`TRUNCATE public.decisions CASCADE`),
+    ).rejects.toMatchObject(appendOnly);
+    expect(await db.select().from(t.decisions)).toEqual([decision]);
+
+    await replaceDataset(db, dev, true);
+    expect(await db.select().from(t.decisions)).toEqual([]);
+    await expect(
+      db.execute(sql`TRUNCATE public.decisions CASCADE`),
+    ).rejects.toMatchObject(appendOnly);
+  }, 60_000);
+
   it("rolls back an entire reset when a later insert fails", async () => {
     const db = await createMemoryDb();
     await replaceDataset(db, dev);
@@ -165,7 +211,9 @@ describe("synthetic data generator", () => {
 
     // Duplicated client PK forces failure after TRUNCATE inside the transaction.
     const invalid = { ...dev, clients: [...dev.clients, dev.clients[0]!] };
-    await expect(replaceDataset(db, invalid)).rejects.toThrow();
+    await expect(replaceDataset(db, invalid)).rejects.toMatchObject({
+      cause: { code: "23505" },
+    });
 
     const [after] = await db.select({ n: count() }).from(t.invoices);
     expect(after?.n).toBe(before?.n);

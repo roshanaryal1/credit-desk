@@ -64,6 +64,13 @@
       "when": 1795762240665,
       "tag": "0008_chain_link_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795762689579,
+      "tag": "0009_append_only_decisions_and_truncate",
+      "breakpoints": true
     }
   ]
 }
