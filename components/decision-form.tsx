@@ -29,7 +29,8 @@ export function DecisionForm({
   const [key] = useState(() => crypto.randomUUID());
   const reasonId = useId();
   const isHighRiskOverride = choice === "APPROVE" && hasHighRiskFindings;
-  const needsReason = choice === "HOLD" || choice === "REJECT" || isHighRiskOverride;
+  const needsReason =
+    choice === "HOLD" || choice === "REJECT" || isHighRiskOverride;
 
   return (
     <form action={action} className="flex flex-col gap-3">
@@ -65,7 +66,12 @@ export function DecisionForm({
       </fieldset>
       <div className="flex flex-col gap-1">
         <label htmlFor={reasonId} className="text-sm font-medium">
-          Reason {isHighRiskOverride ? "(required — HIGH-risk override)" : needsReason ? "(required)" : "(optional)"}
+          Reason{" "}
+          {isHighRiskOverride
+            ? "(required — HIGH-risk override)"
+            : needsReason
+              ? "(required)"
+              : "(optional)"}
         </label>
         <textarea
           id={reasonId}

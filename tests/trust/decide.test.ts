@@ -352,7 +352,10 @@ describe("saving a decision", () => {
 
     const accepted = await saveDecision(
       db,
-      { ...input, reason: "Verified manual exception with supporting rationale" },
+      {
+        ...input,
+        reason: "Verified manual exception with supporting rationale",
+      },
       shadow,
       { codeSha: "test" },
     );

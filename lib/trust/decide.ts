@@ -42,7 +42,11 @@ export interface Analyst {
 
 export type DecideResult =
   | { ok: true; decisionId: string; duplicate: boolean }
-  | { ok: false; reason: "STALE" | "NOT_FOUND" | "CONFLICT" | "REASON_REQUIRED"; message: string };
+  | {
+      ok: false;
+      reason: "STALE" | "NOT_FOUND" | "CONFLICT" | "REASON_REQUIRED";
+      message: string;
+    };
 
 // Serialises snapshot-chain appends across sessions.
 const CHAIN_LOCK = 4_242_001;
