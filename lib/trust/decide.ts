@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
 
+import { HIGH_RISK_REASON_MESSAGE, meetsReasonMinimum } from "./reason";
 import { loadReviewedState } from "./review";
 import {
   ReviewTransactionConflict,
@@ -42,7 +43,11 @@ export interface Analyst {
 
 export type DecideResult =
   | { ok: true; decisionId: string; duplicate: boolean }
-  | { ok: false; reason: "STALE" | "NOT_FOUND" | "CONFLICT"; message: string };
+  | {
+      ok: false;
+      reason: "STALE" | "NOT_FOUND" | "CONFLICT" | "REASON_REQUIRED";
+      message: string;
+    };
 
 // Serialises snapshot-chain appends across sessions.
 const CHAIN_LOCK = 4_242_001;
@@ -95,6 +100,8 @@ export async function saveDecision(
           message: "Invoice not found.",
         };
 
+      // Staleness comes before the override reason: a stale review always
+      // returns STALE, so the analyst reloads before anything else.
       const state = await loadReviewedState(tx, input.invoiceId);
       if (state.version !== input.reviewVersion) {
         return {
@@ -104,6 +111,18 @@ export async function saveDecision(
             "This invoice changed while you were reviewing it. Reload to see the latest findings and decisions.",
         };
       }
+
+      // Evaluate against the same reviewed findings and version that are frozen
+      // in the snapshot. A client-side required field is never sufficient.
+      const highRiskOverride =
+        input.decision === "APPROVE" &&
+        state.findings.some((finding) => finding.severity === "HIGH");
+      if (highRiskOverride && !meetsReasonMinimum(input.reason))
+        return {
+          ok: false,
+          reason: "REASON_REQUIRED",
+          message: HIGH_RISK_REASON_MESSAGE,
+        };
 
       const [exposure] = await tx
         .select({ at: t.exposures.exposedAt })
@@ -160,6 +179,7 @@ export async function saveDecision(
           simulated: opts.simulated ?? false,
           exposedBeforeDecision: exposed,
           reason: input.reason,
+          highRiskOverride,
           findings: state.findings.map((f) => f.id),
           explanationId: state.explanation?.explanation.id ?? null,
           model: state.explanation?.run.model ?? null,

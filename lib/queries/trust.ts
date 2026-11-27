@@ -64,6 +64,8 @@ export async function loadReplay(decisionId: string) {
 }
 
 export interface FrozenSnapshot {
+  // Snapshots recorded before the override policy omit this field.
+  highRiskOverride?: boolean;
   schemaVersion: number;
   codeSha: string;
   configVersion: string;

@@ -110,7 +110,14 @@ export async function decideAction(
   const result = await saveDecision(await getDb(), parsed.data, analyst, {
     codeSha: CODE_SHA,
   });
-  if (!result.ok) return { status: "error", message: result.message };
+  if (!result.ok)
+    return {
+      status: "error",
+      message: result.message,
+      ...(result.reason === "REASON_REQUIRED"
+        ? { fieldErrors: { reason: result.message } }
+        : {}),
+    };
   revalidatePath("/", "layout");
   return {
     status: "saved",
