@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, or } from "drizzle-orm";
 
 import type { Db } from "@/lib/db/client";
 import * as t from "@/lib/db/schema";
@@ -7,7 +7,29 @@ import type { ReviewedState } from "./review";
 import { evidenceSubset } from "./review-evidence";
 import { canonicalJson, sha256 } from "./canonical";
 
-export const SNAPSHOT_SCHEMA_VERSION = 4;
+/**
+ * v5 (#233): the digest covers the previous snapshot's hash, so rewriting a
+ * snapshot also breaks the next one's digest. v1 to v4 hashed the canonical
+ * JSON alone and are still verified that way.
+ */
+export const SNAPSHOT_SCHEMA_VERSION = 5;
+
+/** First schema version whose digest includes the previous hash. */
+const LINKED_DIGEST_VERSION = 5;
+
+/**
+ * The stored `sha256` for a snapshot. From v5 it is
+ * SHA-256("v5\n" + previous hash or "" + "\n" + canonical JSON); the previous
+ * hash is 64 hex characters or empty, so the framing is unambiguous.
+ */
+export function snapshotDigest(
+  prevSha256: string | null,
+  canonical: string,
+  schemaVersion: number = SNAPSHOT_SCHEMA_VERSION,
+): string {
+  if (schemaVersion < LINKED_DIGEST_VERSION) return sha256(canonical);
+  return sha256(`v${LINKED_DIGEST_VERSION}\n${prevSha256 ?? ""}\n${canonical}`);
+}
 
 export interface SnapshotInput {
   invoiceId: string;
@@ -106,7 +128,9 @@ export async function verifySnapshot(
     .from(t.decisionSnapshots)
     .where(eq(t.decisionSnapshots.decisionId, decisionId));
   if (!snap) return null;
-  const checksumMatches = sha256(snap.canonicalJson) === snap.sha256;
+  const checksumMatches =
+    snapshotDigest(snap.prevSha256, snap.canonicalJson, snap.schemaVersion) ===
+    snap.sha256;
   // The link must name the snapshot inserted immediately before this one;
   // null is only valid for the first snapshot in the chain.
   const [prev] = await db
@@ -130,7 +154,80 @@ export async function verifySnapshot(
   return { checksumMatches, chainMatches };
 }
 
-export function hashSnapshot(snapshot: unknown) {
+/** Canonical JSON of a new snapshot and its v5 digest, linked to `prevSha256`. */
+export function hashSnapshot(snapshot: unknown, prevSha256: string | null) {
   const text = canonicalJson(snapshot);
-  return { text, sha256: sha256(text) };
+  return { text, sha256: snapshotDigest(prevSha256, text) };
+}
+
+export interface ChainBreak {
+  decisionId: string;
+  /** CHECKSUM: the row's digest does not match; LINK: it does not name the row before it. */
+  reason: "CHECKSUM" | "LINK";
+}
+
+export interface ChainResult {
+  ok: boolean;
+  checked: number;
+  firstBreak: ChainBreak | null;
+}
+
+const CHAIN_PAGE = 500;
+
+type SnapshotRow = typeof t.decisionSnapshots.$inferSelect;
+
+/**
+ * Walks every snapshot in insertion order and checks each digest and each link.
+ * Pages by (created_at, decision_id) so memory stays bounded as history grows.
+ */
+export async function verifyChain(
+  db: Pick<Db, "select">,
+): Promise<ChainResult> {
+  let previous: string | null = null;
+  let cursor: { createdAt: Date; decisionId: string } | null = null;
+  let checked = 0;
+  for (;;) {
+    const page: SnapshotRow[] = await db
+      .select()
+      .from(t.decisionSnapshots)
+      .where(
+        cursor
+          ? or(
+              gt(t.decisionSnapshots.createdAt, cursor.createdAt),
+              and(
+                eq(t.decisionSnapshots.createdAt, cursor.createdAt),
+                gt(t.decisionSnapshots.decisionId, cursor.decisionId),
+              ),
+            )
+          : undefined,
+      )
+      .orderBy(
+        asc(t.decisionSnapshots.createdAt),
+        asc(t.decisionSnapshots.decisionId),
+      )
+      .limit(CHAIN_PAGE);
+    for (const row of page) {
+      checked += 1;
+      if (row.prevSha256 !== previous)
+        return {
+          ok: false,
+          checked,
+          firstBreak: { decisionId: row.decisionId, reason: "LINK" },
+        };
+      if (
+        snapshotDigest(row.prevSha256, row.canonicalJson, row.schemaVersion) !==
+        row.sha256
+      )
+        return {
+          ok: false,
+          checked,
+          firstBreak: { decisionId: row.decisionId, reason: "CHECKSUM" },
+        };
+      previous = row.sha256;
+    }
+    if (page.length < CHAIN_PAGE)
+      return { ok: true, checked, firstBreak: null };
+    const last: SnapshotRow = page[page.length - 1]!;
+    cursor = { createdAt: last.createdAt, decisionId: last.decisionId };
+  }
 }

@@ -11,6 +11,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
@@ -372,17 +373,29 @@ export const decisions = pgTable(
   ],
 );
 
-export const decisionSnapshots = pgTable("decision_snapshots", {
-  decisionId: text("decision_id")
-    .primaryKey()
-    .references(() => decisions.id),
-  // Canonical JSON stored as text: jsonb would reorder keys and break the hash.
-  canonicalJson: text("canonical_json").notNull(),
-  sha256: text("sha256").notNull(),
-  prevSha256: text("prev_sha256"),
-  schemaVersion: integer("schema_version").notNull(),
-  createdAt: instant("created_at").notNull().defaultNow(),
-});
+export const decisionSnapshots = pgTable(
+  "decision_snapshots",
+  {
+    decisionId: text("decision_id")
+      .primaryKey()
+      .references(() => decisions.id),
+    // Canonical JSON stored as text: jsonb would reorder keys and break the hash.
+    canonicalJson: text("canonical_json").notNull(),
+    sha256: text("sha256").notNull(),
+    prevSha256: text("prev_sha256"),
+    schemaVersion: integer("schema_version").notNull(),
+    createdAt: instant("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    // One successor per snapshot and one genesis: a fork in the chain is
+    // rejected by the database, not only by the global decision lock (#233).
+    unique("decision_snapshots_prev_sha256_uq")
+      .on(t.prevSha256)
+      .nullsNotDistinct(),
+    // chainHead and verifyChain order by these columns on every decision.
+    index("decision_snapshots_chain_order_idx").on(t.createdAt, t.decisionId),
+  ],
+);
 
 // First delivery of validated agent output to a writable reviewer per
 // session/invoice, including before revisions (SPEC 9.1).
