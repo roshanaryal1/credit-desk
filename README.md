@@ -3,8 +3,10 @@
 A prototype credit operations desk for invoice finance. Deterministic checks
 flag risky invoices before funding, watch rules track the funded book, an LLM
 agent explains each flag and has to cite the records behind every claim, a
-validator rejects anything it cannot ground, and an analyst makes every
-decision. A Trust Panel measures how often the agent agrees with analysts who
+validator rejects citations to records no tool returned and checks the amounts
+and dates it can parse against the cited records, and an analyst makes every
+decision. Some free-text money formats still get past the validator
+([#186](https://github.com/roshanaryal1/credit-desk/issues/186)). A Trust Panel measures how often the agent agrees with analysts who
 decided without seeing it, and replays any decision exactly as it was made.
 
 > Prototype for discussion. All data is synthetic.
@@ -131,7 +133,7 @@ flowchart LR
   FN --> UI[Analyst UI]
   E --> UI
   INC --> UI
-  UI -- decision --> T[One transaction:<br/>decision + canonical snapshot<br/>+ SHA-256 chain + audit event]
+  UI -- decision --> T[One transaction:<br/>decision + canonical snapshot<br/>+ SHA-256 checksum + audit event]
   T --> TP[Trust Panel:<br/>agreement, evaluation, replay]
 ```
 
@@ -140,7 +142,7 @@ flowchart LR
 | Checks | `lib/checks/` | Pure functions, thresholds in `config.ts` with `CONFIG_VERSION`; context built as of the submission date (ADR 0006) |
 | Watch | `lib/watch/` | Pure functions over the book as of a date; idempotent runner with incident lifecycle |
 | Agent | `lib/agent/` | OpenAI-compatible client (Groq by default), scoped tools, `submit_explanation` tool, citation validator, versioned prompts (ADR 0002, 0003) |
-| Trust | `lib/trust/` | Shadow-mode eligibility, kappa and Wilson intervals, canonical-JSON snapshots with a hash chain (ADR 0004, 0005) |
+| Trust | `lib/trust/` | Shadow-mode eligibility, kappa and Wilson intervals, canonical-JSON snapshots with a SHA-256 checksum and a stored link to the previous snapshot; the link is not yet inside the hash, so the chain is not tamper-evident ([#233](https://github.com/roshanaryal1/credit-desk/issues/233)) (ADR 0004, 0005) |
 | Data | `lib/db/`, `lib/seed/` | Drizzle schema with append-only triggers; deterministic 90-day generator with reference labels |
 | App | `app/`, `components/` | Next.js 16 App Router, Tailwind, shadcn/ui; password gate in `proxy.ts` |
 

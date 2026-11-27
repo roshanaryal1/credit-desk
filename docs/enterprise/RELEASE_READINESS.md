@@ -16,7 +16,7 @@ Since this assessment, PRs #195, #196, #198, #200, #201, #202, #205, #206, #209,
 | # | Gate | Status | Evidence or blocker |
 | --- | --- | --- | --- |
 | 1 | Critical business workflows complete end to end | Met (synthetic scope) | CI browser smoke; probe W decision persistence; E2E report |
-| 2 | No unresolved P0 or P1 defects | **Not met** | P0 for real data: #109 (identity), #105 (maker-checker). P1 fixes open in PRs #195, #198 and PR #208, not merged |
+| 2 | No unresolved P0 or P1 defects | **Not met** | P0 for real data: #109 (identity), #105 (maker-checker). PRs #195 and #198 since merged; PR #208 closed unmerged and replaced by #212 (open). Also open: #233 (snapshot chain not tamper-evident) |
 | 3 | No unauthorized access or cross-tenant exposure | **Not met** for real data | Route and write boundaries verified for personas (probe R, W). There is no tenant model, and token replay after sign-out is accepted (probe S2) |
 | 4 | Financial calculations pass independent tests | Met (calculation) | 20,000-case BigInt oracle; unit tests. Policy values still need a policy owner |
 | 5 | All supported roles have verified journeys | Partially met | Five personas verified for routes and writes; no Administrator role; CHECKER has no workflow |

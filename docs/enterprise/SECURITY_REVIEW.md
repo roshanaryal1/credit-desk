@@ -31,7 +31,7 @@ Credit Desk handles **synthetic data only** and is protected by a shared demo pa
 | Secrets | Secrets only in environment; `server-only` imports; client bundle scan in CI (`check:bundle`) | n/a | Bundle scan passed on each branch |
 | Injection (SQL) | Drizzle query builder with parameters; `sql` templates bind values | n/a | Inspected; no string-built SQL found in request paths |
 | Export injection | Portfolio and memo exports escape Markdown, HTML and formula prefixes | n/a | Unit tests exist (`memo-export.test.ts`) |
-| Audit integrity | Append-only tables with a trigger; SHA-256 snapshot chain | n/a | Chain verified by tests and the real PostgreSQL script |
+| Audit integrity | Append-only tables with a trigger; SHA-256 snapshot checksums | P1 | Per-snapshot checksums verified by tests and the real PostgreSQL script. `prev_sha256` is stored beside the hashed content, not inside it, so the chain is not tamper-evident against database access. Open: #233 |
 | Dependency audit | `npm audit` reported 0 vulnerabilities in the previous release session | n/a | Not re-run in this session; #181 updates versions |
 | Local toolchain | A local tooling check reported the workstation's Node.js 26.10.0 as affected by a Brotli decoder vulnerability (CVE-2026-111497). **[UNVERIFIED]**: not confirmed against the Node.js security advisories in this audit | Ops | Confirm at nodejs.org security releases, then upgrade the workstation. CI and Vercel use `.nvmrc` |
 

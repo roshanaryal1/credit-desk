@@ -13,7 +13,7 @@ const LAYERS = [
   },
   {
     name: "Validator",
-    body: "Rejects any explanation that cites a record no tool returned, or states an amount or date that is not in the records it cites.",
+    body: "Rejects any explanation that cites a record no tool returned, and checks the amounts and dates it can parse against the records it cites. Some free-text money formats are not caught yet.",
   },
   {
     name: "Analyst",
@@ -21,7 +21,7 @@ const LAYERS = [
   },
   {
     name: "Snapshot",
-    body: "Freezes everything the decision rested on, with a SHA-256 checksum chained to the previous decision, so it can be replayed exactly.",
+    body: "Freezes everything the decision rested on, with a SHA-256 checksum, so it can be replayed exactly. Each snapshot records the previous one's checksum, but that link is not yet covered by the hash, so it does not stop someone with database access from rewriting history.",
   },
 ];
 
