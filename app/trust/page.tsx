@@ -28,7 +28,7 @@ export default function TrustPage({ searchParams }: PageProps<"/trust">) {
     <>
       <PageHeader
         title="Trust Panel"
-        description="How often the agent agrees with analysts who decided without seeing it. A measurement for people to discuss, not a switch to automate."
+        description="How often the agent agrees with shadow-mode decisions whose deciding session had no recorded exposure to its output. A measurement for people to discuss, not a switch to automate."
       />
       <TrustTabs current="/trust" />
       <Suspense fallback={<Loading label="Calculating agreement..." />}>

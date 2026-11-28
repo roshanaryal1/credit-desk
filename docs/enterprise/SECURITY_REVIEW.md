@@ -14,11 +14,11 @@ Credit Desk handles **synthetic data only** and is protected by a shared demo pa
 | Session revocation | Signed stateless cookie; replay after sign-out still accepted until expiry (12 h, or 1 h public) | P1 for real data | Fixed for OIDC sessions in PR #219 (hashed database sessions). Demo cookies still stateless (probe S2) |
 | Tenant isolation | No tenant model. The CLIENT persona is pinned to `cli_0001` server-side; staff personas see every synthetic client | Release blocker for real data | Client grants and realm binding in PR #219 (OIDC mode). Portfolio-wide lists need per-grant filtering |
 | Route authorization | `proxy.ts` persona prefixes, including RSC and export routes | n/a | Verified: 24 denials and 2 allowed (probe R) |
-| Write authorization | Each server action checks `canPerformDemoWrite` | n/a | Verified by persistence for CLIENT, CHECKER, AUDITOR and public ANALYST (probe W) |
+| Write authorization | Each server action checks `canPerformDemoWrite` | n/a | Verified by persistence for CLIENT, CHECKER, AUDITOR and public ANALYST at the baseline (probe W). PR #218 later gave the public ANALYST session the analyst's write access by design; isolating those writes is open (#225) |
 | Token integrity | HMAC-SHA256, expiry, persona allow-list | n/a | Verified: tampered, expired, unknown persona and wrong key rejected (probe A) |
 | Security headers | No CSP, frame-ancestors, XFO, Referrer-Policy or Permissions-Policy on the hosted site (HSTS present) | P2 | Fixed in PR #200 (#197) |
 | Denied action UX | Expired or wrong-persona form submit ends in a client error screen | P2 | Fixed in PR #202 (#199) |
-| Prompt injection | Source-record text reaches the model; no prompt rule; no tests | P2 | Fixed in PR #206 (#204); validator remains the guarantee |
+| Prompt injection | Source-record text reaches the model; no prompt rule; no tests | P2 | Fixed in PR #206 (#204); the validator remains the main control, with the gaps in the next row |
 | AI money grounding | Unsupported monetary forms could pass the citation validator | P1 | Open. PR #208 closed unmerged after free-text parsing did not converge; replaced by structured figures (#212) |
 | Stale approvals | Decisions could be recorded after reviewed financial facts changed | P1 | Fixed in PR #198 (#182, #185) |
 | Provider diagnostics | Raw provider errors could reach logs and outcomes | P1 | Fixed in PR #195 (#188) |
@@ -44,7 +44,7 @@ Credit Desk handles **synthetic data only** and is protected by a shared demo pa
 3. **Backup and recovery.** The hosted database is a Neon free project. Point-in-time restore behaviour and a restore drill have not been verified in this audit.
 4. **Operational monitoring.** Structured logs exist for watch runs and agent outcomes. There are no alerts, no error-rate SLOs and no incident runbook for security events.
 
-**Accepted for the synthetic demo:** shared password, self-selected personas, public one-click read-only sessions on a deployment flagged `SYNTHETIC`.
+**Accepted for the synthetic demo:** shared password, self-selected personas, and public one-click sessions on a deployment flagged `SYNTHETIC`. Those sessions were read-only when this review accepted them. Since PR #218 the public credit analyst session can write synthetic decisions and incident notes to the shared database; isolating those writes blocks the public demo launch (#225).
 
 ## Deployment notes
 

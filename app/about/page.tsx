@@ -21,7 +21,7 @@ const LAYERS = [
   },
   {
     name: "Snapshot",
-    body: "Freezes everything the decision rested on, with a SHA-256 checksum, so it can be replayed exactly. Each snapshot records the previous one's checksum, but that link is not yet covered by the hash, so it does not stop someone with database access from rewriting history.",
+    body: "Saves the decision with its findings, evidence and the agent's explanation as canonical JSON with a SHA-256 checksum. Replay shows that saved record rather than recreating the analyst's screen: it can include agent output withheld in shadow mode, and legacy explanations carry reconstructed evidence, not an original tool transcript. Each snapshot records the previous one's checksum, but that link is not yet covered by the hash, so it does not stop someone with database access from rewriting history.",
   },
 ];
 
@@ -47,8 +47,8 @@ export default function AboutPage() {
           Rules detect, the model explains, a validator checks the model, and a
           person decides. The agent never approves, funds or changes anything.
           Shadow mode measures how often the agent agrees with analysts before
-          anyone relies on it, and every decision can be replayed exactly as it
-          was made.
+          anyone relies on it, and every decision saves a checksummed record
+          that the Trust Panel can replay.
         </p>
       </Section>
 

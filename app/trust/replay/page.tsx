@@ -15,7 +15,7 @@ export default function ReplayListPage() {
     <>
       <PageHeader
         title="Trust Panel"
-        description="Reopen any decision exactly as it was made, from its frozen snapshot."
+        description="Reopen the record saved with any decision, from its frozen snapshot. It shows what the decision rested on, not a recreation of the analyst's screen."
       />
       <TrustTabs current="/trust/replay" />
       <Suspense fallback={<Loading label="Loading decisions..." />}>

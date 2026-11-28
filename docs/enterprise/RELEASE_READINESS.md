@@ -16,7 +16,7 @@ Since this assessment, PRs #195, #196, #198, #200, #201, #202, #205, #206, #209,
 | # | Gate | Status | Evidence or blocker |
 | --- | --- | --- | --- |
 | 1 | Critical business workflows complete end to end | Met (synthetic scope) | CI browser smoke; probe W decision persistence; E2E report |
-| 2 | No unresolved P0 or P1 defects | **Not met** | P0 for real data: #109 (identity), #105 (maker-checker). PRs #195 and #198 since merged; PR #208 closed unmerged and replaced by #212 (open). Also open: #233 (snapshot chain not tamper-evident) |
+| 2 | No unresolved P0 or P1 defects | **Not met** | For real data: maker-checker (#105, P0) and per-grant filtering of portfolio-wide lists (#239, P1). Verified identity (#109) is delivered by PR #219 but stays off until an identity provider is configured, which is an outstanding deployment task. PRs #195 and #198 since merged; PR #208 closed unmerged and replaced by #212 (open). Also open: #233 (snapshot chain not tamper-evident) |
 | 3 | No unauthorized access or cross-tenant exposure | **Not met** for real data | Route and write boundaries verified for personas (probe R, W). There is no tenant model, and token replay after sign-out is accepted (probe S2) |
 | 4 | Financial calculations pass independent tests | Met (calculation) | 20,000-case BigInt oracle; unit tests. Policy values still need a policy owner |
 | 5 | All supported roles have verified journeys | Partially met | Five personas verified for routes and writes; no Administrator role; CHECKER has no workflow |
@@ -46,7 +46,7 @@ Count: 7 met, 4 partially met, 4 not met, 1 unverified.
 | Authentication / RBAC | Demo gate | Verified OIDC identity, MFA, client grants and revocable sessions (PR #219), off until an IdP is configured | IdP configuration; per-grant list filtering |
 | AI reliability | Validator with bypasses | Injection rule and tests (PR #206). Free-text money bypasses remain: PR #208 closed in favour of #212 | Structured figures (#212); live-model testing |
 | External integrations | Fixtures only | Unchanged, classified | Provider apps and credentials (#106) |
-| Security | No headers; provider leak | Headers (PR #200); diagnostics (PR #195) | #109, privacy assessment |
+| Security | No headers; provider leak | Headers (PR #200); diagnostics (PR #195) | IdP configuration (#109 delivered in PR #219); privacy assessment |
 | Test coverage | 474 tests on `main` | 609 tests on `main`; probe, oracle and OIDC journey (19/19) | Firefox, devices, load |
 | Performance | Not measured | Local baseline measured | Hosted load test, agreed targets |
 | Operational readiness | Logs only | Unchanged | Alerts, runbooks, restore drill |

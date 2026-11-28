@@ -6,8 +6,10 @@ agent explains each flag and has to cite the records behind every claim, a
 validator rejects citations to records no tool returned and checks the amounts
 and dates it can parse against the cited records, and an analyst makes every
 decision. Some free-text money formats still get past the validator
-([#186](https://github.com/roshanaryal1/credit-desk/issues/186)). A Trust Panel measures how often the agent agrees with analysts who
-decided without seeing it, and replays any decision exactly as it was made.
+([#186](https://github.com/roshanaryal1/credit-desk/issues/186)). A Trust Panel
+measures how often the agent agrees with eligible shadow-mode decisions, those
+whose deciding session had no recorded exposure to the agent's output, and
+replays the record saved with each decision.
 
 > Prototype for discussion. All data is synthetic.
 
@@ -55,7 +57,7 @@ The shared-password demonstration now supports five **self-selected, fictional**
 perspectives: **Employer / lender**, **Credit analyst**, **Credit checker**,
 **Client / borrower**, and **Auditor**. These are not verified identities or
 production RBAC. The client view shows one fixed synthetic borrower's summary;
-only the password-authenticated analyst demo can record synthetic decisions.
+only the credit analyst perspective can record synthetic decisions.
 The optional public one-click accounts have the permissions of their perspective: the credit analyst can record synthetic decisions, incident notes, review-mode changes and rate-limited agent re-runs; the other four perspectives are read-only.
 Signing out allows selecting a different perspective. For controls, limitations and review
 steps see [docs/review/demo-personas.md](docs/review/demo-personas.md).
@@ -194,8 +196,13 @@ citation validity, amount and date faithfulness, retry rate, tokens and time.
 
 How to read these numbers: labels and checks both encode the specification, so
 perfect scores show the code implements the rules as written. They do not show
-the rules catch real fraud. The validator proves that citations exist and that
-figures match the cited records; it does not prove the reasoning is right.
+the rules catch real fraud. The validator confirms that cited records were
+returned by a tool in the run and that the amounts and ISO dates it recognises
+match those records. Figures in other forms, such as `999,999.00 NZD`, amounts
+in words and non-ISO dates, pass unchecked (see [Limitations](#limitations)),
+and the amount and date faithfulness metric only counts validator errors, so a
+pass is not proof that every figure is grounded. Nor does it show the reasoning
+is right.
 
 ## Limitations
 
@@ -209,8 +216,9 @@ figures match the cited records; it does not prove the reasoning is right.
   Verified OIDC sign-in with MFA and client grants exists
   ([ADR 0019](docs/adr/0019-verified-oidc-identity.md)) but is off until an
   identity provider is configured.
-- The citation validator does not yet ground amounts written in words, non-ISO
-  dates, percentages or day counts (#212).
+- The citation validator does not yet ground amounts with a trailing currency
+  code such as `999,999.00 NZD` or written in words (#186, #212), or non-ISO
+  dates, percentages and day counts (#230).
 - Snapshot checksums detect accidental or casual changes. They do not stop
   someone with full database access.
 - The LLM runs on Groq's free tier, which is acceptable only because the data

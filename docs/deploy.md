@@ -38,7 +38,7 @@ rather than serving unprotected.
 
 ## Optional one-click visitor demo
 
-For a **separate fictional-only** instance, verify the connected database has no live borrower, lender or bank records, run the non-destructive demo preflight, then (and only then) set both `PUBLIC_DEMO_ENABLED=1` and `CREDIT_DESK_DATA_CLASSIFICATION=SYNTHETIC`. The latter is an operator declaration, not a technical guarantee. `DEMO_PASSWORD` and `SESSION_SECRET` must also be configured, but neither is displayed to public visitors. The five one-click demo accounts are signed, short-lived (60 minutes) and read-only. They do not require real passwords; their displayed `.example` email addresses are labels only.
+For a **separate fictional-only** instance, verify the connected database has no live borrower, lender or bank records, run the non-destructive demo preflight, then (and only then) set both `PUBLIC_DEMO_ENABLED=1` and `CREDIT_DESK_DATA_CLASSIFICATION=SYNTHETIC`. The latter is an operator declaration, not a technical guarantee. `DEMO_PASSWORD` and `SESSION_SECRET` must also be configured, but neither is displayed to public visitors. The five one-click demo accounts are signed and short-lived (60 minutes). They do not require real passwords; their displayed `.example` email addresses are labels only. Each has the permissions of its perspective: the credit analyst account can record synthetic decisions and incident notes, switch review mode and re-run the agent, and the other four are read-only. Public analyst writes go into the shared database, where other visitors can see them, until #225 isolates them.
 
 **Never enable on a mixed/live dataset.** No new demo code should be deployed to the public custom domain until hosted migrations/fictional seed and accessibility/browser/security acceptance pass. Disable the switches to prevent new public sessions; rotate `SESSION_SECRET` to invalidate existing sessions. The reviewer-password path remains available for privileged synthetic demonstrations.
 
@@ -76,7 +76,10 @@ is passed.
 Provider rate limits depend on the account. Precompute resumes stored work;
 check the provider's actual response and account limits before retrying. Each
 run records its model. Deploying existing explanations does not require new
-LLM calls. Public one-click sessions cannot invoke the agent.
+LLM calls. A public one-click credit analyst session can re-run the agent, and
+each re-run of a flagged invoice calls the provider (limits: 10 per hour per
+session and per address, 200 per day across the app). The other four public
+perspectives cannot.
 
 ## 4. Deploy and smoke test
 
