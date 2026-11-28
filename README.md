@@ -7,9 +7,10 @@ validator rejects citations to records no tool returned and checks the amounts
 and dates it can parse against the cited records, and an analyst makes every
 decision. Some free-text money formats still get past the validator
 ([#186](https://github.com/roshanaryal1/credit-desk/issues/186)). A Trust Panel
-measures how often the agent agrees with eligible shadow-mode decisions, those
-whose deciding session had no recorded exposure to the agent's output, and
-replays the record saved with each decision.
+measures how often the agent agrees with eligible shadow-mode decisions: the
+first decision on a flagged invoice with a validated explanation, made in a
+session with no recorded exposure to that invoice's agent output before the
+decision. It also replays the record saved with each decision.
 
 > Prototype for discussion. All data is synthetic.
 
@@ -196,13 +197,18 @@ citation validity, amount and date faithfulness, retry rate, tokens and time.
 
 How to read these numbers: labels and checks both encode the specification, so
 perfect scores show the code implements the rules as written. They do not show
-the rules catch real fraud. The validator confirms that cited records were
-returned by a tool in the run and that the amounts and ISO dates it recognises
-match those records. Figures in other forms, such as `999,999.00 NZD`, amounts
-in words and non-ISO dates, pass unchecked (see [Limitations](#limitations)),
-and the amount and date faithfulness metric only counts validator errors, so a
-pass is not proof that every figure is grounded. Nor does it show the reasoning
-is right.
+the rules catch real fraud. When an explanation is generated, the validator
+confirms that each cited record was returned by a tool in that run and that the
+amounts and ISO dates it recognises match those records. A stored legacy
+explanation without captured tool output is rechecked against records fetched
+again through today's tools, scoped to its original date; that corroborates its
+citations but cannot confirm what the original run returned. Figures in other
+forms, such as `999,999.00 NZD`, amounts in words and non-ISO dates, pass
+unchecked (see [Limitations](#limitations)), so a pass is not proof that every
+figure is grounded. The amount and date faithfulness metric is the share of
+schema-valid final outputs with no recorded amount or date mismatch against
+their cited records; an output rejected for an invalid or non-NZD amount still
+counts as faithful. None of these numbers show the reasoning is right.
 
 ## Limitations
 

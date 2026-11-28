@@ -18,7 +18,7 @@ Credit Desk handles **synthetic data only** and is protected by a shared demo pa
 | Token integrity | HMAC-SHA256, expiry, persona allow-list | n/a | Verified: tampered, expired, unknown persona and wrong key rejected (probe A) |
 | Security headers | No CSP, frame-ancestors, XFO, Referrer-Policy or Permissions-Policy on the hosted site (HSTS present) | P2 | Fixed in PR #200 (#197) |
 | Denied action UX | Expired or wrong-persona form submit ends in a client error screen | P2 | Fixed in PR #202 (#199) |
-| Prompt injection | Source-record text reaches the model; no prompt rule; no tests | P2 | Fixed in PR #206 (#204); the validator remains the main control, with the gaps in the next row |
+| Prompt injection | Source-record text reaches the model; no prompt rule; no tests | P2 | Mitigated, not fixed. PR #206 (#204) added a prompt rule that record text is untrusted data, and regression tests with a scripted model. The validator checks citations, recognised figures and forbidden phrases, not whether the cited facts support the recommendation, so injected text that changes only the recommendation can still pass (#231) |
 | AI money grounding | Unsupported monetary forms could pass the citation validator | P1 | Open. PR #208 closed unmerged after free-text parsing did not converge; replaced by structured figures (#212) |
 | Stale approvals | Decisions could be recorded after reviewed financial facts changed | P1 | Fixed in PR #198 (#182, #185) |
 | Provider diagnostics | Raw provider errors could reach logs and outcomes | P1 | Fixed in PR #195 (#188) |

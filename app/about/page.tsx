@@ -17,7 +17,7 @@ const LAYERS = [
   },
   {
     name: "Analyst",
-    body: "Decides. In shadow mode the agent's view stays hidden until the decision is saved, so agreement can be measured honestly.",
+    body: "Decides. In shadow mode the server withholds the agent's view from the analyst until the invoice has a decision, and records an exposure whenever it delivers that view.",
   },
   {
     name: "Snapshot",
@@ -46,9 +46,9 @@ export default function AboutPage() {
         <p className="max-w-prose text-sm leading-relaxed">
           Rules detect, the model explains, a validator checks the model, and a
           person decides. The agent never approves, funds or changes anything.
-          Shadow mode measures how often the agent agrees with analysts before
-          anyone relies on it, and every decision saves a checksummed record
-          that the Trust Panel can replay.
+          Shadow mode measures how often the agent agrees with decisions made in
+          sessions with no recorded exposure to its output, and every decision
+          saves a checksummed record that the Trust Panel can replay.
         </p>
       </Section>
 
