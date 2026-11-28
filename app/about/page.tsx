@@ -13,15 +13,15 @@ const LAYERS = [
   },
   {
     name: "Validator",
-    body: "Rejects any explanation that cites a record no tool returned, or states an amount or date that is not in the records it cites.",
+    body: "Rejects any explanation that cites a record no tool returned, and checks the amounts and dates it can parse against the records it cites. Some free-text money formats are not caught yet.",
   },
   {
     name: "Analyst",
-    body: "Decides. In shadow mode the agent's view stays hidden until the decision is saved, so agreement can be measured honestly.",
+    body: "Decides. In shadow mode the server withholds the agent's view from the analyst until the invoice has a decision, and records an exposure whenever it delivers that view.",
   },
   {
     name: "Snapshot",
-    body: "Freezes everything the decision rested on, with a SHA-256 checksum chained to the previous decision, so it can be replayed exactly.",
+    body: "Saves the decision with its findings, evidence and the agent's explanation as canonical JSON with a SHA-256 checksum. Replay shows that saved record rather than recreating the analyst's screen: it can include agent output withheld in shadow mode, and legacy explanations carry reconstructed evidence, not an original tool transcript. Each snapshot records the previous one's checksum, but that link is not yet covered by the hash, so it does not stop someone with database access from rewriting history.",
   },
 ];
 
@@ -46,9 +46,9 @@ export default function AboutPage() {
         <p className="max-w-prose text-sm leading-relaxed">
           Rules detect, the model explains, a validator checks the model, and a
           person decides. The agent never approves, funds or changes anything.
-          Shadow mode measures how often the agent agrees with analysts before
-          anyone relies on it, and every decision can be replayed exactly as it
-          was made.
+          Shadow mode measures how often the agent agrees with decisions made in
+          sessions with no recorded exposure to its output, and every decision
+          saves a checksummed record that the Trust Panel can replay.
         </p>
       </Section>
 

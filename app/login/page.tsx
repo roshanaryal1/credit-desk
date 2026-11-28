@@ -35,7 +35,7 @@ const areas = [
   {
     name: "Trust Panel",
     detail:
-      "Analyst and AI agreement, and an exact replay of every recorded decision.",
+      "Analyst and AI agreement, and a replay of the record saved with every decision.",
   },
 ];
 
@@ -66,7 +66,8 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
           <p className="mt-4 text-sm leading-6 text-slate-300">
             Deterministic checks flag invoice risk. An AI assistant explains
             each flag and must cite the source records; a validator rejects
-            anything it cannot ground. A credit analyst makes every decision.
+            citations to records no tool returned and checks the amounts and
+            dates it can parse. A credit analyst makes every decision.
           </p>
           <dl className="mt-8 hidden divide-y divide-slate-800 border-y border-slate-800 sm:block">
             {areas.map((area) => (
